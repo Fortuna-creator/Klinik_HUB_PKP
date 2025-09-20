@@ -22,4 +22,15 @@ public class User {
     private String password;
 
     private String role;
+    // Device information captured during registration
+    @Column(name = "device_id")
+    private String deviceId;
+    @Column(name = "device_name")
+    private String deviceName;
+    @Column(name = "device_location")
+    private String deviceLocation;
+    @Column(name = "os_name")
+    private String osName;
+    @Column(name = "os_version")
+    private String osVersion;
 }

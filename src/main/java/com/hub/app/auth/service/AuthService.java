@@ -28,6 +28,12 @@ public class AuthService {
         u.setUsername(req.getUsername());
         u.setPassword(passwordEncoder.encode(req.getPassword()));
         u.setRole("ROLE_USER");
+        // set device info if provided
+        u.setDeviceId(req.getDeviceId());
+        u.setDeviceName(req.getDeviceName());
+        u.setDeviceLocation(req.getDeviceLocation());
+        u.setOsName(req.getOsName());
+        u.setOsVersion(req.getOsVersion());
         userRepository.save(u);
         String token = jwtUtil.generateToken(u.getUsername());
         return new AuthResponse(token);

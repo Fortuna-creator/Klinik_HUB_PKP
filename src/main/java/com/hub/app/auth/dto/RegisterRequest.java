@@ -8,4 +8,9 @@ import lombok.NoArgsConstructor;
 public class RegisterRequest {
     private String username;
     private String password;
+    private String deviceId;
+    private String deviceName;
+    private String deviceLocation;
+    private String osName;
+    private String osVersion;
 }
