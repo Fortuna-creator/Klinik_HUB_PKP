@@ -1,8 +1,17 @@
 package com.hub.app.config;
 
+import io.minio.MinioClient;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MinioConfig {
-    // TODO: Configure MinIO client bean
+
+    @Bean
+    public MinioClient minioClient() {
+        return MinioClient.builder()
+                .endpoint("http://localhost:9000") // ganti sesuai env
+                .credentials("minioadmin", "minioadmin") // ganti sesuai env
+                .build();
+    }
 }
