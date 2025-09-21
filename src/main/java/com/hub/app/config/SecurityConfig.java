@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/backoffice/**").hasRole("BALAI")
+                        .requestMatchers("/api/balai/**").hasRole("BALAI")
                         .anyRequest().authenticated()
                 );
         return http.build();
