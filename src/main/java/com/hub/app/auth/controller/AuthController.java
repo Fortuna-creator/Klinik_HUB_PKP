@@ -15,7 +15,17 @@ public class AuthController {
     @PostMapping(value = "/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
         var user = authService.register(req.getFullName(), req.getEmail(), req.getPhone(), req.getPassword());
-        return ResponseEntity.ok(user);
+        return ResponseEntity.ok(RegisterResponse.builder()
+                        .role(user.getRole())
+                        .status(user.getStatus().name())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .userId(user.getId())
+                        .fullName(user.getName())
+                        .ktpUrl(user.getKtpUrl())
+                        .selfieUrl(user.getSelfieUrl())
+                        .username(user.getUsername())
+                .build());
     }
 
     @PostMapping("/verify-otp")
