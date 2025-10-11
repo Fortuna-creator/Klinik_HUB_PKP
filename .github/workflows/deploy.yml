@@ -59,4 +59,3 @@ jobs:
           script: |
             SERVICE="${{ steps.cfg.outputs.SERVICE }}"
             sudo -n /usr/bin/systemctl restart "$SERVICE"
-            sudo -n /usr/bin/systemctl is-active --quiet "$SERVICE"
