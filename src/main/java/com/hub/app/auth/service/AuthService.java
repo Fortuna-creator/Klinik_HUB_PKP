@@ -1,5 +1,6 @@
 package com.hub.app.auth.service;
 
+import com.hub.app.auth.dto.LoginResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,7 +69,7 @@ public class AuthService {
         return valid;
     }
 
-    public String login(LoginRequest req) {
+    public LoginResponse login(LoginRequest req) {
         User user = userRepository.findByEmail(req.getEmail())
             .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
@@ -77,6 +78,17 @@ public class AuthService {
         if (user.getStatus() != UserStatus.ACTIVE) {
             throw new IllegalArgumentException("User not active");
         }
-        return jwtService.generateToken(user.getEmail(), user.getRole().name());
+
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+
+
+        return LoginResponse.builder()
+                .userId(user.getId())
+                .fullName(user.getName())
+                .token(token)
+                .role(user.getRole().name())
+                .status(user.getStatus().name())
+                .email(user.getEmail())
+                .build();
     }
 }
