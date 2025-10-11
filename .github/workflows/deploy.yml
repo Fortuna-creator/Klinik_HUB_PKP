@@ -49,7 +49,7 @@ jobs:
           source: "target/*.jar"
           target: "${{ steps.cfg.outputs.APP_DIR }}/app.jar"
 
-      - name: Restart app with nohup (no systemd)
+      - name: Restart via systemd
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -57,10 +57,6 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           script: |
-            APP_DIR="${{ steps.cfg.outputs.APP_DIR }}"
-            PROFILE="${{ steps.cfg.outputs.PROFILE }}"
-            cd "$APP_DIR"
-            pkill -f 'app.jar' || true
-            nohup java -jar app.jar \
-              --spring.profiles.active="$PROFILE" \
-              --spring.config.import=optional:file:.env[.properties] > app.log 2>&1 &
+            SERVICE="${{ steps.cfg.outputs.SERVICE }}"
+            sudo systemctl restart "$SERVICE"
+            sudo systemctl is-active --quiet "$SERVICE"
