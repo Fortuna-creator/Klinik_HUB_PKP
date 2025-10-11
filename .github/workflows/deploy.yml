@@ -50,15 +50,16 @@ jobs:
           echo "JAR_BASENAME=$(basename "$JAR_PATH")" >> "$GITHUB_OUTPUT"
           echo "Selected artifact: $JAR_PATH"
 
-      - name: Upload artifact (flat, no target/)
+      - name: Upload artifact (flattened)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
           username: hub
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
-          source: "${{ steps.art.outputs.JAR_PATH }}"                   # single file
-          target: "${{ steps.cfg.outputs.APP_DIR }}/${{ steps.art.outputs.JAR_BASENAME }}"  # explicit filename
+          source: "${{ steps.art.outputs.JAR_PATH }}"     # single file like target/app-0.0.1.jar
+          target: "${{ steps.cfg.outputs.APP_DIR }}/"     # directory (trailing slash)
+          strip_components: 1                              # <-- drop leading 'target/'
           debug: true
 
       # Verify upload, point app.jar to latest, restart
