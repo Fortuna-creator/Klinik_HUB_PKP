@@ -40,6 +40,7 @@ public class AuthService {
         User u = User.builder()
                 .name(name)
                 .email(email)
+                .username(email)
                 .phone(phone)
                 .password(encoder.encode(password))
                 // TODO: registration using ROLE from request to accommodate web registration or bulk registration from web
