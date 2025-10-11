@@ -23,7 +23,7 @@ public class OtpService {
         String code = String.format("%06d", new SecureRandom().nextInt(999999));
         OtpToken token = OtpToken.builder()
                 .userId(user.getId())
-                .code(code)
+                .token(code)
                 .expiresAt(Instant.now().plus(5, ChronoUnit.MINUTES))
                 .used(false)
                 .build();
