@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:hubdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      javax.persistence.schema-generation.database.action: none
+    show-sql: true
+  h2:
+    console:
+      enabled: true
+
+minio:
+  endpoint: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+
+jwt:
+  secret: dev-secret-key-change-me
+  expiration-ms: 3600000
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.hub.app: DEBUG
+    org.springframework.security: DEBUG
