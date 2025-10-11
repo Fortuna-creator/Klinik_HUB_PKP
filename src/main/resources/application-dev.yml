@@ -30,7 +30,7 @@ minio:
   secret-key: minioadmin
 
 jwt:
-  secret: dev-secret-key-change-me
+  secret: ${JWT_SECRET}
   expiration-ms: 3600000
 
 server:
