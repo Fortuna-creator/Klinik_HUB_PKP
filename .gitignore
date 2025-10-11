@@ -13,3 +13,11 @@ out/test/**/*.class
 # Alternative build directory patterns (if using different tools)
 bin/**/*.class
 classes/**/*.class
+
+# JAR files
+*.jar
+**/*.jar
+target/**/*.jar
+build/**/*.jar
+out/**/*.jar
+bin/**/*.jar
