@@ -20,7 +20,9 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/register", "/api/auth/verify-otp", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/auth/profile-update").authenticated()
+                        .requestMatchers("/api/files/**").authenticated()
                         .requestMatchers("/api/balai/**").hasRole("BALAI")
                         .anyRequest().authenticated()
                 );
