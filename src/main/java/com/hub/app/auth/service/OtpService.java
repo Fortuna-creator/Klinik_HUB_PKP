@@ -38,7 +38,7 @@ public class OtpService {
     }
 
     public boolean verifyOtp(Long userId, String code) {
-        return otpRepo.findTopByUserIdAndCodeAndUsedFalseOrderByExpiresAtDesc(userId, code)
+        return otpRepo.findTopByUserIdAndTokenAndUsedFalseOrderByExpiresAtDesc(userId, code)
                 .filter(t -> t.getExpiresAt().isAfter(Instant.now()))
                 .map(t -> {
                     t.setUsed(true);
