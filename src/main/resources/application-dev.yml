@@ -2,8 +2,8 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/hubdb_dev
     driverClassName: org.postgresql.Driver
-    username: postgres
-    password: password
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -12,6 +12,9 @@ spring:
     show-sql: true
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.xml
+  config:
+    import: optional:file:.env[.properties]
+
 
 minio:
   endpoint: http://localhost:9000
@@ -23,7 +26,7 @@ jwt:
   expiration-ms: 3600000
 
 server:
-  port: 8080
+  port: ${SERVER_PORT}
 
 logging:
   level:
