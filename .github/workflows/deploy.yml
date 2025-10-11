@@ -39,7 +39,7 @@ jobs:
             exit 1
           fi
 
-      - name: Upload JAR to VPS
+      - name: Upload JAR to VPS (as files, not "app.jar" dir)
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -47,9 +47,9 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           source: "target/*.jar"
-          target: "${{ steps.cfg.outputs.APP_DIR }}/app.jar"
+          target: "${{ steps.cfg.outputs.APP_DIR }}/"
 
-      - name: Restart via systemd
+      - name: Point app.jar to latest and restart
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -57,5 +57,16 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           script: |
+            set -euo pipefail
+            APP_DIR="${{ steps.cfg.outputs.APP_DIR }}"
             SERVICE="${{ steps.cfg.outputs.SERVICE }}"
+            cd "$APP_DIR"
+
+            LATEST_JAR="$(ls -t *.jar 2>/dev/null | grep -v '^app\.jar$' | head -1 || true)"
+            if [ -z "$LATEST_JAR" ]; then
+              echo "No JAR uploaded to $APP_DIR"; exit 1
+            fi
+
+            ln -sfn "$LATEST_JAR" app.jar
+
             sudo -n /usr/bin/systemctl restart "$SERVICE"
