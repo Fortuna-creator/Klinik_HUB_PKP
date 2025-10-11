@@ -10,6 +10,8 @@ spring:
     properties:
       javax.persistence.schema-generation.database.action: none
     show-sql: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
 minio:
   endpoint: https://staging-minio.example.com
