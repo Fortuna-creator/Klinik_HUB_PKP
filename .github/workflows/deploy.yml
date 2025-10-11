@@ -21,7 +21,7 @@ jobs:
           java-version: '21'
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests
+        run: mvn -B -DskipTests clean package
 
       - name: Resolve deploy config from branch
         id: cfg
@@ -39,17 +39,44 @@ jobs:
             exit 1
           fi
 
-      - name: Upload JAR to VPS (as files, not "app.jar" dir)
+      # Pick ONE jar and expose its full path + basename
+      - name: Determine artifact
+        id: art
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR_PATH="$(ls -t target/*.jar | head -1)"
+          echo "JAR_PATH=$JAR_PATH" >> "$GITHUB_OUTPUT"
+          echo "JAR_BASENAME=$(basename "$JAR_PATH")" >> "$GITHUB_OUTPUT"
+          echo "Selected artifact: $JAR_PATH"
+
+      - name: Prepare remote directory
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: hub
+          key: ${{ secrets.VPS_SSH_KEY }}
+          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
+          script: |
+            set -euo pipefail
+            APP_DIR="${{ steps.cfg.outputs.APP_DIR }}"
+            sudo mkdir -p "$APP_DIR"
+            sudo chown -R hub:hub "$APP_DIR"
+            ls -ld "$APP_DIR"
+
+      - name: Upload artifact
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
+          username: hub
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
-          source: "target/*.jar"
-          target: "${{ steps.cfg.outputs.APP_DIR }}/"
+          source: "${{ steps.art.outputs.JAR_PATH }}"     # single file
+          target: "${{ steps.cfg.outputs.APP_DIR }}/"     # directory
+          debug: true
 
-      - name: Point app.jar to latest and restart
+      # Verify upload, point app.jar to latest, restart
+      - name: Symlink and restart via systemd
         uses: appleboy/ssh-action@v0.1.10
         with:
           host: ${{ secrets.VPS_HOST }}
@@ -60,13 +87,16 @@ jobs:
             set -euo pipefail
             APP_DIR="${{ steps.cfg.outputs.APP_DIR }}"
             SERVICE="${{ steps.cfg.outputs.SERVICE }}"
-            cd "$APP_DIR"
+            JAR="${{ steps.art.outputs.JAR_BASENAME }}"
 
-            LATEST_JAR="$(ls -t *.jar 2>/dev/null | grep -v '^app\.jar$' | head -1 || true)"
-            if [ -z "$LATEST_JAR" ]; then
-              echo "No JAR uploaded to $APP_DIR"; exit 1
+            cd "$APP_DIR"
+            if [ ! -f "$JAR" ]; then
+              echo "Expected $APP_DIR/$JAR but it's not there"; ls -la; exit 1
             fi
 
-            ln -sfn "$LATEST_JAR" app.jar
+            # symlink app.jar -> uploaded jar (atomic swap)
+            ln -sfn "$JAR" app.jar
+            ls -la
 
+            # restart & confirm
             sudo -n /usr/bin/systemctl restart "$SERVICE"
