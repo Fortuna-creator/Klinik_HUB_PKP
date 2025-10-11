@@ -1,0 +1,15 @@
+# Compiled Java class files
+*.class
+
+# Compiled Java class files in subdirectories (recursive)
+**/*.class
+
+# Specific build directories (common in Maven/Gradle projects)
+target/classes/**/*.class
+build/classes/**/*.class
+out/production/**/*.class
+out/test/**/*.class
+
+# Alternative build directory patterns (if using different tools)
+bin/**/*.class
+classes/**/*.class
