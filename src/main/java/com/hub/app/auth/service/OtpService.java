@@ -34,7 +34,7 @@ public class OtpService {
         msg.setTo(user.getEmail());
         msg.setSubject("OTP Registrasi HUB");
         msg.setText("Kode OTP Anda adalah: " + code);
-        mailSender.send(msg);
+//        mailSender.send(msg);
     }
 
     public boolean verifyOtp(Long userId, String code) {
