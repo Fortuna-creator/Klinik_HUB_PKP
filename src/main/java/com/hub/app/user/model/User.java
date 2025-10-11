@@ -1,7 +1,17 @@
 package com.hub.app.user.model;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "users")
@@ -27,4 +37,16 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status; // UNVERIFIED, PENDING_APPROVAL, ACTIVE, REJECTED
+
+    // Explicit methods for IDEs not running Lombok properly
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+    public String getPhone() { return phone; }
+    public String getPassword() { return password; }
+    public Role getRole() { return role; }
+    public String getKtpUrl() { return ktpUrl; }
+    public String getSelfieUrl() { return selfieUrl; }
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
 }

@@ -7,4 +7,12 @@ import lombok.Data;
 public class VerifyOtpRequest {
     private Long userId;
     private String otpCode;
+
+    public Long getUserId() {
+        return this.userId;
+    }
+
+    public String getOtpCode() {
+        return this.otpCode;
+    }
 }

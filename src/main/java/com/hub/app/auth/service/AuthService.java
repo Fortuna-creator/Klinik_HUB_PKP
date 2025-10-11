@@ -2,6 +2,7 @@ package com.hub.app.auth.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.hub.app.auth.dto.LoginRequest;
@@ -17,12 +18,13 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final UserRepository userRepo;
+    private final UserRepository userRepository;
     private final OtpService otpService;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
     private final MinioService minioService;
-
+ 
+    @Transactional
     public User register(
             String name,
             String email,
@@ -30,8 +32,8 @@ public class AuthService {
             String password,
             MultipartFile ktpFile,
             MultipartFile selfieFile) {
-        if (userRepo.existsByEmail(email)) {
-            throw new RuntimeException("Email already exists");
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already exists");
         }
 
         // Upload ke MinIO
@@ -49,30 +51,31 @@ public class AuthService {
                 .selfieUrl(selfieUrl)
                 .build();
 
-        userRepo.save(u);
+        userRepository.save(u);
 
         otpService.generateAndSendOtp(u);
         return u;
     }
+    @Transactional
 
     public boolean verifyOtp(VerifyOtpRequest req) {
         boolean valid = otpService.verifyOtp(req.getUserId(), req.getOtpCode());
         if (valid) {
-            var user = userRepo.findById(req.getUserId()).orElseThrow();
+            User user = userRepository.findById(req.getUserId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
             user.setStatus(UserStatus.PENDING_APPROVAL);
-            userRepo.save(user);
+            userRepository.save(user);
         }
         return valid;
     }
 
     public String login(LoginRequest req) {
-        var user = userRepo.findByEmail(req.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(req.getEmail())
+            .orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new IllegalArgumentException("Invalid credentials");
         }
-        if (!"ACTIVE".equals(user.getStatus())) {
-            throw new RuntimeException("User not active");
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new IllegalArgumentException("User not active");
         }
         return jwtService.generateToken(user.getEmail(), user.getRole().name());
     }

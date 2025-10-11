@@ -1,7 +1,6 @@
 package com.hub.app.backoffice.service;
 
 import com.hub.app.backoffice.dto.RegisterConsultantRequest;
-import com.hub.app.backoffice.dto.BulkRegisterConsultantRequest;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.model.UserStatus;
@@ -60,18 +59,6 @@ public class BalaiService {
 
         sendActivationEmail(u);
         return u;
-    }
-
-    /**
-     * Bulk register consultants/supervisors
-     */
-    @Transactional
-    public List<User> bulkRegister(BulkRegisterConsultantRequest bulkReq) {
-        List<User> registered = new ArrayList<>();
-        for (RegisterConsultantRequest req : bulkReq.getConsultants()) {
-            registered.add(registerConsultant(req));
-        }
-        return registered;
     }
 
     @Transactional

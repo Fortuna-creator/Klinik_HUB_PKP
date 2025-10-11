@@ -1,7 +1,6 @@
 package com.hub.app.backoffice.controller;
 
 import com.hub.app.backoffice.dto.RegisterConsultantRequest;
-import com.hub.app.backoffice.dto.BulkRegisterConsultantRequest;
 import com.hub.app.backoffice.service.BalaiService;
 import com.hub.app.user.model.User;
 import lombok.RequiredArgsConstructor;
