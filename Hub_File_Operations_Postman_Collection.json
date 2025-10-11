@@ -1,0 +1,512 @@
+{
+  "info": {
+    "name": "Hub File Operations API",
+    "description": "Comprehensive Postman collection for Hub File Upload and Download operations. Includes JWT authentication, multipart/form-data uploads, file validation, error handling, and test scripts.\n\n## API Overview\nThis collection provides endpoints for secure file upload and download operations using MinIO storage.\n\n## Features\n- **File Upload**: POST /api/files/upload with multipart/form-data support\n- **File Download**: GET /api/files/download/{fileId} with proper headers\n- **Authentication**: JWT Bearer token required\n- **Validation**: File type (JPEG/PNG), size limits (5MB), automatic compression\n- **Error Handling**: Comprehensive error responses for common scenarios\n- **Security**: Secure storage with unique filenames and checksums\n\n## File Upload Specifications\n- **Supported Formats**: JPEG, PNG\n- **Max File Size**: 5MB per file\n- **Compression**: Automatic resizing to max 1920x1080 pixels\n- **Storage**: MinIO with unique filenames\n\n## Authentication\nInclude JWT token in Authorization header:\n```\nAuthorization: Bearer <jwt_token>\n```\n\n## Environment Variables\n- `base_url`: API base URL (default: http://localhost:8080)\n- `jwt_token`: JWT access token\n- `file_id`: File ID for download operations\n\n## Usage\n1. Obtain JWT token from authentication collection\n2. Set jwt_token environment variable\n3. Use upload endpoint to upload files\n4. Use download endpoint to retrieve files by ID",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "hub-backend"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token for authentication"
+    },
+    {
+      "key": "file_id",
+      "value": "",
+      "type": "string",
+      "description": "File ID returned from upload operation"
+    },
+    {
+      "key": "uploaded_file_url",
+      "value": "",
+      "type": "string",
+      "description": "URL of uploaded file"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "Authentication setup for file operations",
+      "item": [
+        {
+          "name": "Set JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login to obtain JWT token for file operations. This endpoint is from the authentication collection."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains access token\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('accessToken');",
+                  "    pm.collectionVariables.set('jwt_token', jsonData.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "File Upload",
+      "description": "File upload operations with validation and compression",
+      "item": [
+        {
+          "name": "Upload File - Success",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": [],
+                  "type": "file",
+                  "description": "File to upload (JPEG/PNG, max 5MB)"
+                },
+                {
+                  "key": "folder",
+                  "value": "documents",
+                  "type": "text",
+                  "description": "Folder/category for file organization"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "Upload a file with automatic validation, compression, and secure storage. Requires JWT authentication."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains file information\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('fileId');",
+                  "    pm.expect(jsonData).to.have.property('fileUrl');",
+                  "    pm.expect(jsonData).to.have.property('checksum');",
+                  "    ",
+                  "    // Store file ID for download tests",
+                  "    pm.collectionVariables.set('file_id', jsonData.fileId);",
+                  "    pm.collectionVariables.set('uploaded_file_url', jsonData.fileUrl);",
+                  "});",
+                  "",
+                  "pm.test(\"File URL is valid\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.fileUrl).to.match(/^\\//);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload File - Invalid File Type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": [],
+                  "type": "file",
+                  "description": "Invalid file type (e.g., PDF, TXT)"
+                },
+                {
+                  "key": "folder",
+                  "value": "documents",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "Test error handling for invalid file types. Should return 400 Bad Request."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message for invalid file type\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error).to.include('file type');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload File - File Too Large",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": [],
+                  "type": "file",
+                  "description": "Large file exceeding 5MB limit"
+                },
+                {
+                  "key": "folder",
+                  "value": "documents",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "Test error handling for files exceeding size limit. Should return 400 Bad Request."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Error message for file size\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error).to.include('size');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload File - Unauthorized",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": [],
+                  "type": "file"
+                },
+                {
+                  "key": "folder",
+                  "value": "documents",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "Test authentication requirement. Should return 401 Unauthorized when no token provided."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Unauthorized error message\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "File Download",
+      "description": "File download operations with proper headers",
+      "item": [
+        {
+          "name": "Download File - Success",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files/download/{{file_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "download", "{{file_id}}"]
+            },
+            "description": "Download a file by ID with proper content headers. Requires JWT authentication."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('file_id')) {",
+                  "    throw new Error('File ID not available. Please upload a file first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has content type header\", function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.match(/image\\/(jpeg|png)/);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has content disposition header\", function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment');",
+                  "});",
+                  "",
+                  "pm.test(\"Response has content length\", function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Length')).to.be.not.null;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download File - File Not Found",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files/download/invalid-file-id",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "download", "invalid-file-id"]
+            },
+            "description": "Test error handling for non-existent files. Should return 404 Not Found."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"File not found error message\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "    pm.expect(jsonData.error).to.include('not found');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download File - Unauthorized",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/files/download/{{file_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "download", "{{file_id}}"]
+            },
+            "description": "Test authentication requirement for downloads. Should return 401 Unauthorized."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Unauthorized error message\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script for token validation",
+          "const jwtToken = pm.collectionVariables.get('jwt_token');",
+          "if (jwtToken) {",
+          "    // Check if token is expired (simple check)",
+          "    const payload = jwtToken.split('.')[1];",
+          "    if (payload) {",
+          "        try {",
+          "            const decoded = JSON.parse(atob(payload));",
+          "            const currentTime = Math.floor(Date.now() / 1000);",
+          "            if (decoded.exp && decoded.exp < currentTime) {",
+          "                console.log('JWT token expired, please refresh token');",
+          "            }",
+          "        } catch (e) {",
+          "            console.log('Error parsing JWT token');",
+          "        }",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}
