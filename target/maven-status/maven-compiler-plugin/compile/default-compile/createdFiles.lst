@@ -19,7 +19,6 @@ com/hub/app/auth/util/JwtUtil.class
 com/hub/app/backoffice/dto/BulkRegisterConsultantRequest.class
 com/hub/app/user/model/User$UserBuilder.class
 com/hub/app/config/SecurityConfig.class
-com/hub/app/user/model/UserStatus.class
 com/hub/app/auth/dto/JwtResponse.class
 com/hub/app/auth/model/OtpToken$OtpTokenBuilder.class
 com/hub/app/auth/dto/AuthResponse.class

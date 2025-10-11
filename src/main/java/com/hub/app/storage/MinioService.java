@@ -27,6 +27,12 @@ public class MinioService {
                 throw new RuntimeException("File size exceeds 2 MB limit");
             }
 
+            // 🔍 Validasi tipe file untuk gambar
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                throw new RuntimeException("Only image files are allowed");
+            }
+
             // 🔍 Hitung checksum SHA-256
             String checksum = calculateChecksum(file.getInputStream(), "SHA-256");
 
