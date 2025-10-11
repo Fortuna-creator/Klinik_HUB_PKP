@@ -45,7 +45,8 @@ public class AuthService {
                 .password(encoder.encode(password))
                 // TODO: registration using ROLE from request to accommodate web registration or bulk registration from web
                 .role(Role.HOMEOWNER) 
-                .status(UserStatus.UNVERIFIED)
+//                .status(UserStatus.UNVERIFIED)
+                .status(UserStatus.ACTIVE)
 //                .ktpUrl(ktpUrl)
 //                .selfieUrl(selfieUrl)
                 .build();
