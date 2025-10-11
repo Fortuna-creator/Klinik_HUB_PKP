@@ -13,16 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 public class AuthController {
     private final AuthService authService;
 
-    @PostMapping(value = "/register", consumes = "multipart/form-data")
-    public ResponseEntity<?> register(
-            @RequestPart("name") String name,
-            @RequestPart("email") String email,
-            @RequestPart("phone") String phone,
-            @RequestPart("password") String password,
-            @RequestPart("ktp") MultipartFile ktpFile,
-            @RequestPart("selfie") MultipartFile selfieFile) {
-        var user = authService.register(name, email, phone, password, ktpFile, selfieFile);
-        return ResponseEntity.ok("User registered, OTP sent to " + user.getEmail());
+    @PostMapping(value = "/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+        var user = authService.register(req.getFullName(), req.getEmail(), req.getPhone(), req.getPassword());
+        return ResponseEntity.ok(user);
     }
 
     @PostMapping("/verify-otp")

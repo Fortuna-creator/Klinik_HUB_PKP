@@ -3,11 +3,10 @@ package com.hub.app.auth.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+
 
 import com.hub.app.auth.dto.LoginRequest;
 import com.hub.app.auth.dto.VerifyOtpRequest;
-import com.hub.app.storage.MinioService;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.model.UserStatus;
@@ -22,33 +21,32 @@ public class AuthService {
     private final OtpService otpService;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
-    private final MinioService minioService;
+//    private final MinioService minioService;
  
     @Transactional
     public User register(
             String name,
             String email,
             String phone,
-            String password,
-            MultipartFile ktpFile,
-            MultipartFile selfieFile) {
+            String password) {
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        // Upload ke MinIO
-        String ktpUrl = minioService.uploadFile(ktpFile, "ktp");
-        String selfieUrl = minioService.uploadFile(selfieFile, "selfie");
+        // TODO: pindahin ini ke tempat lain
+//        String ktpUrl = minioService.uploadFile(ktpFile, "ktp");
+//        String selfieUrl = minioService.uploadFile(selfieFile, "selfie");
 
         User u = User.builder()
                 .name(name)
                 .email(email)
                 .phone(phone)
                 .password(encoder.encode(password))
-                .role(Role.HOMEOWNER)
+                // TODO: registration using ROLE from request to accommodate web registration or bulk registration from web
+                .role(Role.HOMEOWNER) 
                 .status(UserStatus.UNVERIFIED)
-                .ktpUrl(ktpUrl)
-                .selfieUrl(selfieUrl)
+//                .ktpUrl(ktpUrl)
+//                .selfieUrl(selfieUrl)
                 .build();
 
         userRepository.save(u);

@@ -39,9 +39,9 @@ public class UserService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         var user = userRepo.findByEmail(username).orElseThrow();
 
-        Collection<? extends GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.name()))
-                .toList();
+        Collection<? extends GrantedAuthority> authorities =
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+
 
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getEmail())

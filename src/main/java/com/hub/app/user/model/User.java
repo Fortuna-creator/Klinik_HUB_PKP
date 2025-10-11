@@ -1,14 +1,11 @@
 package com.hub.app.user.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
-
 @Entity
 @Table(name = "users")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -23,6 +20,7 @@ public class User {
 
     private String phone;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -33,14 +31,6 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status; // UNVERIFIED, PENDING_APPROVAL, ACTIVE, REJECTED
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false, length = 50)
-    @Builder.Default
-    private Set<Role> roles = new HashSet<>();
-
 
     // Explicit methods for IDEs not running Lombok properly
     public Long getId() { return id; }
