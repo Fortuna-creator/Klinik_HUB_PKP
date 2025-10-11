@@ -1,17 +1,13 @@
 package com.hub.app.user.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -37,6 +33,14 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private UserStatus status; // UNVERIFIED, PENDING_APPROVAL, ACTIVE, REJECTED
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 50)
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();
+
 
     // Explicit methods for IDEs not running Lombok properly
     public Long getId() { return id; }
