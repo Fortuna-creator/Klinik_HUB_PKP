@@ -50,20 +50,6 @@ jobs:
           echo "JAR_BASENAME=$(basename "$JAR_PATH")" >> "$GITHUB_OUTPUT"
           echo "Selected artifact: $JAR_PATH"
 
-      - name: Prepare remote directory
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: hub
-          key: ${{ secrets.VPS_SSH_KEY }}
-          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
-          script: |
-            set -euo pipefail
-            APP_DIR="${{ steps.cfg.outputs.APP_DIR }}"
-            sudo mkdir -p "$APP_DIR"
-            sudo chown -R hub:hub "$APP_DIR"
-            ls -ld "$APP_DIR"
-
       - name: Upload artifact
         uses: appleboy/scp-action@v0.1.7
         with:
