@@ -1,4 +1,5 @@
 package com.hub.app.config;
+import com.hub.app.auth.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

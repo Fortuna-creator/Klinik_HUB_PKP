@@ -1,5 +1,6 @@
 package com.hub.app.config;
 
+import com.hub.app.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
