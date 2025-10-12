@@ -3,8 +3,6 @@ name: Deploy to VPS on Merge/Push
 on:
   push:
     branches: [ main, develop ]
-  pull_request:
-    branches: [ main, develop ]
 
 jobs:
   build-and-deploy:
