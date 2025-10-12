@@ -25,6 +25,12 @@ public class BalaiService {
     private final UserRepository userRepo;
     private final JavaMailSender mailSender;
 
+    public List<User> getUsersForVerification() {
+        return userRepo.findAll().stream()
+                .filter(u -> u.getStatus() == VerificationStatus.VERIFICATION_IN_PROCESS)
+                .toList();
+    }
+
     /**
      * Approve user homeowner registration
      */

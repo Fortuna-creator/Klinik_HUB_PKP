@@ -3,8 +3,10 @@ package com.hub.app.backoffice.controller;
 import com.hub.app.backoffice.dto.RegisterConsultantRequest;
 import com.hub.app.backoffice.service.BalaiService;
 import com.hub.app.user.model.User;
+import com.hub.app.user.model.VerificationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +22,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BalaiController {
     private final BalaiService balaiService;
+
+    @GetMapping("/verification-pending")
+    public ResponseEntity<List<User>> getUsersForVerification() {
+        return ResponseEntity.ok(balaiService.getUsersForVerification());
+    }
 
     @PostMapping("/approve/{userId}")
     public ResponseEntity<User> approveUser(@PathVariable Long userId) {
