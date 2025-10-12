@@ -28,7 +28,17 @@ public class AuthController {
                 return ResponseEntity.badRequest().body("Passwords do not match");
             }
             var user = authService.register(req.getEmail(), req.getPassword());
-            return ResponseEntity.ok("User registered, OTP sent to " + user.getEmail());
+            return ResponseEntity.ok(RegisterResponse.builder()
+                        .role(user.getRole())
+                        .status(user.getStatus().name())
+                        .email(user.getEmail())
+                        .phone(user.getPhone())
+                        .userId(user.getId())
+                        .fullName(user.getName())
+                        .ktpUrl(user.getKtpUrl())
+                        .selfieUrl(user.getSelfieUrl())
+                        .username(user.getUsername())
+                .build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -72,7 +82,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest req) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
     }
 }
