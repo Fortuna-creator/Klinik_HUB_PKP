@@ -9,6 +9,7 @@ import com.hub.app.auth.dto.LoginRequest;
 import com.hub.app.auth.dto.ProfileUpdateRequest;
 import com.hub.app.auth.dto.VerifyOtpRequest;
 import com.hub.app.storage.MinioService;
+import org.springframework.web.multipart.MultipartFile;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.model.UserActivityStatus;
@@ -37,7 +38,7 @@ public class AuthService {
                 .password(encoder.encode(password))
                 .role(Role.HOMEOWNER)
                 .status(VerificationStatus.UNVERIFIED)
-                .activityStatus(UserActivityStatus.ACTIVE)
+                .activityStatus(UserActivityStatus.INACTIVE)
                 .build();
 
         userRepository.save(u);
@@ -49,8 +50,21 @@ public class AuthService {
     @Transactional
     public User updateProfile(Long userId, ProfileUpdateRequest req) {
         User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
-        if (user.getStatus() != VerificationStatus.UNVERIFIED) {
+        if (user.getStatus() != VerificationStatus.UNVERIFIED && user.getStatus() != VerificationStatus.REJECTED) {
             throw new IllegalArgumentException("User not eligible for profile update");
+        }
+
+        // Check KTP number uniqueness
+        if (userRepository.existsByKtpNumberAndIdNot(req.getKtpNumber(), userId)) {
+            throw new IllegalArgumentException("KTP Number already exists");
+        }
+
+        // Validate files
+        if (req.getKtpFile() != null) {
+            validateFile(req.getKtpFile(), "KTP");
+        }
+        if (req.getSelfieFile() != null) {
+            validateFile(req.getSelfieFile(), "Selfie");
         }
 
         // Upload files if provided
@@ -67,13 +81,26 @@ public class AuthService {
 
         return userRepository.save(user);
     }
-    @Transactional
 
+    private void validateFile(MultipartFile file, String type) {
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException(type + " file is empty");
+        }
+        String contentType = file.getContentType();
+        if (!contentType.equals("image/jpeg") && !contentType.equals("image/png")) {
+            throw new IllegalArgumentException(type + " file must be JPEG or PNG");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) { // 5MB
+            throw new IllegalArgumentException(type + " file size must be less than 5MB");
+        }
+    }
+    @Transactional
     public boolean verifyOtp(VerifyOtpRequest req) {
         boolean valid = otpService.verifyOtp(req.getUserId(), req.getOtpCode());
         if (valid) {
             User user = userRepository.findById(req.getUserId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
-            // Status remains UNVERIFIED after OTP verification
+            user.setActivityStatus(UserActivityStatus.ACTIVE);
+            userRepository.save(user);
         }
         return valid;
     }
@@ -84,12 +111,9 @@ public class AuthService {
         if (!encoder.matches(req.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("Invalid credentials");
         }
-        //if (user.getStatus() != VerificationStatus.VERIFIED) {
-        //    throw new IllegalArgumentException("User not verified");
-        //}
-        //if (user.getActivityStatus() != UserActivityStatus.ACTIVE) {
-        //    throw new IllegalArgumentException("User account is inactive");
-        //}
+        if (user.getActivityStatus() != UserActivityStatus.ACTIVE) {
+            throw new IllegalArgumentException("User account is inactive");
+        }
 
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
 

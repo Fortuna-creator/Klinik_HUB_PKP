@@ -20,11 +20,20 @@ public class OtpService {
     private final JavaMailSender mailSender;
 
     public void generateAndSendOtp(User user) {
+        // Rate limiting: max 3 OTP per hour per user
+        Instant oneHourAgo = Instant.now().minus(1, ChronoUnit.HOURS);
+        long recentOtps = otpRepo.findAll().stream()
+                .filter(t -> t.getUserId().equals(user.getId()) && t.getExpiresAt().isAfter(oneHourAgo))
+                .count();
+        if (recentOtps >= 3) {
+            throw new IllegalArgumentException("Too many OTP requests. Please try again later.");
+        }
+
         String code = String.format("%06d", new SecureRandom().nextInt(999999));
         OtpToken token = OtpToken.builder()
                 .userId(user.getId())
                 .code(code)
-                .expiresAt(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .expiresAt(Instant.now().plus(10, ChronoUnit.MINUTES))
                 .used(false)
                 .build();
         otpRepo.save(token);
@@ -34,7 +43,7 @@ public class OtpService {
         msg.setTo(user.getEmail());
         msg.setSubject("OTP Registrasi HUB");
         msg.setText("Kode OTP Anda adalah: " + code);
-//        mailSender.send(msg);
+ //        mailSender.send(msg);
     }
 
     public boolean verifyOtp(Long userId, String code) {
