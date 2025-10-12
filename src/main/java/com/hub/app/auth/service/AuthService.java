@@ -21,6 +21,7 @@ import com.hub.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -99,14 +100,35 @@ public class AuthService {
         }
     }
     @Transactional
-    public boolean verifyOtp(VerifyOtpRequest req) {
-        boolean valid = otpService.verifyOtp(req.getUserId(), req.getOtpCode());
+    public LoginResponse verifyOtp(VerifyOtpRequest req) {
+        Optional<User> userOptional = userRepository.findByEmail(req.getEmail());
+
+        if (userOptional.isEmpty()) {
+            throw new DomainException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        User user = userOptional.get();
+
+        boolean valid = otpService.verifyOtp(user.getId(), req.getOtpCode());
+
+
         if (valid || Objects.equals(req.getOtpCode(), "1234")) {
-            User user = userRepository.findById(req.getUserId()).orElseThrow(() -> new DomainException(ErrorCode.USER_NOT_FOUND));
             user.setActivityStatus(UserActivityStatus.ACTIVE);
             userRepository.save(user);
+        } else {
+            throw new DomainException(ErrorCode.AUTH_INVALID_OTP);
         }
-        return valid;
+
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+
+        return LoginResponse.builder()
+                .userId(user.getId())
+                .fullName(user.getName())
+                .token(token)
+                .role(user.getRole().name())
+                .status(user.getStatus().name())
+                .email(user.getEmail())
+                .build();
     }
 
     public LoginResponse login(LoginRequest req) {

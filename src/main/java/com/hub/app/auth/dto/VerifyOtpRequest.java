@@ -5,14 +5,6 @@ import lombok.Data;
 
 @Data
 public class VerifyOtpRequest {
-    private Long userId;
+    private String email;
     private String otpCode;
-
-    public Long getUserId() {
-        return this.userId;
-    }
-
-    public String getOtpCode() {
-        return this.otpCode;
-    }
 }

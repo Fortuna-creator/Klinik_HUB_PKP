@@ -13,7 +13,8 @@ public enum ErrorCode {
 
     // Auth
     AUTH_INVALID_CREDENTIALS("INVALID_CREDENTIALS", HttpStatus.UNAUTHORIZED, "Email atau password salah"),
-    AUTH_INVALID_STATUS("INVALID_STATUS", HttpStatus.UNAUTHORIZED, "Akun tidak aktif"),
+    AUTH_INVALID_STATUS("ACCOUNT_INACTIVE", HttpStatus.UNAUTHORIZED, "Akun tidak aktif"),
+    AUTH_INVALID_OTP("INVALID_OTP", HttpStatus.UNAUTHORIZED, "Invalid OTP"),
 
     // User-specific
     USER_NOT_FOUND("USER_NOT_FOUND", HttpStatus.BAD_REQUEST, "User Not Found"),

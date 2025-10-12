@@ -72,12 +72,7 @@ public class AuthController {
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest req) {
         try {
-            boolean valid = authService.verifyOtp(req);
-            if (valid) {
-                return ResponseEntity.ok("OTP verified successfully");
-            } else {
-                return ResponseEntity.badRequest().body("Invalid OTP");
-            }
+            return ResponseEntity.ok(authService.verifyOtp(req));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (DomainException e) {

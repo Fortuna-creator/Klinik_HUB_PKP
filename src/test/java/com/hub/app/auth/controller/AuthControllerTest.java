@@ -7,6 +7,8 @@ import com.hub.app.auth.dto.ProfileUpdateRequest;
 import com.hub.app.auth.dto.VerifyOtpRequest;
 import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
+import com.hub.app.error.DomainException;
+import com.hub.app.error.ErrorCode;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -24,6 +26,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @WebMvcTest(AuthController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -155,9 +159,20 @@ class AuthControllerTest {
     void verifyOtp_ShouldReturnOk_WhenOtpValid() throws Exception {
         // Arrange
         VerifyOtpRequest request = new VerifyOtpRequest();
-        request.setUserId(1L);
-        request.setOtpCode("123456");
-        when(authService.verifyOtp(request)).thenReturn(true);
+        request.setEmail("test@test.com");
+        request.setOtpCode("1234");
+
+        String expectedToken = "jwt.token.here";
+        LoginResponse expectation = LoginResponse.builder()
+                .userId(1L)
+                .fullName("example")
+                .token(expectedToken)
+                .role("HOMEOWNER")
+                .status("ACTIVE")
+                .email("test@test.com")
+                .build();
+
+        when(authService.verifyOtp(request)).thenReturn(expectation);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/verify-otp")
@@ -168,19 +183,23 @@ class AuthControllerTest {
     }
 
     @Test
-    void verifyOtp_ShouldReturnBadRequest_WhenOtpInvalid() throws Exception {
+    void verifyOtp_ShouldReturnUnauthorized_AndApiErrorResponse_WhenOtpInvalid() throws Exception {
         // Arrange
         VerifyOtpRequest request = new VerifyOtpRequest();
-        request.setUserId(1L);
-        request.setOtpCode("123456");
-        when(authService.verifyOtp(request)).thenReturn(false);
+        request.setEmail("test@test.com");
+        request.setOtpCode("1235");
+
+        // Service throws a domain-level error for invalid OTP
+        doThrow(new DomainException(ErrorCode.AUTH_INVALID_OTP))
+                .when(authService).verifyOtp(request);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/verify-otp")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid OTP"));
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errorCode").value("INVALID_OTP"))
+                .andExpect(jsonPath("$.message").value("Invalid OTP"));
     }
 
     @Test
