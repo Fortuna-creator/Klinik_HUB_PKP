@@ -23,7 +23,7 @@ public class OtpService {
         String code = String.format("%06d", new SecureRandom().nextInt(999999));
         OtpToken token = OtpToken.builder()
                 .userId(user.getId())
-                .token(code)
+                .code(code)
                 .expiresAt(Instant.now().plus(5, ChronoUnit.MINUTES))
                 .used(false)
                 .build();
@@ -38,7 +38,7 @@ public class OtpService {
     }
 
     public boolean verifyOtp(Long userId, String code) {
-        return otpRepo.findTopByUserIdAndTokenAndUsedFalseOrderByExpiresAtDesc(userId, code)
+        return otpRepo.findTopByUserIdAndCodeAndUsedFalseOrderByExpiresAtDesc(userId, code)
                 .filter(t -> t.getExpiresAt().isAfter(Instant.now()))
                 .map(t -> {
                     t.setUsed(true);

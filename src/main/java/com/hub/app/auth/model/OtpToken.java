@@ -19,7 +19,7 @@ public class OtpToken {
     private Long id;
 
     private Long userId;
-    private String token;
+    private String code;
     private Instant expiresAt;
     private boolean used;
 }

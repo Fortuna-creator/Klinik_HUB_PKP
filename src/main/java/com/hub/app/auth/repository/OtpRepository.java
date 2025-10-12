@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface OtpRepository extends JpaRepository<OtpToken, Long> {
 
     // Cari OTP terakhir untuk user tertentu yang masih aktif (belum digunakan)
-    Optional<OtpToken> findTopByUserIdAndTokenAndUsedFalseOrderByExpiresAtDesc(Long userId, String code);
+    Optional<OtpToken> findTopByUserIdAndCodeAndUsedFalseOrderByExpiresAtDesc(Long userId, String code);
 
     // Hapus semua OTP lama untuk user tertentu (opsional, untuk cleanup)
     void deleteByUserId(Long userId);
