@@ -3,7 +3,8 @@ package com.hub.app.backoffice.service;
 import com.hub.app.backoffice.dto.RegisterConsultantRequest;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
-import com.hub.app.user.model.UserStatus;
+import com.hub.app.user.model.UserActivityStatus;
+import com.hub.app.user.model.VerificationStatus;
 import com.hub.app.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class BalaiService {
      */
     public User approveUser(Long userId) {
         var user = userRepo.findById(userId).orElseThrow();
-        user.setStatus(UserStatus.ACTIVE);
+        user.setStatus(VerificationStatus.VERIFIED);
         return userRepo.save(user);
     }
 
@@ -38,7 +39,13 @@ public class BalaiService {
      */
     public User rejectUser(Long userId) {
         var user = userRepo.findById(userId).orElseThrow();
-        user.setStatus(UserStatus.REJECTED);
+        user.setStatus(VerificationStatus.REJECTED);
+        return userRepo.save(user);
+    }
+
+    public User backofficeDeactivateUser(Long userId) {
+        var user = userRepo.findById(userId).orElseThrow();
+        user.setActivityStatus(UserActivityStatus.INACTIVE);
         return userRepo.save(user);
     }
 
@@ -53,7 +60,8 @@ public class BalaiService {
                 .phone(req.getPhone())
                 .password(UUID.randomUUID().toString()) // sementara random, nanti ganti di aktivasi
                 .role(req.isProfessional() ? Role.CONSULTANT : Role.SUPERVISOR)
-                .status(UserStatus.PENDING_APPROVAL) // pending sampai aktivasi email
+                .status(VerificationStatus.VERIFICATION_IN_PROCESS) // pending sampai aktivasi email
+                .activityStatus(UserActivityStatus.ACTIVE)
                 .build();
         userRepo.save(u);
 

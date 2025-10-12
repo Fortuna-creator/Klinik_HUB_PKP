@@ -21,3 +21,6 @@ target/**/*.jar
 build/**/*.jar
 out/**/*.jar
 bin/**/*.jar
+
+# Maven build directory
+target/
