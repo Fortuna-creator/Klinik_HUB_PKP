@@ -1,9 +1,6 @@
 package com.hub.app.auth.controller;
 
-import com.hub.app.auth.dto.InitialRegisterRequest;
-import com.hub.app.auth.dto.LoginRequest;
-import com.hub.app.auth.dto.ProfileUpdateRequest;
-import com.hub.app.auth.dto.VerifyOtpRequest;
+import com.hub.app.auth.dto.*;
 import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.user.model.User;
