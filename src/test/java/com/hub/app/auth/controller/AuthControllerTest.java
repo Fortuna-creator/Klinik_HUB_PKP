@@ -2,6 +2,7 @@ package com.hub.app.auth.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hub.app.auth.dto.InitialRegisterRequest;
+import com.hub.app.auth.dto.LoginResponse;
 import com.hub.app.auth.dto.ProfileUpdateRequest;
 import com.hub.app.auth.dto.VerifyOtpRequest;
 import com.hub.app.auth.service.AuthService;
@@ -189,13 +190,23 @@ class AuthControllerTest {
         request.setEmail("test@example.com");
         request.setPassword("password123");
         String expectedToken = "jwt.token.here";
-        when(authService.login(request)).thenReturn(expectedToken);
+
+        LoginResponse expectation = LoginResponse.builder()
+                .userId(1L)
+                .fullName("example")
+                .token(expectedToken)
+                .role("HOMEOWNER")
+                .status("ACTIVE")
+                .email("test@example.com")
+                .build();
+
+        when(authService.login(request)).thenReturn(expectation);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(expectedToken));
+                .andExpect(content().json(objectMapper.writeValueAsString(expectation)));
     }
 }
