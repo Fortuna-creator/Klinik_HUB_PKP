@@ -34,7 +34,6 @@ public class AuthController {
                         .fullName(user.getName())
                         .ktpUrl(user.getKtpUrl())
                         .selfieUrl(user.getSelfieUrl())
-                        .username(user.getUsername())
                 .build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
