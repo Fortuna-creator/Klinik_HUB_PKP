@@ -3,10 +3,13 @@ package com.hub.app.auth.controller;
 import com.hub.app.auth.dto.*;
 import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
+import com.hub.app.error.ApiErrorBuilder;
+import com.hub.app.error.DomainException;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +20,7 @@ public class AuthController {
     private final AuthService authService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final ApiErrorBuilder apiErrorBuilder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody InitialRegisterRequest req) {
@@ -36,9 +40,11 @@ public class AuthController {
                         .selfieUrl(user.getSelfieUrl())
                 .build());
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return apiErrorBuilder.error(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", e.getMessage());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("An error occurred");
+            return apiErrorBuilder.error(HttpStatus.BAD_REQUEST, e.getMessage(), e.getMessage());
         }
     }
 
@@ -56,6 +62,8 @@ public class AuthController {
             return ResponseEntity.ok("Profile updated, awaiting approval");
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("An error occurred");
         }
@@ -72,6 +80,8 @@ public class AuthController {
             }
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("An error occurred");
         }
