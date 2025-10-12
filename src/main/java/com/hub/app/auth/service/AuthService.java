@@ -3,10 +3,6 @@ package com.hub.app.auth.service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-<<<<<<< HEAD
-
-=======
->>>>>>> develop
 
 import com.hub.app.auth.dto.LoginRequest;
 import com.hub.app.auth.dto.ProfileUpdateRequest;
