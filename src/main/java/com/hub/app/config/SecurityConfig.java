@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/health", "/actuator/**").permitAll()
                         .requestMatchers("/api/balai/**").hasRole("BALAI")
+                        .requestMatchers("/api/users/consultants/completed").hasRole("HOMEOWNER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
