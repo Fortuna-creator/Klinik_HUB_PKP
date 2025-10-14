@@ -1,6 +1,7 @@
 package com.hub.app.auth.controller;
 
 import com.hub.app.auth.dto.*;
+import com.hub.app.auth.service.ActivationService;
 import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.error.ApiErrorBuilder;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
     private final AuthService authService;
+    private final ActivationService activationService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final ApiErrorBuilder apiErrorBuilder;
@@ -85,5 +87,31 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+
+    @PostMapping("/activate-account")
+    public ResponseEntity<?> activateAccount(@Valid @RequestBody ActivateAccountRequest req) {
+        try {
+            var user = activationService.activateAccount(req);
+            return ResponseEntity.ok("Account activated successfully for " + user.getEmail());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred during activation");
+        }
+    }
+
+    @PostMapping("/resend-activation")
+    public ResponseEntity<?> resendActivation(@RequestParam String email) {
+        try {
+            activationService.resendActivationEmail(email);
+            return ResponseEntity.ok("Activation email resent successfully");
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred");
+        }
     }
 }
