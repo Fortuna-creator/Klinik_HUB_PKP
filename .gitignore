@@ -24,3 +24,20 @@ bin/**/*.jar
 
 # Maven build directory
 target/
+
+# Local configuration files
+application-local.yml
+application-local.properties
+
+# Logs
+logs/
+*.log
+
+# IDE files
+.idea/
+*.iml
+.vscode/settings.json
+
+# OS generated files
+.DS_Store
+Thumbnails.db

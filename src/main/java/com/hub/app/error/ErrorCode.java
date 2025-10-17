@@ -18,7 +18,11 @@ public enum ErrorCode {
 
     // User-specific
     USER_NOT_FOUND("USER_NOT_FOUND", HttpStatus.BAD_REQUEST, "User Not Found"),
-    USER_EMAIL_ALREADY_EXISTS("USER_EMAIL_ALREADY_EXISTS", HttpStatus.CONFLICT, "Email sudah terdaftar");
+    USER_EMAIL_ALREADY_EXISTS("USER_EMAIL_ALREADY_EXISTS", HttpStatus.CONFLICT, "Email sudah terdaftar"),
+
+    // Project-specific
+    PROJECT_NOT_FOUND("PROJECT_NOT_FOUND", HttpStatus.NOT_FOUND, "Project not found"),
+    UNAUTHORIZED("UNAUTHORIZED", HttpStatus.UNAUTHORIZED, "Unauthorized access");
 
     private final String code;
     private final HttpStatus httpStatus;
