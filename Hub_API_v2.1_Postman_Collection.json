@@ -47,6 +47,18 @@
       "value": "password123",
       "type": "string",
       "description": "Test password"
+    },
+    {
+      "key": "activation_token",
+      "value": "",
+      "type": "string",
+      "description": "Activation token for account activation"
+    },
+    {
+      "key": "portfolio_id",
+      "value": "",
+      "type": "string",
+      "description": "Portfolio ID for operations"
     }
   ],
   "item": [
@@ -264,6 +276,92 @@
                   "pm.test(\"Profile updated successfully\", function () {",
                   "    const jsonData = pm.response.text();",
                   "    pm.expect(jsonData).to.include('Profile updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Activate Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"token\": \"{{activation_token}}\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/activate-account",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "activate-account"]
+            },
+            "description": "Activate user account using activation token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains success message\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('Account activated successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resend Activation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "{{email}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/resend-activation",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "resend-activation"]
+            },
+            "description": "Resend activation email to user."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains success message\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('Activation email resent successfully');",
                   "});"
                 ],
                 "type": "text/javascript"
@@ -728,6 +826,163 @@
               }
             }
           ]
+        },
+        {
+          "name": "Get Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio"]
+            },
+            "description": "Retrieve user's portfolio information."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains portfolio data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData) {",
+                  "        pm.expect(jsonData).to.have.property('id');",
+                  "        pm.expect(jsonData).to.have.property('user');",
+                  "        pm.collectionVariables.set('portfolio_id', jsonData.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save Portfolio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Experienced consultant with 5+ years in legal services\",\n  \"specialization\": \"Legal\",\n  \"experience\": \"5 years\",\n  \"education\": \"Law Degree from University X\",\n  \"certifications\": \"Certified Legal Consultant\",\n  \"projectSamples\": \"Various legal consultation projects\",\n  \"linkedinUrl\": \"https://linkedin.com/in/consultant\",\n  \"websiteUrl\": \"https://consultant.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio"]
+            },
+            "description": "Save or update user's portfolio information."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains portfolio data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Completed Portfolios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/consultants/completed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "consultants", "completed"]
+            },
+            "description": "Retrieve list of completed consultant portfolios."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
@@ -735,6 +990,54 @@
       "name": "Backoffice",
       "description": "Backoffice operations for user management and consultant registration",
       "item": [
+        {
+          "name": "Get Users for Verification",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/balai/verification-pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "verification-pending"]
+            },
+            "description": "Retrieve list of users pending verification."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
         {
           "name": "Approve User",
           "request": {
@@ -917,7 +1220,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"consultant@example.com\",\n  \"name\": \"Jane Consultant\",\n  \"phone\": \"+1234567890\",\n  \"specialization\": \"Legal\"\n}"
+              "raw": "{\n  \"name\": \"Jane Consultant\",\n  \"email\": \"consultant@example.com\",\n  \"phone\": \"+1234567890\",\n  \"university\": \"University X\",\n  \"professional\": true\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/balai/register-consultant",
