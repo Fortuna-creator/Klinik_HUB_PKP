@@ -8,4 +8,5 @@ import java.util.UUID;
 
 public interface HomeOwnerRepository extends JpaRepository<HomeOwner, Long> {
     Optional<HomeOwner> findByEmail(String email);
+    boolean existsByKtpNumberAndIdNot(String ktpNumber, Long id);
 }

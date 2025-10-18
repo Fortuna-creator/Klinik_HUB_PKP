@@ -41,7 +41,7 @@ public class HomeOwnerService {
         }
 
         // Check KTP number uniqueness
-        if (userRepository.existsByKtpNumberAndIdNot(req.getKtpNumber(), userId)) {
+        if (homeOwnerRepository.existsByKtpNumberAndIdNot(req.getKtpNumber(), userId)) {
             throw new DomainException(ErrorCode.KTP_ALREADY_USED);
         }
 

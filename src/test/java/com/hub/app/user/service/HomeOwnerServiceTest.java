@@ -101,7 +101,7 @@ class HomeOwnerServiceTest {
     @Test
     void updateProfile_ShouldUpdateProfileSuccessfully() {
         when(homeOwnerRepository.findById(1L)).thenReturn(Optional.of(testHomeOwner));
-        when(userRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
+        when(homeOwnerRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
         when(homeOwnerRepository.save(any(HomeOwner.class))).thenReturn(testHomeOwner);
 
         ProfileUpdateResponse result = homeOwnerService.updateProfile(1L, testRequest);
@@ -119,7 +119,7 @@ class HomeOwnerServiceTest {
         assertNotNull(result.getUpdatedAt());
 
         verify(homeOwnerRepository).findById(1L);
-        verify(userRepository).existsByKtpNumberAndIdNot("6543210987654321", 1L);
+        verify(homeOwnerRepository).existsByKtpNumberAndIdNot("6543210987654321", 1L);
         verify(homeOwnerRepository).save(testHomeOwner);
     }
 
@@ -151,21 +151,21 @@ class HomeOwnerServiceTest {
     @Test
     void updateProfile_ShouldThrowExceptionWhenKtpNumberAlreadyExists() {
         when(homeOwnerRepository.findById(1L)).thenReturn(Optional.of(testHomeOwner));
-        when(userRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(true);
+        when(homeOwnerRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(true);
 
         DomainException exception = assertThrows(DomainException.class,
             () -> homeOwnerService.updateProfile(1L, testRequest));
 
         assertEquals(ErrorCode.KTP_ALREADY_USED, exception.getErrorCode());
         verify(homeOwnerRepository).findById(1L);
-        verify(userRepository).existsByKtpNumberAndIdNot("6543210987654321", 1L);
+        verify(homeOwnerRepository).existsByKtpNumberAndIdNot("6543210987654321", 1L);
         verify(homeOwnerRepository, never()).save(any(HomeOwner.class));
     }
 
     @Test
     void updateProfile_ShouldUpdateStatusToVerificationInProcess() {
         when(homeOwnerRepository.findById(1L)).thenReturn(Optional.of(testHomeOwner));
-        when(userRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
+        when(homeOwnerRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
         when(homeOwnerRepository.save(any(HomeOwner.class))).thenReturn(testHomeOwner);
 
         homeOwnerService.updateProfile(1L, testRequest);
@@ -177,7 +177,7 @@ class HomeOwnerServiceTest {
     @Test
     void updateProfile_ShouldUpdateUpdatedAtTimestamp() {
         when(homeOwnerRepository.findById(1L)).thenReturn(Optional.of(testHomeOwner));
-        when(userRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
+        when(homeOwnerRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
         when(homeOwnerRepository.save(any(HomeOwner.class))).thenReturn(testHomeOwner);
 
         homeOwnerService.updateProfile(1L, testRequest);
@@ -192,7 +192,7 @@ class HomeOwnerServiceTest {
         testRequest.setBio(null);
 
         when(homeOwnerRepository.findById(1L)).thenReturn(Optional.of(testHomeOwner));
-        when(userRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
+        when(homeOwnerRepository.existsByKtpNumberAndIdNot("6543210987654321", 1L)).thenReturn(false);
         when(homeOwnerRepository.save(any(HomeOwner.class))).thenReturn(testHomeOwner);
 
         ProfileUpdateResponse result = homeOwnerService.updateProfile(1L, testRequest);
