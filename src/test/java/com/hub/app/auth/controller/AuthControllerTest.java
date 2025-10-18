@@ -3,7 +3,6 @@ package com.hub.app.auth.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hub.app.auth.dto.InitialRegisterRequest;
 import com.hub.app.auth.dto.LoginResponse;
-import com.hub.app.auth.dto.ProfileUpdateRequest;
 import com.hub.app.auth.dto.VerifyOtpRequest;
 import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
@@ -17,7 +16,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
@@ -100,60 +98,6 @@ class AuthControllerTest {
                 .andExpect(content().string("Email already exists"));
     }
 
-    @Test
-    void updateProfile_ShouldReturnOk_WhenValidRequest() throws Exception {
-        // Arrange
-        String validToken = "valid.jwt.token";
-        String email = "test@example.com";
-        User mockUser = new User();
-        mockUser.setId(1L);
-        mockUser.setEmail(email);
-        ProfileUpdateRequest profileRequest = new ProfileUpdateRequest();
-        MockMultipartFile profileFile = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg", "image content".getBytes());
-
-        when(jwtService.validateToken(validToken)).thenReturn(true);
-        when(jwtService.extractUsername(validToken)).thenReturn(email);
-        when(userRepository.findByEmail(email)).thenReturn(Optional.of(mockUser));
-        when(authService.updateProfile(anyLong(), any(ProfileUpdateRequest.class))).thenReturn(mockUser);
-
-        // Act & Assert
-        mockMvc.perform(multipart("/api/auth/profile-update")
-                .file(profileFile)
-                .header("Authorization", "Bearer " + validToken))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Profile updated, awaiting approval"));
-    }
-
-    @Test
-    void updateProfile_ShouldReturnUnauthorized_WhenInvalidToken() throws Exception {
-        // Arrange
-        String invalidToken = "invalid.token";
-        MockMultipartFile profileFile = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg", "image content".getBytes());
-        when(jwtService.validateToken(invalidToken)).thenReturn(false);
-
-        // Act & Assert
-        mockMvc.perform(multipart("/api/auth/profile-update")
-                .file(profileFile)
-                .header("Authorization", "Bearer " + invalidToken))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid token"));
-    }
-
-    @Test
-    void updateProfile_ShouldReturnBadRequest_WhenUserNotFound() throws Exception {
-        // Arrange
-        String validToken = "valid.jwt.token";
-        String email = "test@example.com";
-        when(jwtService.validateToken(validToken)).thenReturn(true);
-        when(jwtService.extractUsername(validToken)).thenReturn(email);
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        mockMvc.perform(multipart("/api/auth/profile-update")
-                .header("Authorization", "Bearer " + validToken))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("User not found"));
-    }
 
     @Test
     void verifyOtp_ShouldReturnOk_WhenOtpValid() throws Exception {

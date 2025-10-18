@@ -3,7 +3,6 @@ package com.hub.app.backoffice.controller;
 import com.hub.app.backoffice.dto.RegisterConsultantRequest;
 import com.hub.app.backoffice.service.BalaiService;
 import com.hub.app.user.model.User;
-import com.hub.app.user.model.VerificationStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

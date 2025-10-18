@@ -6,8 +6,6 @@ import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
-import com.hub.app.user.model.User;
-import com.hub.app.user.repository.UserRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,7 +19,6 @@ public class AuthController {
     private final AuthService authService;
     private final ActivationService activationService;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
     private final ApiErrorBuilder apiErrorBuilder;
 
     @PostMapping("/register")
@@ -33,13 +30,10 @@ public class AuthController {
             var user = authService.register(req.getEmail(), req.getPassword());
             return ResponseEntity.ok(RegisterResponse.builder()
                         .role(user.getRole())
-                        .status(user.getStatus().name())
                         .email(user.getEmail())
                         .phone(user.getPhone())
                         .userId(user.getId())
                         .fullName(user.getName())
-                        .ktpUrl(user.getKtpUrl())
-                        .selfieUrl(user.getSelfieUrl())
                 .build());
         } catch (IllegalArgumentException e) {
             return apiErrorBuilder.error(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", e.getMessage());
@@ -50,26 +44,6 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = "/profile-update", consumes = "multipart/form-data")
-    public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String authHeader, @Valid @ModelAttribute ProfileUpdateRequest req) {
-        try {
-            String token = authHeader.replace("Bearer ", "");
-            if (!jwtService.validateToken(token)) {
-                return ResponseEntity.status(401).body("Invalid token");
-            }
-            String email = jwtService.extractUsername(token);
-            User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-            var updatedUser = authService.updateProfile(user.getId(), req);
-            return ResponseEntity.ok("Profile updated, awaiting approval");
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (DomainException e) {
-            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("An error occurred");
-        }
-    }
 
     @PostMapping("/verify-otp")
     public ResponseEntity<?> verifyOtp(@RequestBody VerifyOtpRequest req) {

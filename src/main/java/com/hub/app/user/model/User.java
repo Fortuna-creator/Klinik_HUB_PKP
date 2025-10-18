@@ -6,11 +6,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.Instant;
+
 @Entity
 @Table(name = "users")
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
@@ -20,34 +24,21 @@ public class User {
 
     private String phone;
     private String address;
-    private String ktpNumber;
+
+    private String avatarUrl;
+    private String bio;
 
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private Role role; 
-
-    private String ktpUrl;
-    private String selfieUrl;
-
-    @Enumerated(EnumType.STRING)
-    private VerificationStatus status; // UNVERIFIED, VERIFICATION_IN_PROCESS, VERIFIED, REJECTED
+    private Role role;
 
     @Enumerated(EnumType.STRING)
     private UserActivityStatus activityStatus; // ACTIVE, INACTIVE
 
-    // Explicit methods for IDEs not running Lombok properly
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public String getEmail() { return email; }
-    public String getPhone() { return phone; }
-    public String getAddress() { return address; }
-    public String getKtpNumber() { return ktpNumber; }
-    public String getPassword() { return password; }
-    public Role getRole() { return role; }
-    public String getKtpUrl() { return ktpUrl; }
-    public String getSelfieUrl() { return selfieUrl; }
-    public VerificationStatus getStatus() { return status; }
-    public void setStatus(VerificationStatus status) { this.status = status; }
+    @Enumerated(EnumType.STRING)
+    private VerificationStatus status;
+
+    private Instant updatedAt;
 }
