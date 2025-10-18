@@ -1,0 +1,395 @@
+databaseChangeLog:
+  - changeSet:
+      id: seed-consultants-data
+      author: hub
+      changes:
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1001
+              - column:
+                  name: name
+                  value: "Dr. Ahmad Santoso"
+              - column:
+                  name: email
+                  value: "ahmad.santoso@consultant.com"
+              - column:
+                  name: phone
+                  value: "+6281234567890"
+              - column:
+                  name: address
+                  value: "Jl. Sudirman No. 123, Jakarta Pusat"
+              - column:
+                  name: avatar_url
+                  value: "https://example.com/avatar/ahmad.jpg"
+              - column:
+                  name: bio
+                  value: "Experienced architect with 15+ years in residential and commercial design."
+              - column:
+                  name: password
+                  value: "$2b$12$zL6Lz.V9s4JQl5sDQ7a.u.6zxFOZO7fHDT0aFoAcC7lt22EFkkl1C"
+              - column:
+                  name: role
+                  value: "CONSULTANT"
+              - column:
+                  name: activity_status
+                  value: "ACTIVE"
+              - column:
+                  name: status
+                  value: "VERIFIED"
+              - column:
+                  name: updated_at
+                  value: "2025-10-18T07:56:42.135Z"
+        - insert:
+            tableName: consultants
+            columns:
+              - column:
+                  name: id
+                  value: 1001
+              - column:
+                  name: latitude
+                  value: "-6.2087634"
+              - column:
+                  name: longitude
+                  value: "106.845599"
+              - column:
+                  name: specialty
+                  value: "Architecture, Interior Design"
+              - column:
+                  name: rating
+                  value: "4.8"
+              - column:
+                  name: location
+                  value: "Jakarta Pusat"
+              - column:
+                  name: type
+                  value: "PROFESSIONAL"
+              - column:
+                  name: experience_level
+                  value: "Expert"
+              - column:
+                  name: availability_status
+                  value: "AVAILABLE"
+              - column:
+                  name: contact_info
+                  value: "Available for consultation Mon-Fri 9AM-5PM"
+              - column:
+                  name: hourly_rate
+                  value: "150000"
+              - column:
+                  name: package_cost
+                  value: "2500000"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1002
+              - column:
+                  name: name
+                  value: "Siti Nurhaliza"
+              - column:
+                  name: email
+                  value: "siti.nurhaliza@consultant.com"
+              - column:
+                  name: phone
+                  value: "+6282234567891"
+              - column:
+                  name: address
+                  value: "Jl. Malioboro No. 45, Yogyakarta"
+              - column:
+                  name: avatar_url
+                  value: "https://example.com/avatar/siti.jpg"
+              - column:
+                  name: bio
+                  value: "Interior designer specializing in modern minimalist designs."
+              - column:
+                  name: password
+                  value: "$2b$12$zL6Lz.V9s4JQl5sDQ7a.u.6zxFOZO7fHDT0aFoAcC7lt22EFkkl1C"
+              - column:
+                  name: role
+                  value: "CONSULTANT"
+              - column:
+                  name: activity_status
+                  value: "ACTIVE"
+              - column:
+                  name: status
+                  value: "VERIFIED"
+              - column:
+                  name: updated_at
+                  value: "2025-10-18T07:56:42.135Z"
+        - insert:
+            tableName: consultants
+            columns:
+              - column:
+                  name: id
+                  value: 1002
+              - column:
+                  name: latitude
+                  value: "-7.7956"
+              - column:
+                  name: longitude
+                  value: "110.3695"
+              - column:
+                  name: specialty
+                  value: "Interior Design, Space Planning"
+              - column:
+                  name: rating
+                  value: "4.6"
+              - column:
+                  name: location
+                  value: "Yogyakarta"
+              - column:
+                  name: type
+                  value: "PROFESSIONAL"
+              - column:
+                  name: experience_level
+                  value: "Intermediate"
+              - column:
+                  name: availability_status
+                  value: "AVAILABLE"
+              - column:
+                  name: contact_info
+                  value: "Specializes in residential interiors"
+              - column:
+                  name: hourly_rate
+                  value: "120000"
+              - column:
+                  name: package_cost
+                  value: "1800000"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1003
+              - column:
+                  name: name
+                  value: "Budi Prasetyo"
+              - column:
+                  name: email
+                  value: "budi.prasetyo@consultant.com"
+              - column:
+                  name: phone
+                  value: "+6283234567892"
+              - column:
+                  name: address
+                  value: "Jl. Braga No. 67, Bandung"
+              - column:
+                  name: avatar_url
+                  value: "https://example.com/avatar/budi.jpg"
+              - column:
+                  name: bio
+                  value: "Structural engineer with expertise in earthquake-resistant designs."
+              - column:
+                  name: password
+                  value: "$2b$12$zL6Lz.V9s4JQl5sDQ7a.u.6zxFOZO7fHDT0aFoAcC7lt22EFkkl1C"
+              - column:
+                  name: role
+                  value: "CONSULTANT"
+              - column:
+                  name: activity_status
+                  value: "ACTIVE"
+              - column:
+                  name: status
+                  value: "VERIFIED"
+              - column:
+                  name: updated_at
+                  value: "2025-10-18T07:56:42.135Z"
+        - insert:
+            tableName: consultants
+            columns:
+              - column:
+                  name: id
+                  value: 1003
+              - column:
+                  name: latitude
+                  value: "-6.9175"
+              - column:
+                  name: longitude
+                  value: "107.6191"
+              - column:
+                  name: specialty
+                  value: "Structural Engineering, Seismic Design"
+              - column:
+                  name: rating
+                  value: "4.9"
+              - column:
+                  name: location
+                  value: "Bandung"
+              - column:
+                  name: type
+                  value: "PROFESSIONAL"
+              - column:
+                  name: experience_level
+                  value: "Expert"
+              - column:
+                  name: availability_status
+                  value: "BUSY"
+              - column:
+                  name: contact_info
+                  value: "Licensed structural engineer"
+              - column:
+                  name: hourly_rate
+                  value: "200000"
+              - column:
+                  name: package_cost
+                  value: "3500000"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1004
+              - column:
+                  name: name
+                  value: "Maya Sari"
+              - column:
+                  name: email
+                  value: "maya.sari@consultant.com"
+              - column:
+                  name: phone
+                  value: "+6284234567893"
+              - column:
+                  name: address
+                  value: "Jl. Veteran No. 89, Surabaya"
+              - column:
+                  name: avatar_url
+                  value: "https://example.com/avatar/maya.jpg"
+              - column:
+                  name: bio
+                  value: "Landscape architect creating sustainable outdoor spaces."
+              - column:
+                  name: password
+                  value: "$2b$12$zL6Lz.V9s4JQl5sDQ7a.u.6zxFOZO7fHDT0aFoAcC7lt22EFkkl1C"
+              - column:
+                  name: role
+                  value: "CONSULTANT"
+              - column:
+                  name: activity_status
+                  value: "ACTIVE"
+              - column:
+                  name: status
+                  value: "VERIFIED"
+              - column:
+                  name: updated_at
+                  value: "2025-10-18T07:56:42.135Z"
+        - insert:
+            tableName: consultants
+            columns:
+              - column:
+                  name: id
+                  value: 1004
+              - column:
+                  name: latitude
+                  value: "-7.2575"
+              - column:
+                  name: longitude
+                  value: "112.7521"
+              - column:
+                  name: specialty
+                  value: "Landscape Architecture, Sustainable Design"
+              - column:
+                  name: rating
+                  value: "4.7"
+              - column:
+                  name: location
+                  value: "Surabaya"
+              - column:
+                  name: type
+                  value: "PROFESSIONAL"
+              - column:
+                  name: experience_level
+                  value: "Intermediate"
+              - column:
+                  name: availability_status
+                  value: "AVAILABLE"
+              - column:
+                  name: contact_info
+                  value: "Focus on eco-friendly landscapes"
+              - column:
+                  name: hourly_rate
+                  value: "130000"
+              - column:
+                  name: package_cost
+                  value: "2200000"
+        - insert:
+            tableName: users
+            columns:
+              - column:
+                  name: id
+                  value: 1005
+              - column:
+                  name: name
+                  value: "Rizki Ramadhan"
+              - column:
+                  name: email
+                  value: "rizki.ramadhan@consultant.com"
+              - column:
+                  name: phone
+                  value: "+6285234567894"
+              - column:
+                  name: address
+                  value: "Jl. Diponegoro No. 101, Semarang"
+              - column:
+                  name: avatar_url
+                  value: "https://example.com/avatar/rizki.jpg"
+              - column:
+                  name: bio
+                  value: "Architecture student with fresh perspectives and modern design ideas."
+              - column:
+                  name: password
+                  value: "$2b$12$zL6Lz.V9s4JQl5sDQ7a.u.6zxFOZO7fHDT0aFoAcC7lt22EFkkl1C"
+              - column:
+                  name: role
+                  value: "CONSULTANT"
+              - column:
+                  name: activity_status
+                  value: "ACTIVE"
+              - column:
+                  name: status
+                  value: "VERIFIED"
+              - column:
+                  name: updated_at
+                  value: "2025-10-18T07:56:42.135Z"
+        - insert:
+            tableName: consultants
+            columns:
+              - column:
+                  name: id
+                  value: 1005
+              - column:
+                  name: latitude
+                  value: "-6.9667"
+              - column:
+                  name: longitude
+                  value: "110.4167"
+              - column:
+                  name: specialty
+                  value: "Modern Architecture, 3D Visualization"
+              - column:
+                  name: rating
+                  value: "4.2"
+              - column:
+                  name: location
+                  value: "Semarang"
+              - column:
+                  name: type
+                  value: "STUDENT"
+              - column:
+                  name: experience_level
+                  value: "Beginner"
+              - column:
+                  name: availability_status
+                  value: "AVAILABLE"
+              - column:
+                  name: contact_info
+                  value: "Student consultant - affordable rates"
+              - column:
+                  name: hourly_rate
+                  value: "50000"
+              - column:
+                  name: package_cost
+                  value: "750000"
