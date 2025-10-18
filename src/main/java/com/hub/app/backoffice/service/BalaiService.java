@@ -14,7 +14,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,7 +33,6 @@ public class BalaiService {
     private final UserRepository userRepo;
     private final ActivationTokenRepository activationTokenRepo;
     private final JavaMailSender mailSender;
-    private final PasswordEncoder passwordEncoder;
 
     public List<User> getUsersForVerification() {
         return userRepo.findAll().stream()

@@ -3,10 +3,17 @@ package com.hub.app.user.controller;
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
+import com.hub.app.error.ErrorCode;
+import com.hub.app.user.dto.ConsultantListResponse;
 import com.hub.app.user.dto.PortfolioRequest;
+import com.hub.app.user.dto.ProfileUpdateRequest;
+import com.hub.app.user.dto.ProfileUpdateResponse;
 import com.hub.app.user.model.Portfolio;
+import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.UserRepository;
+import com.hub.app.user.service.ConsultantService;
+import com.hub.app.user.service.HomeOwnerService;
 import com.hub.app.user.service.PortfolioService;
 import com.hub.app.user.service.UserService;
 import jakarta.validation.Valid;
@@ -14,14 +21,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
     private final PortfolioService portfolioService;
+    private final ConsultantService consultantService;
+    private final HomeOwnerService homeOwnerService;
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final ApiErrorBuilder apiErrorBuilder;
@@ -30,17 +40,7 @@ public class UserController {
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
-
-    @PostMapping("/{id}/approve")
-    public ResponseEntity<User> approveUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.approveUser(id));
-    }
-
-    @PostMapping("/{id}/reject")
-    public ResponseEntity<User> rejectUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.rejectUser(id));
-    }
-
+    
     @PostMapping("/{id}/activate")
     public ResponseEntity<User> activateUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.activateUser(id));
@@ -93,5 +93,70 @@ public class UserController {
     @GetMapping("/consultants/completed")
     public ResponseEntity<List<Portfolio>> getCompletedPortfolios() {
         return ResponseEntity.ok(portfolioService.getCompletedPortfolios());
+    }
+
+    @GetMapping("/consultants")
+    public ResponseEntity<?> getConsultantsNearLocation(
+            @RequestParam BigDecimal lat,
+            @RequestParam BigDecimal long_param,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestHeader("Authorization") String authHeader) {
+
+        try {
+            // Validate JWT token
+            String token = authHeader.replace("Bearer ", "");
+            if (!jwtService.validateToken(token)) {
+                return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
+                                            ErrorCode.UNAUTHORIZED.getCode(),
+                                            ErrorCode.UNAUTHORIZED.getDefaultMessage());
+            }
+
+            // Get consultants near location
+            ConsultantListResponse response = consultantService.getConsultantsNearLocation(lat, long_param, page, size);
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            // Invalid coordinates
+            return apiErrorBuilder.error(ErrorCode.INVALID_COORDINATE.getHttpStatus(),
+                                        ErrorCode.INVALID_COORDINATE.getCode(),
+                                        ErrorCode.INVALID_COORDINATE.getDefaultMessage());
+        } catch (Exception e) {
+            // Internal server error
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
+        }
+    }
+
+    @PostMapping("/verification")
+    public ResponseEntity<?> updateProfile(@RequestHeader("Authorization") String authHeader, @Valid @RequestBody ProfileUpdateRequest req) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            if (!jwtService.validateToken(token)) {
+                return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
+                                           ErrorCode.UNAUTHORIZED.getCode(),
+                                           ErrorCode.UNAUTHORIZED.getDefaultMessage());
+            }
+            String email = jwtService.extractUsername(token);
+            User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new DomainException(ErrorCode.USER_NOT_FOUND));
+
+            // Check if user is a HOMEOWNER
+            if (user.getRole() != Role.HOMEOWNER) {
+                return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
+                                           ErrorCode.UNAUTHORIZED.getCode(),
+                                           "Access denied: Only homeowners can update their profile");
+            }
+
+            ProfileUpdateResponse response = homeOwnerService.updateProfile(user.getId(), req);
+            return ResponseEntity.ok(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                       ErrorCode.INTERNAL_ERROR.getCode(),
+                                       ErrorCode.INTERNAL_ERROR.getDefaultMessage());
+        }
     }
 }
