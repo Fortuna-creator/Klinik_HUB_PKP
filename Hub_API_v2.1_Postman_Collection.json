@@ -91,7 +91,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "register"]
             },
-            "description": "Register a new user and send OTP for verification."
+            "description": "Endpoint: POST /api/auth/register\nMethod: POST\nDescription: Register a new user and send OTP for verification.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n| password | String | 8- | Yes | Password (min 8 chars, uppercase, lowercase, digit, special char) |\n| confirmPassword | String | - | Yes | Password confirmation |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (OTP sent) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format or password constraints |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Email address already registered |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Sends OTP code to user's email for account verification\n- Password must contain at least one uppercase letter, lowercase letter, digit, and special character"
           },
           "event": [
             {
@@ -131,7 +131,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "verify-otp"]
             },
-            "description": "Verify OTP code sent to user's email."
+            "description": "Endpoint: POST /api/auth/verify-otp\nMethod: POST\nDescription: Verify OTP code sent to user's email.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| userId | String | - | Yes | User ID from registration |\n| otpCode | String | 6 | Yes | 6-digit OTP code |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (verified successfully) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid OTP format |\n| 401 | INVALID_OTP | Invalid OTP | OTP code is incorrect or expired |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- OTP is valid for a limited time (typically 5-10 minutes)\n- After successful verification, user can proceed to login"
           },
           "event": [
             {
@@ -182,7 +182,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "login"]
             },
-            "description": "Authenticate user and obtain JWT token."
+            "description": "Endpoint: POST /api/auth/login\nMethod: POST\nDescription: Authenticate user and obtain JWT token.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n| password | String | - | Yes | Password |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| userId | Long | - | Yes | User ID |\n| fullName | String | 100 | Yes | User's full name |\n| email | String | 100 | Yes | Email address |\n| token | String | 512 | Yes | JWT access token |\n| role | String | - | Yes | User role (HOMEOWNER/CONSULTANT) |\n| status | String | - | Yes | Account status |\n| expiresIn | Integer | - | Yes | Token expiration time in seconds |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format |\n| 401 | INVALID_CREDENTIALS | Email atau password salah | Invalid email or password |\n| 401 | ACCOUNT_INACTIVE | Akun tidak aktif | Account is not active |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns JWT token for subsequent authenticated requests\n- Token should be included in Authorization header as 'Bearer {token}'"
           },
           "event": [
             {
@@ -257,7 +257,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "profile-update"]
             },
-            "description": "Update user profile with optional image uploads. Requires JWT authentication."
+            "description": "Endpoint: POST /api/auth/profile-update\nMethod: POST\nDescription: Update user profile with optional image uploads. Requires JWT authentication.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| name | String | 100 | No | Full name |\n| phone | String | 15 | No | Phone number (format: +[country code][number]) |\n| address | String | 255 | No | Address |\n| ktpNumber | String | 16 | No | KTP number (16 digits) |\n| ktpFile | File | 5MB | No | KTP image file (JPEG/PNG) |\n| selfieFile | File | 5MB | No | Selfie image file (JPEG/PNG) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (Profile updated) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or file types |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 413 | - | File too large | File size exceeds 5MB limit |\n| 415 | - | Unsupported file type | File type not JPEG/PNG |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- All fields are optional, only provided fields will be updated\n- File uploads are handled via multipart/form-data\n- Images are validated for type and size before upload"
           },
           "event": [
             {
@@ -308,7 +308,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "activate-account"]
             },
-            "description": "Activate user account using activation token."
+            "description": "Endpoint: POST /api/auth/activate-account\nMethod: POST\nDescription: Activate user account using activation token.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n| token | String | - | Yes | Activation token from email |\n| password | String | 8- | Yes | New password |\n| confirmPassword | String | - | Yes | Password confirmation |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (Account activated successfully) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format or password constraints |\n| 400 | BAD_REQUEST | Permintaan tidak valid | Passwords do not match |\n| 404 | USER_NOT_FOUND | User not found | Email not found or token invalid |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Account already activated |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Activation token is sent via email during registration\n- Token has expiration time (typically 24 hours)\n- Password must meet security requirements (uppercase, lowercase, digit, special char)"
           },
           "event": [
             {
@@ -354,7 +354,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "auth", "resend-activation"]
             },
-            "description": "Resend activation email to user."
+            "description": "Endpoint: POST /api/auth/resend-activation\nMethod: POST\nDescription: Resend activation email to user.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (Activation email resent successfully) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format |\n| 404 | USER_NOT_FOUND | User not found | Email not found in system |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Account already activated |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Can only be used for accounts that are not yet activated\n- Rate limiting may apply to prevent abuse"
           },
           "event": [
             {
@@ -414,7 +414,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "files", "upload"]
             },
-            "description": "Upload a file with validation and secure storage."
+            "description": "Endpoint: POST /api/files/upload\nMethod: POST\nDescription: Upload a file with validation and secure storage.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file | File | 5MB | Yes | File to upload (JPEG/PNG) |\n| fileType | String | - | Yes | File type: KTP, Document, or Selfie |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| fileId | String | - | Yes | Unique file identifier |\n| fileUrl | String | 255 | Yes | URL to access the uploaded file |\n| checksum | String | - | Yes | File checksum for integrity verification |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid file type or missing required fields |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 413 | - | File too large | File size exceeds 5MB limit |\n| 415 | - | Unsupported file type | File type not JPEG/PNG |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Files are stored securely using MinIO object storage\n- Supported file types: JPEG, PNG\n- Maximum file size: 5MB\n- Checksum is provided for file integrity verification"
           },
           "event": [
             {
@@ -465,7 +465,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "files", "download", "{{file_id}}"]
             },
-            "description": "Download a file by ID."
+            "description": "Endpoint: GET /api/files/download/{file_id}\nMethod: GET\nDescription: Download a file by ID.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file_id | String | - | Yes | File ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file | Binary | - | Yes | File content as binary data |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 404 | - | File not found | File ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns file as binary data with appropriate Content-Type header\n- Includes Content-Disposition header for file download\n- File access is restricted to authenticated users"
           },
           "event": [
             {
@@ -525,7 +525,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users"]
             },
-            "description": "Retrieve list of all users."
+            "description": "Endpoint: GET /api/users\nMethod: GET\nDescription: Retrieve list of all users.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| users | Array | - | Yes | Array of user objects |\n| - id | Long | - | Yes | User ID |\n| - email | String | 100 | Yes | Email address |\n| - fullName | String | 100 | Yes | Full name |\n| - role | String | - | Yes | User role |\n| - status | String | - | Yes | Account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Returns paginated results (may need pagination parameters in future)"
           },
           "event": [
             {
@@ -577,7 +577,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "{{user_id}}", "approve"]
             },
-            "description": "Approve a user account."
+            "description": "Endpoint: POST /api/users/{user_id}/approve\nMethod: POST\nDescription: Approve a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to APPROVED"
           },
           "event": [
             {
@@ -633,7 +633,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "{{user_id}}", "reject"]
             },
-            "description": "Reject a user account."
+            "description": "Endpoint: POST /api/users/{user_id}/reject\nMethod: POST\nDescription: Reject a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to REJECTED"
           },
           "event": [
             {
@@ -688,7 +688,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "{{user_id}}", "activate"]
             },
-            "description": "Activate a user account."
+            "description": "Endpoint: POST /api/users/{user_id}/activate\nMethod: POST\nDescription: Activate a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to ACTIVE"
           },
           "event": [
             {
@@ -743,7 +743,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "{{user_id}}", "deactivate"]
             },
-            "description": "Deactivate a user account."
+            "description": "Endpoint: POST /api/users/{user_id}/deactivate\nMethod: POST\nDescription: Deactivate a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to DEACTIVATED"
           },
           "event": [
             {
@@ -798,7 +798,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "{{user_id}}", "self-deactivate"]
             },
-            "description": "Allow user to self-deactivate their account."
+            "description": "Endpoint: POST /api/users/{user_id}/self-deactivate\nMethod: POST\nDescription: Allow user to self-deactivate their account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Cannot deactivate other users' accounts |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Users can only deactivate their own accounts\n- Changes user status to DEACTIVATED"
           },
           "event": [
             {
@@ -849,7 +849,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "portfolio"]
             },
-            "description": "Retrieve user's portfolio information."
+            "description": "Endpoint: GET /api/users/portfolio\nMethod: GET\nDescription: Retrieve user's portfolio information.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| user | Object | - | Yes | User information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| projectSamples | String | 500 | No | Sample projects |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 404 | USER_NOT_FOUND | User not found | User does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns portfolio data for the authenticated consultant user\n- Portfolio may not exist if not yet created"
           },
           "event": [
             {
@@ -909,7 +909,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "portfolio"]
             },
-            "description": "Save or update user's portfolio information."
+            "description": "Endpoint: POST /api/users/portfolio\nMethod: POST\nDescription: Save or update user's portfolio information.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| projectSamples | String | 500 | No | Sample projects |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| user | Object | - | Yes | User information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| projectSamples | String | 500 | No | Sample projects |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or lengths |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only consultants can manage portfolios |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Creates new portfolio if none exists, updates existing otherwise\n- All fields are optional, only provided fields will be updated"
           },
           "event": [
             {
@@ -958,7 +958,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "users", "consultants", "completed"]
             },
-            "description": "Retrieve list of completed consultant portfolios."
+            "description": "Endpoint: GET /api/users/consultants/completed\nMethod: GET\nDescription: Retrieve list of completed consultant portfolios.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultants | Array | - | Yes | Array of consultant portfolio objects |\n| - consultantId | String | - | Yes | Consultant ID |\n| - fullName | String | 100 | Yes | Consultant full name |\n| - specialty | String | 100 | No | Area of specialization |\n| - rating | BigDecimal | - | No | Consultant rating |\n| - distanceKm | BigDecimal | - | No | Distance in kilometers |\n| - avatarUrl | String | 255 | No | Avatar image URL |\n| - location | String | 255 | No | Consultant location |\n| pagination | Object | - | Yes | Pagination information |\n| - total | Integer | - | Yes | Total number of consultants |\n| - page | Integer | - | Yes | Current page number |\n| - size | Integer | - | Yes | Page size |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns only consultants with completed portfolios\n- Supports pagination for large result sets"
           },
           "event": [
             {
@@ -1014,7 +1014,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Update user profile for verification with valid JWT token and complete profile data including new fields (avatarUrl, bio, updatedAt)."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Update user profile for verification with complete profile data.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| fullName | String | 100 | Yes | Full name |\n| email | String | 100 | Yes | Email address |\n| phone | String | 15 | Yes | Phone number |\n| address | String | 255 | Yes | Address |\n| avatarUrl | String | 255 | No | Avatar image URL |\n| bio | String | 500 | No | User biography |\n| ktpNumber | String | 16 | Yes | KTP number (16 digits) |\n| ktpImageUrl | String | 255 | Yes | KTP image URL |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| userId | Long | - | Yes | User ID |\n| fullName | String | 100 | Yes | Full name |\n| email | String | 100 | Yes | Email address |\n| phone | String | 15 | Yes | Phone number |\n| address | String | 255 | Yes | Address |\n| avatarUrl | String | 255 | No | Avatar image URL |\n| bio | String | 500 | No | User biography |\n| ktpNumber | String | 16 | Yes | KTP number |\n| ktpImageUrl | String | 255 | Yes | KTP image URL |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or missing required fields |\n| 400 | KTP_ALREADY_USED | KTP number already registered | KTP number already in use |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only homeowners can update verification |\n| 404 | USER_NOT_FOUND | User not found | User does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Used for homeowner profile verification\n- All required fields must be provided\n- KTP number must be unique across all users"
           },
           "event": [
             {
@@ -1079,7 +1079,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Attempt to update profile with invalid JWT token - should return 401 Unauthorized."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with invalid JWT token.\n\nExpected Result: 401 Unauthorized with UNAUTHORIZED error."
           },
           "event": [
             {
@@ -1120,7 +1120,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Attempt to update profile without JWT token - should return 401 Unauthorized."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile without JWT token.\n\nExpected Result: 401 Unauthorized with UNAUTHORIZED error."
           },
           "event": [
             {
@@ -1166,7 +1166,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Attempt to update profile with JWT token for non-existent user - should return 404 Not Found."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with JWT token for non-existent user.\n\nExpected Result: 404 Not Found with USER_NOT_FOUND error."
           },
           "event": [
             {
@@ -1212,7 +1212,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Attempt to update profile with KTP number already registered by another user - should return 400 Bad Request with KTP_ALREADY_USED error."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with KTP number already registered by another user.\n\nExpected Result: 400 Bad Request with KTP_ALREADY_USED error."
           },
           "event": [
             {
@@ -1269,7 +1269,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Attempt to update profile with invalid data (missing required fields, invalid formats, length violations) - should return 400 Bad Request with VALIDATION_ERROR."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with invalid data (missing required fields, invalid formats, length violations).\n\nExpected Result: 400 Bad Request with VALIDATION_ERROR."
           },
           "event": [
             {
@@ -1326,7 +1326,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "user", "verification"]
             },
-            "description": "Attempt to update profile as a consultant user (not homeowner) - should return 403 Forbidden."
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile as a consultant user (not homeowner).\n\nExpected Result: 403 Forbidden with UNAUTHORIZED error."
           },
           "event": [
             {
@@ -1378,7 +1378,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "projects"]
             },
-            "description": "Create a new project with location, type, and financial details."
+            "description": "Endpoint: POST /api/projects\nMethod: POST\nDescription: Create a new project with location, type, and financial details.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| name | String | 100 | Yes | Project name |\n| longitude | BigDecimal | - | Yes | Longitude coordinate (-180 to 180) |\n| latitude | BigDecimal | - | Yes | Latitude coordinate (-90 to 90) |\n| locationDetail | String | 255 | Yes | Detailed location address |\n| type | String | - | Yes | Project type (PROTOTYPE/NON_PROTOTYPE) |\n| landArea | BigDecimal | - | Yes | Land area in square meters (> 0) |\n| income | BigDecimal | - | Yes | Income amount (> 0) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projectId | UUID | - | Yes | Unique project identifier |\n| name | String | 100 | Yes | Project name |\n| type | String | - | Yes | Project type |\n| createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or constraint violations |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Only homeowners can create projects\n- Coordinates must be valid longitude/latitude values\n- Land area and income must be positive values"
           },
           "event": [
             {
@@ -1452,7 +1452,7 @@
                 }
               ]
             },
-            "description": "Retrieve list of user's projects with optional pagination and filters."
+            "description": "Endpoint: GET /api/projects\nMethod: GET\nDescription: Retrieve list of user's projects with optional pagination and filters.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| page | Integer | - | No | Page number (0-based, default: 0) |\n| size | Integer | - | No | Page size (default: 10) |\n| type | String | - | No | Filter by project type (PROTOTYPE/NON_PROTOTYPE) |\n| status | String | - | No | Filter by project status (ACTIVE/COMPLETED/CANCELLED) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projects | Array | - | Yes | Array of project objects |\n| - projectId | UUID | - | Yes | Unique project identifier |\n| - name | String | 100 | Yes | Project name |\n| - type | String | - | Yes | Project type |\n| - status | String | - | Yes | Project status |\n| - location | Object | - | Yes | Location information |\n|   - longitude | BigDecimal | - | Yes | Longitude coordinate |\n|   - latitude | BigDecimal | - | Yes | Latitude coordinate |\n|   - address | String | 255 | Yes | Location address |\n| - landArea | BigDecimal | - | Yes | Land area in square meters |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid query parameters |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns only projects owned by the authenticated user\n- Supports pagination and filtering by type and status\n- Default page size is 10, maximum may be limited"
           },
           "event": [
             {
@@ -1501,7 +1501,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "projects", "{{project_id}}"]
             },
-            "description": "Retrieve detailed information for a specific project."
+            "description": "Endpoint: GET /api/projects/{project_id}\nMethod: GET\nDescription: Retrieve detailed information for a specific project.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| project_id | UUID | - | Yes | Project ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projectId | UUID | - | Yes | Unique project identifier |\n| name | String | 100 | Yes | Project name |\n| type | String | - | Yes | Project type |\n| status | String | - | Yes | Project status |\n| locationDetail | String | 255 | Yes | Detailed location address |\n| longitude | BigDecimal | - | Yes | Longitude coordinate |\n| latitude | BigDecimal | - | Yes | Latitude coordinate |\n| landArea | BigDecimal | - | Yes | Land area in square meters |\n| createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n| updatedAt | LocalDateTime | - | No | Project last update timestamp |\n| consultation | Object | - | No | Consultation information |\n| - consultationId | UUID | - | No | Consultation ID |\n| - consultantName | String | 100 | No | Consultant name |\n| - scheduledAt | LocalDateTime | - | No | Scheduled consultation time |\n| - status | String | - | No | Consultation status |\n| - notes | String | 500 | No | Consultation notes |\n| permit | Object | - | No | Permit information |\n| - permitId | UUID | - | No | Permit ID |\n| - permitType | String | 50 | No | Type of permit |\n| - status | String | - | No | Permit status |\n| - submittedAt | LocalDateTime | - | No | Permit submission timestamp |\n| - dedDocumentUrl | String | 255 | No | DED document URL |\n| - pbgDocumentUrl | String | 255 | No | PBG document URL |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | User does not own this project |\n| 404 | PROJECT_NOT_FOUND | Project not found | Project ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Users can only access their own projects\n- Includes consultation and permit information if available\n- Consultation and permit objects may be null if not yet assigned"
           },
           "event": [
             {
@@ -1566,7 +1566,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "balai", "verification-pending"]
             },
-            "description": "Retrieve list of users pending verification."
+            "description": "Endpoint: GET /api/balai/verification-pending\nMethod: GET\nDescription: Retrieve list of users pending verification.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| users | Array | - | Yes | Array of user objects pending verification |\n| - id | Long | - | Yes | User ID |\n| - email | String | 100 | Yes | Email address |\n| - fullName | String | 100 | Yes | Full name |\n| - phone | String | 15 | No | Phone number |\n| - address | String | 255 | No | Address |\n| - ktpNumber | String | 16 | No | KTP number |\n| - status | String | - | Yes | Account status |\n| - createdAt | LocalDateTime | - | Yes | Account creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Returns users with PENDING_VERIFICATION status\n- Used for manual verification workflow"
           },
           "event": [
             {
@@ -1618,7 +1618,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "balai", "approve", "{{user_id}}"]
             },
-            "description": "Approve user via backoffice."
+            "description": "Endpoint: POST /api/balai/approve/{user_id}\nMethod: POST\nDescription: Approve user via backoffice.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status (APPROVED) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 409 | - | User already approved | User is already in APPROVED status |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Changes user status from PENDING_VERIFICATION to APPROVED\n- Allows user to access full system features"
           },
           "event": [
             {
@@ -1673,7 +1673,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "balai", "reject", "{{user_id}}"]
             },
-            "description": "Reject user via backoffice."
+            "description": "Endpoint: POST /api/balai/reject/{user_id}\nMethod: POST\nDescription: Reject user via backoffice.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status (REJECTED) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 409 | - | User already processed | User is already approved or rejected |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Changes user status from PENDING_VERIFICATION to REJECTED\n- User will not be able to access the system"
           },
           "event": [
             {
@@ -1728,7 +1728,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "balai", "deactivate", "{{user_id}}"]
             },
-            "description": "Deactivate user via backoffice."
+            "description": "Endpoint: POST /api/balai/deactivate/{user_id}\nMethod: POST\nDescription: Deactivate user via backoffice.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status (DEACTIVATED) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 409 | - | User already deactivated | User is already in DEACTIVATED status |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Changes user status to DEACTIVATED\n- User will lose access to the system until reactivated"
           },
           "event": [
             {
@@ -1787,7 +1787,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "balai", "register-consultant"]
             },
-            "description": "Register a new consultant."
+            "description": "Endpoint: POST /api/balai/register-consultant\nMethod: POST\nDescription: Register a new consultant.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| name | String | 100 | Yes | Consultant full name |\n| email | String | 100 | Yes | Email address |\n| phone | String | 15 | Yes | Phone number |\n| university | String | 100 | No | University name (required for students) |\n| professional | Boolean | - | Yes | True for professional consultant, false for student |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Consultant user ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| role | String | - | Yes | User role (CONSULTANT) |\n| status | String | - | Yes | Account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or missing required fields |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Email address already registered |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Creates a new consultant user account\n- If professional=false, university field is required\n- New consultant will have PENDING_VERIFICATION status initially"
           },
           "event": [
             {
@@ -1848,7 +1848,7 @@
               "host": ["{{base_url}}"],
               "path": ["api", "balai", "register-consultant", "bulk"]
             },
-            "description": "Bulk register consultants from CSV file."
+            "description": "Endpoint: POST /api/balai/register-consultant/bulk\nMethod: POST\nDescription: Bulk register consultants from CSV file.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file | File | - | Yes | CSV file containing consultant data |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultants | Array | - | Yes | Array of created consultant objects |\n| - id | Long | - | Yes | Consultant user ID |\n| - email | String | 100 | Yes | Email address |\n| - fullName | String | 100 | Yes | Full name |\n| - role | String | - | Yes | User role (CONSULTANT) |\n| - status | String | - | Yes | Account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid CSV format or data |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | One or more email addresses already registered |\n| 413 | - | File too large | CSV file exceeds size limit |\n| 415 | - | Unsupported file type | File is not a valid CSV |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- CSV file should contain columns: name, email, phone, university (optional), professional\n- Processes multiple consultants in a single operation\n- Returns list of successfully created consultants\n- Any validation errors will prevent the entire batch from being processed"
           },
           "event": [
             {
