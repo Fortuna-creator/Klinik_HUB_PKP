@@ -11,6 +11,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "users")
+@Inheritance(strategy = InheritanceType.JOINED)
 @Data @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
     @Id
