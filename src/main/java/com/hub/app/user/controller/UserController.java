@@ -99,7 +99,7 @@ public class UserController {
     @GetMapping("/consultants")
     public ResponseEntity<?> getConsultantsNearLocation(
             @RequestParam BigDecimal lat,
-            @RequestParam BigDecimal long_param,
+            @RequestParam(name="long") BigDecimal long_param,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String type,
