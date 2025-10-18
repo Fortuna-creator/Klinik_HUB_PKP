@@ -8,6 +8,7 @@ import com.hub.app.user.dto.ConsultantListResponse;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.dto.ProfileUpdateRequest;
 import com.hub.app.user.dto.ProfileUpdateResponse;
+import com.hub.app.user.model.ConsultantType;
 import com.hub.app.user.model.Portfolio;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
@@ -101,6 +102,9 @@ public class UserController {
             @RequestParam BigDecimal long_param,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String specialty,
+            @RequestParam(required = false) String sortBy,
             @RequestHeader("Authorization") String authHeader) {
 
         try {
@@ -112,8 +116,21 @@ public class UserController {
                                             ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
 
-            // Get consultants near location
-            ConsultantListResponse response = consultantService.getConsultantsNearLocation(lat, long_param, page, size);
+            // Parse consultant type if provided
+            ConsultantType consultantType = null;
+            if (type != null && !type.isEmpty()) {
+                try {
+                    consultantType = ConsultantType.valueOf(type.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
+                                                ErrorCode.BAD_REQUEST.getCode(),
+                                                "Invalid consultant type. Must be PROFESSIONAL or STUDENT");
+                }
+            }
+
+            // Get consultants near location with filters
+            ConsultantListResponse response = consultantService.getConsultantsNearLocation(
+                    lat, long_param, page, size, consultantType, specialty, sortBy);
             return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
