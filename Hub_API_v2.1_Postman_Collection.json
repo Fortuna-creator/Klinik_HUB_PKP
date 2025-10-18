@@ -989,6 +989,364 @@
               }
             }
           ]
+        },
+        {
+          "name": "Update Profile Verification - Success",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Update user profile for verification with valid JWT token and complete profile data including new fields (avatarUrl, bio, updatedAt)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains updated user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "    pm.expect(jsonData).to.have.property('fullName');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('phone');",
+                  "    pm.expect(jsonData).to.have.property('address');",
+                  "    pm.expect(jsonData).to.have.property('avatarUrl');",
+                  "    pm.expect(jsonData).to.have.property('bio');",
+                  "    pm.expect(jsonData).to.have.property('ktpNumber');",
+                  "    pm.expect(jsonData).to.have.property('ktpImageUrl');",
+                  "    pm.expect(jsonData).to.have.property('updatedAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Invalid JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid.jwt.token",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Attempt to update profile with invalid JWT token - should return 401 Unauthorized."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains UNAUTHORIZED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'UNAUTHORIZED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Missing JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Attempt to update profile without JWT token - should return 401 Unauthorized."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains UNAUTHORIZED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'UNAUTHORIZED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - User Not Found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Attempt to update profile with JWT token for non-existent user - should return 404 Not Found."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains USER_NOT_FOUND error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'USER_NOT_FOUND');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - KTP Already Used",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"1234567890123456\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Attempt to update profile with KTP number already registered by another user - should return 400 Bad Request with KTP_ALREADY_USED error."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains KTP_ALREADY_USED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'KTP_ALREADY_USED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Invalid Request Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"\",\n  \"email\": \"invalid-email\",\n  \"phone\": \"invalid-phone\",\n  \"address\": \"\",\n  \"avatarUrl\": \"invalid-url\",\n  \"bio\": \"This bio is way too long and exceeds the maximum allowed character limit of 500 characters. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\",\n  \"ktpNumber\": \"123\",\n  \"ktpImageUrl\": \"invalid-url\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Attempt to update profile with invalid data (missing required fields, invalid formats, length violations) - should return 400 Bad Request with VALIDATION_ERROR."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains VALIDATION_ERROR\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'VALIDATION_ERROR');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Unauthorized Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjb25zdWx0YW50X3VzZXIiLCJuYW1lIjoiQ29uc3VsdGFudCBVc2VyIiwicm9sZSI6IkNPTlNVTFRBTlQiLCJpYXQiOjE1MTYyMzkwMjJ9.invalid_signature",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Attempt to update profile as a consultant user (not homeowner) - should return 403 Forbidden."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains UNAUTHORIZED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'UNAUTHORIZED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
         }
       ]
     },
