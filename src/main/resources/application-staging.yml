@@ -27,5 +27,6 @@ server:
 
 logging:
   level:
+    com.hub.backend: DEBUG
     com.hub.app: INFO
     org.springframework.security: INFO
