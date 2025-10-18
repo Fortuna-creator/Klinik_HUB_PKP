@@ -991,6 +991,103 @@
           ]
         },
         {
+          "name": "Get Consultants Near Location",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/consultants?lat=-6.21462&long=106.84513&page=0&size=10&type=PROFESSIONAL&specialty=Architecture&sortBy=name",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "consultants"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "-6.21462",
+                  "description": "User's latitude coordinate"
+                },
+                {
+                  "key": "long",
+                  "value": "106.84513",
+                  "description": "User's longitude coordinate"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Page number (0-based)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Page size"
+                },
+                {
+                  "key": "type",
+                  "value": "PROFESSIONAL",
+                  "description": "Filter by consultant type (PROFESSIONAL or STUDENT)"
+                },
+                {
+                  "key": "specialty",
+                  "value": "Architecture",
+                  "description": "Filter by specialty"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "name",
+                  "description": "Sort by field (name, experience, rating, distance)"
+                }
+              ]
+            },
+            "description": "Endpoint: GET /api/user/consultants\nMethod: GET\nDescription: Retrieve consultants near a location with optional filtering and sorting.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| lat | BigDecimal | - | Yes | User's latitude coordinate |\n| long | BigDecimal | - | Yes | User's longitude coordinate |\n| page | Integer | - | No | Page number (0-based, default: 0) |\n| size | Integer | - | No | Page size (default: 10) |\n| type | String | - | No | Filter by consultant type (PROFESSIONAL/STUDENT) |\n| specialty | String | 100 | No | Filter by specialty |\n| sortBy | String | - | No | Sort by field (name/experience/rating/distance, default: distance) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultants | Array | - | Yes | Array of consultant objects |\n| - consultantId | String | - | Yes | Consultant ID |\n| - fullName | String | 100 | Yes | Consultant full name |\n| - specialty | String | 100 | No | Area of specialization |\n| - rating | BigDecimal | - | No | Consultant rating |\n| - distanceKm | BigDecimal | - | Yes | Distance in kilometers |\n| - avatarUrl | String | 255 | No | Avatar image URL |\n| - location | String | 255 | No | Consultant location |\n| - type | String | - | No | Consultant type (PROFESSIONAL/STUDENT) |\n| - experienceLevel | String | 50 | No | Experience level |\n| - availabilityStatus | String | - | No | Availability status |\n| - contactInfo | String | 255 | No | Contact information |\n| - hourlyRate | BigDecimal | - | No | Hourly rate (professionals only) |\n| - packageCost | BigDecimal | - | No | Package cost (professionals only) |\n| pagination | Object | - | Yes | Pagination information |\n| - total | Integer | - | Yes | Total number of consultants |\n| - page | Integer | - | Yes | Current page number |\n| - size | Integer | - | Yes | Page size |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | INVALID_COORDINATE | Format koordinat tidak valid | Invalid latitude/longitude |\n| 400 | BAD_REQUEST | Permintaan tidak valid | Invalid consultant type |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns consultants within reasonable distance, sorted by distance by default\n- Professionals include pricing information, students are free\n- Supports filtering by type, specialty, and sorting by various criteria\n- Uses Haversine formula for distance calculation"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultants array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('consultants');",
+                  "    pm.expect(jsonData.consultants).to.be.an('array');",
+                  "    pm.expect(jsonData).to.have.property('pagination');",
+                  "});",
+                  "",
+                  "pm.test(\"Each consultant has required fields\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.consultants && jsonData.consultants.length > 0) {",
+                  "        const consultant = jsonData.consultants[0];",
+                  "        pm.expect(consultant).to.have.property('consultantId');",
+                  "        pm.expect(consultant).to.have.property('fullName');",
+                  "        pm.expect(consultant).to.have.property('distanceKm');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "Update Profile Verification - Success",
           "request": {
             "method": "POST",

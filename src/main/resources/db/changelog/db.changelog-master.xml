@@ -9,5 +9,9 @@
     <include file="002-update-schema.sql" relativeToChangelogFile="true"/>
     <include file="003-portfolio-schema.sql" relativeToChangelogFile="true"/>
     <include file="004-project-schema.sql" relativeToChangelogFile="true"/>
+    <include file="005-user-location-schema.sql" relativeToChangelogFile="true"/>
+    <include file="006-consultants-table.sql" relativeToChangelogFile="true"/>
+    <include file="007-homeowners-table.sql" relativeToChangelogFile="true"/>
+    <include file="008-consultant-enhancements.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

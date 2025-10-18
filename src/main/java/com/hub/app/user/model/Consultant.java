@@ -23,4 +23,19 @@ public class Consultant extends User {
     private String specialty;
     private BigDecimal rating;
     private String location; // Address/location description
+
+    // New fields for professional vs student differentiation
+    @Enumerated(EnumType.STRING)
+    private ConsultantType type; // PROFESSIONAL or STUDENT
+
+    private String experienceLevel; // e.g., "Beginner", "Intermediate", "Expert"
+
+    @Enumerated(EnumType.STRING)
+    private AvailabilityStatus availabilityStatus; // AVAILABLE, BUSY, UNAVAILABLE
+
+    private String contactInfo; // Additional contact information
+
+    // Pricing fields (only for professionals)
+    private BigDecimal hourlyRate;
+    private BigDecimal packageCost;
 }
