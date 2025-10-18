@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ConsultantRepository extends JpaRepository<Consultant, Long> {
-    Optional<Consultant> findByUserId(Long userId);
-
     @Query("SELECT c FROM Consultant c WHERE c.latitude IS NOT NULL AND c.longitude IS NOT NULL")
     List<Consultant> findConsultantsWithLocation();
 }
