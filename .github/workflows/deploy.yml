@@ -18,12 +18,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Clear check sum
-        run: mvn liquibase:clearCheckSums
-
-      - name: Update check sum
-        run: mvn liquibase:clearCheckSums
-
       - name: Build with Maven
         run: mvn -B -DskipTests clean package
 
