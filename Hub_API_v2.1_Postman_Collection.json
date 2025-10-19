@@ -902,14 +902,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bio\": \"Experienced consultant with 5+ years in legal services\",\n  \"specialization\": \"Legal\",\n  \"experience\": \"5 years\",\n  \"education\": \"Law Degree from University X\",\n  \"certifications\": \"Certified Legal Consultant\",\n  \"projectSamples\": \"Various legal consultation projects\",\n  \"linkedinUrl\": \"https://linkedin.com/in/consultant\",\n  \"websiteUrl\": \"https://consultant.com\"\n}"
+              "raw": "{\n  \"bio\": \"Experienced consultant with 5+ years in architecture services\",\n  \"specialization\": \"Architecture\",\n  \"experience\": \"5 years\",\n  \"education\": \"Architecture Degree from University X\",\n  \"certifications\": \"Certified Architect\",\n  \"linkedinUrl\": \"https://linkedin.com/in/consultant\",\n  \"websiteUrl\": \"https://consultant.com\",\n  \"projects\": [\n    {\n      \"projectName\": \"Modern House Design\",\n      \"price\": 50000.00,\n      \"detailDescription\": \"Complete modern house design with 3D rendering and construction plans\",\n      \"imageUrls\": [\n        \"https://minio.example.com/project1-image1.jpg\",\n        \"https://minio.example.com/project1-image2.jpg\",\n        \"https://minio.example.com/project1-image3.jpg\"\n      ]\n    },\n    {\n      \"projectName\": \"Commercial Building\",\n      \"price\": 150000.00,\n      \"detailDescription\": \"Large commercial building design with sustainable features\",\n      \"imageUrls\": [\n        \"https://minio.example.com/project2-image1.jpg\"\n      ]\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/users/portfolio",
               "host": ["{{base_url}}"],
               "path": ["api", "users", "portfolio"]
             },
-            "description": "Endpoint: POST /api/users/portfolio\nMethod: POST\nDescription: Save or update user's portfolio information.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| projectSamples | String | 500 | No | Sample projects |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| user | Object | - | Yes | User information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| projectSamples | String | 500 | No | Sample projects |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or lengths |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only consultants can manage portfolios |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Creates new portfolio if none exists, updates existing otherwise\n- All fields are optional, only provided fields will be updated"
+            "description": "Endpoint: POST /api/users/portfolio\nMethod: POST\nDescription: Save or update user's portfolio information with project details.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs for the project |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| user | Object | - | Yes | User information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - id | Long | - | Yes | Project ID |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or lengths |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only consultants can manage portfolios |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Creates new portfolio if none exists, updates existing otherwise\n- All fields are optional, only provided fields will be updated\n- Projects array can contain multiple project objects with images\n- Portfolio is considered complete when it has at least one project"
           },
           "event": [
             {
@@ -935,6 +935,123 @@
                   "    const jsonData = pm.response.json();",
                   "    pm.expect(jsonData).to.have.property('id');",
                   "    pm.expect(jsonData).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Portfolio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Updated consultant biography\",\n  \"specialization\": \"Architecture\",\n  \"experience\": \"6 years\",\n  \"education\": \"Architecture Degree from University X\",\n  \"certifications\": \"Certified Architect\",\n  \"linkedinUrl\": \"https://linkedin.com/in/consultant\",\n  \"websiteUrl\": \"https://consultant.com\",\n  \"projects\": [\n    {\n      \"projectName\": \"Updated Modern House Design\",\n      \"price\": 55000.00,\n      \"detailDescription\": \"Updated modern house design with additional features\",\n      \"imageUrls\": [\n        \"https://minio.example.com/updated-project1-image1.jpg\",\n        \"https://minio.example.com/updated-project1-image2.jpg\"\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio"]
+            },
+            "description": "Endpoint: PUT /api/users/portfolio\nMethod: PUT\nDescription: Update user's existing portfolio information.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs for the project |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| user | Object | - | Yes | User information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or lengths |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only consultants can manage portfolios |\n| 404 | USER_NOT_FOUND | User not found | User does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Updates existing portfolio, creates new one if none exists\n- All fields are optional, only provided fields will be updated\n- Existing projects will be replaced with the new projects array"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains portfolio data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Portfolio Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "src": [],
+                  "type": "file",
+                  "description": "Multiple image files for portfolio projects (JPEG/PNG, max 5MB each)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio/upload-images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio", "upload-images"]
+            },
+            "description": "Endpoint: POST /api/users/portfolio/upload-images\nMethod: POST\nDescription: Upload multiple images for portfolio projects.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| files | File[] | 5MB each | Yes | Multiple image files (JPEG/PNG) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| imageUrls | Array | - | Yes | Array of uploaded image URLs |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid file types or missing files |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 413 | - | File too large | Individual file exceeds 5MB limit |\n| 415 | - | Unsupported file type | File type not JPEG/PNG |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Supports uploading multiple images at once\n- Images are stored securely using MinIO object storage\n- Returns array of URLs that can be used in portfolio project creation\n- Maximum 5MB per file, JPEG/PNG formats only"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains image URLs\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('imageUrls');",
+                  "    pm.expect(jsonData.imageUrls).to.be.an('array');",
                   "});"
                 ],
                 "type": "text/javascript"

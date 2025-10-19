@@ -1,7 +1,9 @@
 package com.hub.app.user.service;
 
+import com.hub.app.user.dto.PortfolioProjectRequest;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.model.Portfolio;
+import com.hub.app.user.model.PortfolioProject;
 import com.hub.app.user.model.PortfolioStatus;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.PortfolioRepository;
@@ -10,8 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -50,9 +54,24 @@ public class PortfolioService {
         portfolio.setExperience(request.getExperience());
         portfolio.setEducation(request.getEducation());
         portfolio.setCertifications(request.getCertifications());
-        portfolio.setProjectSamples(request.getProjectSamples());
         portfolio.setLinkedinUrl(request.getLinkedinUrl());
         portfolio.setWebsiteUrl(request.getWebsiteUrl());
+
+        // Update projects
+        if (request.getProjects() != null) {
+            List<PortfolioProject> projects = request.getProjects().stream()
+                    .map(projectRequest -> PortfolioProject.builder()
+                            .portfolio(portfolio)
+                            .projectName(projectRequest.getProjectName())
+                            .price(projectRequest.getPrice())
+                            .detailDescription(projectRequest.getDetailDescription())
+                            .imageUrls(projectRequest.getImageUrls())
+                            .build())
+                    .collect(Collectors.toList());
+            portfolio.setProjects(projects);
+        } else {
+            portfolio.setProjects(new ArrayList<>());
+        }
 
         // Check completion status
         portfolio.setStatus(determinePortfolioStatus(portfolio));
@@ -73,7 +92,7 @@ public class PortfolioService {
                 portfolio.getExperience() != null && !portfolio.getExperience().trim().isEmpty() &&
                 portfolio.getEducation() != null && !portfolio.getEducation().trim().isEmpty() &&
                 portfolio.getCertifications() != null && !portfolio.getCertifications().trim().isEmpty() &&
-                portfolio.getProjectSamples() != null && !portfolio.getProjectSamples().trim().isEmpty();
+                portfolio.getProjects() != null && !portfolio.getProjects().isEmpty();
 
         return hasRequiredFields ? PortfolioStatus.COMPLETED : PortfolioStatus.INCOMPLETE;
     }

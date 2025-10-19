@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "portfolios")
@@ -29,13 +30,13 @@ public class Portfolio {
     @Column(length = 2000)
     private String certifications;
 
-    // Project Samples
-    @Column(length = 2000)
-    private String projectSamples;
-
     // Contact Information
     private String linkedinUrl;
     private String websiteUrl;
+
+    // Portfolio Projects
+    @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PortfolioProject> projects;
 
     // Portfolio Status
     @Enumerated(EnumType.STRING)
