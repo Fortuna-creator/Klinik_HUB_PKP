@@ -33,15 +33,18 @@ spring:
     refresh:
       enabled: true
 
-mail:
-  host: ${MAIL_HOST:smtp.mailtrap.io}
-  port: ${MAIL_PORT:587}
-  username: ${MAIL_USERNAME:youruser}
-  password: ${MAIL_PASSWORD:yourpass}
-  properties:
-    smtp:
-      auth: true
-      starttls.enable: true
+  mail:
+    host: ${MAIL_HOST:smtp.mailtrap.io}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:youruser}
+    password: ${MAIL_PASSWORD:yourpass}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      smtp:
+        auth: true
+        starttls.enable: true
 
 minio:
   endpoint: ${MINIO_ENDPOINT:http://minio:9000}
