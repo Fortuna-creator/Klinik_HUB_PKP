@@ -12,4 +12,4 @@ COPY target/*.jar app.jar
 EXPOSE 8081
 
 # Set entrypoint to run the Spring Boot application
-ENTRYPOINT ["java", "-jar", "--spring.profiles.active=dev",  "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=dev"]
