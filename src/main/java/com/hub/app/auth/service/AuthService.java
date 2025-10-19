@@ -96,6 +96,7 @@ public class AuthService {
                 .role(user.getRole().name())
                 .email(user.getEmail())
                 .status(user.getStatus().name())
+                .activityStatus(user.getActivityStatus().name())
                 .expiresIn(System.currentTimeMillis() + expires)
                 .build();
     }
