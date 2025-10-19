@@ -142,36 +142,36 @@ class UserControllerTest {
     }
 
     @Test
-    void getPortfolio_ShouldReturnPortfolioWhenExists() throws Exception {
+    void getPortfolios_ShouldReturnPortfoliosWhenExists() throws Exception {
         Portfolio portfolio = new Portfolio();
         portfolio.setId(1L);
 
         when(jwtService.extractUsername("valid.token")).thenReturn("john@example.com");
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
-        when(portfolioService.getPortfolioByConsultant(any())).thenReturn(Optional.of(portfolio));
+        when(portfolioService.getPortfoliosByConsultant(any())).thenReturn(List.of(portfolio));
 
         mockMvc.perform(get("/api/user/portfolio")
                         .header("Authorization", "Bearer valid.token"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value(1L));
+                .andExpect(jsonPath("$[0].id").value(1L));
 
         verify(jwtService).extractUsername("valid.token");
         verify(userRepository).findByEmail("john@example.com");
-        verify(portfolioService).getPortfolioByConsultant(any());
+        verify(portfolioService).getPortfoliosByConsultant(any());
     }
 
     @Test
-    void getPortfolio_ShouldReturnNotFoundWhenNoPortfolio() throws Exception {
+    void getPortfolios_ShouldReturnNotFoundWhenNoPortfolios() throws Exception {
         when(jwtService.extractUsername("valid.token")).thenReturn("john@example.com");
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
-        when(portfolioService.getPortfolioByConsultant(any())).thenReturn(Optional.empty());
+        when(portfolioService.getPortfoliosByConsultant(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/user/portfolio")
                         .header("Authorization", "Bearer valid.token"))
                 .andExpect(status().isNotFound());
 
-        verify(portfolioService).getPortfolioByConsultant(any());
+        verify(portfolioService).getPortfoliosByConsultant(any());
     }
 
     @Test

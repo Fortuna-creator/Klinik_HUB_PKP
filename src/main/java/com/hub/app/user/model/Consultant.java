@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @Entity
 @Table(name = "consultants")
@@ -38,4 +39,8 @@ public class Consultant extends User {
     // Pricing fields (only for professionals)
     private BigDecimal hourlyRate;
     private BigDecimal packageCost;
+
+    // Portfolios relationship
+    @OneToMany(mappedBy = "consultant", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Portfolio> portfolios;
 }
