@@ -148,7 +148,7 @@ class UserControllerTest {
 
         when(jwtService.extractUsername("valid.token")).thenReturn("john@example.com");
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
-        when(portfolioService.getPortfolioByUser(testUser)).thenReturn(Optional.of(portfolio));
+        when(portfolioService.getPortfolioByConsultant(any())).thenReturn(Optional.of(portfolio));
 
         mockMvc.perform(get("/api/user/portfolio")
                         .header("Authorization", "Bearer valid.token"))
@@ -158,20 +158,20 @@ class UserControllerTest {
 
         verify(jwtService).extractUsername("valid.token");
         verify(userRepository).findByEmail("john@example.com");
-        verify(portfolioService).getPortfolioByUser(testUser);
+        verify(portfolioService).getPortfolioByConsultant(any());
     }
 
     @Test
     void getPortfolio_ShouldReturnNotFoundWhenNoPortfolio() throws Exception {
         when(jwtService.extractUsername("valid.token")).thenReturn("john@example.com");
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
-        when(portfolioService.getPortfolioByUser(testUser)).thenReturn(Optional.empty());
+        when(portfolioService.getPortfolioByConsultant(any())).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/user/portfolio")
                         .header("Authorization", "Bearer valid.token"))
                 .andExpect(status().isNotFound());
 
-        verify(portfolioService).getPortfolioByUser(testUser);
+        verify(portfolioService).getPortfolioByConsultant(any());
     }
 
     @Test
