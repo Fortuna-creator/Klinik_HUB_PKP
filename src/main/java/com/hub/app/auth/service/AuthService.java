@@ -3,6 +3,7 @@ package com.hub.app.auth.service;
 import com.hub.app.auth.dto.LoginResponse;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.user.model.VerificationStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,7 @@ public class AuthService {
                 .email(email)
                 .password(encoder.encode(password))
                 .role(Role.HOMEOWNER)
+                .status(VerificationStatus.UNVERIFIED)
                 .activityStatus(UserActivityStatus.INACTIVE)
                 .build();
 
