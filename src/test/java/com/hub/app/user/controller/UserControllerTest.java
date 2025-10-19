@@ -145,7 +145,6 @@ class UserControllerTest {
     void getPortfolio_ShouldReturnPortfolioWhenExists() throws Exception {
         Portfolio portfolio = new Portfolio();
         portfolio.setId(1L);
-        portfolio.setUser(testUser);
 
         when(jwtService.extractUsername("valid.token")).thenReturn("john@example.com");
         when(userRepository.findByEmail("john@example.com")).thenReturn(Optional.of(testUser));
