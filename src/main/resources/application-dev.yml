@@ -1,40 +1,68 @@
 spring:
+  application:
+    name: hub-backend
+
+  # DataSource akan diambil dari Consul KV
   datasource:
-    url: jdbc:postgresql://localhost:5432/hubdb_dev
-    driverClassName: org.postgresql.Driver
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    url: ${DATABASE_URL:jdbc:postgresql://postgres_container:5432/hubdb_dev}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres123}
+    driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: validate
     properties:
       javax.persistence.schema-generation.database.action: none
     show-sql: true
+
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.xml
+
   config:
     import: optional:file:.env[.properties]
 
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT}
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      smtp:
-        auth: true
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:consul}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        enabled: true
+      config:
+        enabled: true
+    refresh:
+      enabled: true
+
+mail:
+  host: ${MAIL_HOST:smtp.mailtrap.io}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:youruser}
+  password: ${MAIL_PASSWORD:yourpass}
+  properties:
+    smtp:
+      auth: true
+      starttls.enable: true
 
 minio:
-  endpoint: http://localhost:9000
-  access-key: minioadmin
-  secret-key: minioadmin
+  endpoint: ${MINIO_ENDPOINT:http://minio:9000}
+  access-key: ${MINIO_ACCESS_KEY:admin}
+  secret-key: ${MINIO_SECRET_KEY:admin12345}
 
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET:supersecretjwtkey}
   expiration-ms: 3600000
 
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh
+  endpoint:
+    refresh:
+      enabled: true
 
 logging:
   level:
