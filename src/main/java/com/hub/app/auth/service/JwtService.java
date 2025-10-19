@@ -2,6 +2,7 @@ package com.hub.app.auth.service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
+    @Getter
     @Value("${jwt.expiration-ms}")
     private Long jwtExpirationMs;
 
@@ -42,4 +44,5 @@ public class JwtService {
             return false;
         }
     }
+
 }
