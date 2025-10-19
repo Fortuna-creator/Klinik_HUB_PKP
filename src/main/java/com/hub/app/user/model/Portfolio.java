@@ -16,6 +16,10 @@ public class Portfolio {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "consultant_id")
+    private Consultant consultant;
+
     // Portfolio Projects
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PortfolioProject> projects;
