@@ -10,5 +10,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
+    List<Portfolio> findByConsultantId(Long consultantId);
     List<Portfolio> findByStatus(PortfolioStatus status);
 }
