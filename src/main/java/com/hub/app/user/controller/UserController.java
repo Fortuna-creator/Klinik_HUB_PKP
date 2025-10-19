@@ -7,6 +7,7 @@ import com.hub.app.error.ErrorCode;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.storage.MinioService;
 import com.hub.app.user.dto.ConsultantListResponse;
+import com.hub.app.user.dto.ConsultantPortfolioResponse;
 import com.hub.app.user.dto.PortfolioProjectRequest;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.dto.ProfileUpdateRequest;
@@ -100,8 +101,8 @@ public class UserController {
                                            ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
 
-            // Get portfolio by consultant ID
-            return portfolioService.getPortfolioByConsultantId(consultantId)
+            // Get portfolio by consultant ID with formatted response
+            return portfolioService.getConsultantPortfolioForHomeowner(consultantId)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {

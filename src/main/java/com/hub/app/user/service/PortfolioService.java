@@ -1,5 +1,6 @@
 package com.hub.app.user.service;
 
+import com.hub.app.user.dto.ConsultantPortfolioResponse;
 import com.hub.app.user.dto.PortfolioProjectRequest;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.model.Consultant;
@@ -165,5 +166,42 @@ public class PortfolioService {
      */
     public Optional<Portfolio> getPortfolioByConsultantId(Long consultantId) {
         return portfolioRepository.findByConsultantId(consultantId);
+    }
+
+    /**
+     * Get consultant's portfolio with formatted response for homeowners
+     */
+    public Optional<ConsultantPortfolioResponse> getConsultantPortfolioForHomeowner(Long consultantId) {
+        return portfolioRepository.findByConsultantId(consultantId)
+                .map(portfolio -> {
+                    Consultant consultant = portfolio.getConsultant();
+
+                    // Build consultant info
+                    ConsultantPortfolioResponse.ConsultantInfo consultantInfo =
+                        ConsultantPortfolioResponse.ConsultantInfo.builder()
+                            .id(consultant.getId())
+                            .name(consultant.getName())
+                            .email(consultant.getEmail())
+                            .specialization(portfolio.getSpecialization())
+                            .build();
+
+                    // Build portfolio projects info
+                    List<ConsultantPortfolioResponse.PortfolioProjectInfo> projectInfos =
+                        portfolio.getProjects().stream()
+                            .map(project -> ConsultantPortfolioResponse.PortfolioProjectInfo.builder()
+                                .id(project.getId())
+                                .projectName(project.getProjectName())
+                                .price(project.getPrice())
+                                .detailDescription(project.getDetailDescription())
+                                .imageUrls(project.getImageUrls())
+                                .createdAt(project.getCreatedAt())
+                                .build())
+                            .collect(Collectors.toList());
+
+                    return ConsultantPortfolioResponse.builder()
+                            .consultant(consultantInfo)
+                            .portfolios(projectInfos)
+                            .build();
+                });
     }
 }

@@ -208,7 +208,7 @@ Content-Type: application/json
 ```
 
 ### 5. Get Consultant Portfolio by ID
-**Endpoint:** `GET /api/users/consultants/{consultantId}/portfolio`  
+**Endpoint:** `GET /api/users/consultants/{consultantId}/portfolio`
 **Description:** Get a specific consultant's portfolio (for homeowners to view when selecting consultants)
 
 #### Sample Request
@@ -220,53 +220,26 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 #### Sample Response (200 OK)
 ```json
 {
-  "id": 1,
   "consultant": {
     "id": 123,
-    "name": "Jane Architect",
-    "email": "jane.architect@example.com"
+    "name": "John Consultant",
+    "email": "john@example.com",
+    "specialization": "Architecture"
   },
-  "bio": "Experienced architect specializing in modern residential and commercial designs with sustainable materials",
-  "specialization": "Modern Architecture & Sustainable Design",
-  "experience": "8 years",
-  "education": "Master of Architecture from Bandung Institute of Technology",
-  "certifications": "Certified Green Architect, LEED Accredited Professional, Certified BIM Manager",
-  "linkedinUrl": "https://linkedin.com/in/jane-architect",
-  "websiteUrl": "https://jane-architect.com",
-  "projects": [
+  "portfolios": [
     {
       "id": 1,
-      "projectName": "Modern Minimalist House - BSD City",
-      "price": 75000.00,
-      "detailDescription": "Complete architectural design for a 300m² modern minimalist house in BSD City. Includes 3D visualization, working drawings, structural calculations, and MEP coordination. Features open-concept living spaces, sustainable materials, and smart home integration.",
+      "projectName": "Modern House Design",
+      "price": 50000,
+      "detailDescription": "Complete modern house design...",
       "imageUrls": [
-        "https://minio.example.com/modern-house-exterior.jpg",
-        "https://minio.example.com/modern-house-interior.jpg",
-        "https://minio.example.com/modern-house-3d-render.jpg",
-        "https://minio.example.com/modern-house-floor-plan.jpg"
+        "url1",
+        "url2",
+        "url3"
       ],
-      "createdAt": "2025-01-15T09:00:00.000Z",
-      "updatedAt": "2025-01-15T09:00:00.000Z"
-    },
-    {
-      "id": 2,
-      "projectName": "Commercial Office Building - Jakarta CBD",
-      "price": 150000.00,
-      "detailDescription": "Comprehensive architectural design for a 10-story commercial office building in Jakarta CBD. Includes facade design, interior layout planning, structural engineering coordination, and compliance with local building codes. Emphasizes energy efficiency and modern workspace concepts.",
-      "imageUrls": [
-        "https://minio.example.com/office-building-facade.jpg",
-        "https://minio.example.com/office-building-floor-plan.jpg",
-        "https://minio.example.com/office-building-interior.jpg",
-        "https://minio.example.com/office-building-site-plan.jpg",
-        "https://minio.example.com/office-building-sections.jpg"
-      ],
-      "createdAt": "2025-01-15T10:30:00.000Z",
-      "updatedAt": "2025-01-15T10:30:00.000Z"
+      "createdAt": "2025-01-15T10:30:00"
     }
-  ],
-  "status": "COMPLETED",
-  "createdAt": "2025-01-15T08:30:00.000Z",
-  "updatedAt": "2025-01-15T10:30:00.000Z"
+  ]
 }
 ```
 
