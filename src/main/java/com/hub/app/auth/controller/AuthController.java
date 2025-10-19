@@ -29,12 +29,13 @@ public class AuthController {
             }
             var user = authService.register(req.getEmail(), req.getPassword());
             return ResponseEntity.ok(RegisterResponse.builder()
-                        .role(user.getRole())
-                        .email(user.getEmail())
-                        .phone(user.getPhone())
-                        .userId(user.getId())
-                        .fullName(user.getName())
-                .build());
+                    .role(user.getRole())
+                    .email(user.getEmail())
+                    .phone(user.getPhone())
+                    .status(user.getStatus().name())
+                    .userId(user.getId())
+                    .fullName(user.getName())
+                    .build());
         } catch (IllegalArgumentException e) {
             return apiErrorBuilder.error(HttpStatus.BAD_REQUEST, "INVALID_ARGUMENT", e.getMessage());
         } catch (DomainException e) {

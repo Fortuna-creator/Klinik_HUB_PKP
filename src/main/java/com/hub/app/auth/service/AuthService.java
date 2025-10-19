@@ -69,15 +69,7 @@ public class AuthService {
             throw new DomainException(ErrorCode.AUTH_INVALID_OTP);
         }
 
-        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
-
-        return LoginResponse.builder()
-                .userId(user.getId())
-                .fullName(user.getName())
-                .token(token)
-                .role(user.getRole().name())
-                .email(user.getEmail())
-                .build();
+        return setLoginResponse(user);
     }
 
     public LoginResponse login(LoginRequest req) {
@@ -90,8 +82,12 @@ public class AuthService {
             throw new DomainException(ErrorCode.AUTH_INVALID_STATUS);
         }
 
-        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        return setLoginResponse(user);
+    }
 
+    private LoginResponse setLoginResponse(User user) {
+        String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
+        Long expires = jwtService.getJwtExpirationMs();
 
         return LoginResponse.builder()
                 .userId(user.getId())
@@ -99,6 +95,8 @@ public class AuthService {
                 .token(token)
                 .role(user.getRole().name())
                 .email(user.getEmail())
+                .status(user.getStatus().name())
+                .expiresIn(System.currentTimeMillis() + expires)
                 .build();
     }
 }

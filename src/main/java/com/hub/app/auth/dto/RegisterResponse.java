@@ -14,6 +14,7 @@ public class RegisterResponse {
     private String username;
     private Role role;
     private String status;
+    private String activityStatus;
     private String ktpUrl;
     private String selfieUrl;
 }
