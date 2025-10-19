@@ -959,7 +959,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bio\": \"Updated consultant biography\",\n  \"specialization\": \"Architecture\",\n  \"experience\": \"6 years\",\n  \"education\": \"Architecture Degree from University X\",\n  \"certifications\": \"Certified Architect\",\n  \"linkedinUrl\": \"https://linkedin.com/in/consultant\",\n  \"websiteUrl\": \"https://consultant.com\",\n  \"projects\": [\n    {\n      \"projectName\": \"Updated Modern House Design\",\n      \"price\": 55000.00,\n      \"detailDescription\": \"Updated modern house design with additional features\",\n      \"imageUrls\": [\n        \"https://minio.example.com/updated-project1-image1.jpg\",\n        \"https://minio.example.com/updated-project1-image2.jpg\"\n      ]\n    }\n  ]\n}"
+              "raw": "{\n  \"bio\": \"Experienced architect specializing in modern residential designs with sustainable materials\",\n  \"specialization\": \"Modern Architecture & Sustainable Design\",\n  \"experience\": \"7 years\",\n  \"education\": \"Master of Architecture from Bandung Institute of Technology\",\n  \"certifications\": \"Certified Green Architect, LEED Accredited Professional\",\n  \"linkedinUrl\": \"https://linkedin.com/in/jane-architect\",\n  \"websiteUrl\": \"https://jane-architect.com\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/users/portfolio",
@@ -1016,7 +1016,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"projectName\": \"Modern House Design\",\n  \"price\": 50000.00,\n  \"detailDescription\": \"Complete modern house design with 3D rendering and construction plans\",\n  \"imageUrls\": [\n    \"https://minio.example.com/project1-image1.jpg\",\n    \"https://minio.example.com/project1-image2.jpg\",\n    \"https://minio.example.com/project1-image3.jpg\"\n  ]\n}"
+              "raw": "{\n  \"projectName\": \"Modern Minimalist House - BSD City\",\n  \"price\": 75000.00,\n  \"detailDescription\": \"Complete architectural design for a 300m² modern minimalist house in BSD City. Includes 3D visualization, working drawings, structural calculations, and MEP coordination. Features open-concept living spaces, sustainable materials, and smart home integration.\",\n  \"imageUrls\": [\n    \"https://minio.example.com/modern-house-exterior.jpg\",\n    \"https://minio.example.com/modern-house-interior.jpg\",\n    \"https://minio.example.com/modern-house-3d-render.jpg\",\n    \"https://minio.example.com/modern-house-floor-plan.jpg\"\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/users/portfolio/projects",
