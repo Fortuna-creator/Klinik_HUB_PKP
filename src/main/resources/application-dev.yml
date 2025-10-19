@@ -20,7 +20,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 
   config:
-    import: consul:
+    import: optional:consul:consul:8500
 
   cloud:
     consul:
