@@ -16,24 +16,6 @@ public class Portfolio {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
-    @JoinColumn(name = "consultant_id", unique = true)
-    private Consultant consultant;
-
-    // Basic Information
-    private String bio;
-    private String specialization;
-    private String experience; // years of experience
-    private String education;
-
-    // Certifications
-    @Column(length = 2000)
-    private String certifications;
-
-    // Contact Information
-    private String linkedinUrl;
-    private String websiteUrl;
-
     // Portfolio Projects
     @OneToMany(mappedBy = "portfolio", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PortfolioProject> projects;

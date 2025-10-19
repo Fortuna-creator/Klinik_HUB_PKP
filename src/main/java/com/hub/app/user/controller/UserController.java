@@ -69,6 +69,29 @@ public class UserController {
     }
 
     @GetMapping("/portfolio")
+    public ResponseEntity<?> getPortfolios(@RequestHeader("Authorization") String authHeader) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String email = jwtService.extractUsername(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can have portfolios");
+            }
+
+            List<Portfolio> portfolios = portfolioService.getPortfoliosByConsultant((Consultant) user);
+            if (portfolios.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(portfolios);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/portfolio/first")
     public ResponseEntity<?> getPortfolio(@RequestHeader("Authorization") String authHeader) {
         try {
             String token = authHeader.replace("Bearer ", "");
