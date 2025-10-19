@@ -23,6 +23,8 @@ spring:
     import: optional:consul:consul:8500
 
   cloud:
+    compatibility-verifier:
+      enabled: false
     consul:
       host: ${CONSUL_HOST:consul}
       port: ${CONSUL_PORT:8500}
