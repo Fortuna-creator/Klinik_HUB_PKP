@@ -1,9 +1,8 @@
-name: Build and Deploy Spring Boot App
+name: Build and Deploy Spring Boot App (Develop)
 
 on:
   push:
     branches:
-      - main
       - develop
 
 permissions:
@@ -64,16 +63,16 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
 
-  deploy:
+  deploy-develop:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/develop'
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Deploy to server
+    - name: Deploy to server via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.DEPLOY_HOST }}
@@ -81,7 +80,9 @@ jobs:
         key: ${{ secrets.DEPLOY_KEY }}
         port: ${{ secrets.DEPLOY_PORT }}
         script: |
-          cd /path/to/your/project
+          echo "---- Starting deploy for develop branch ----"
+          cd /opt/containers/dev
+          # generate .env file from secrets
           echo "DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}" > .env
           echo "DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}" >> .env
           echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
@@ -91,6 +92,8 @@ jobs:
           echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
           echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
           echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+          # restart docker-compose
           docker-compose down
           docker-compose pull
           docker-compose up -d
+        debug: true
