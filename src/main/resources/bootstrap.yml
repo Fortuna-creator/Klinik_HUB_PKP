@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: hub-backend
+  profiles:
+    active: dev
+
+  cloud:
+    consul:
+      host: consul
+      port: 8500
+      config:
+        enabled: true
+        prefix: config/hub-backend
+        default-context: application
+        profile-separator: ','
+        data-key: data
+        format: YAML
