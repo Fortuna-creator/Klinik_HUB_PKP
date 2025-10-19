@@ -1,5 +1,6 @@
 package com.hub.app.user.repository;
 
+import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.Portfolio;
 import com.hub.app.user.model.PortfolioStatus;
 import com.hub.app.user.model.User;
@@ -9,6 +10,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
-    Optional<Portfolio> findByUser(User user);
+    Optional<Portfolio> findByConsultant(Consultant consultant);
+    Optional<Portfolio> findByConsultantId(Long consultantId);
+    Optional<Portfolio> findByUser(User user); // Keep for backward compatibility
     List<Portfolio> findByStatus(PortfolioStatus status);
 }

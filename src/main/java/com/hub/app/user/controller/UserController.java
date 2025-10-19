@@ -4,12 +4,18 @@ import com.hub.app.auth.service.JwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.file.dto.FileUploadResponse;
+import com.hub.app.storage.MinioService;
 import com.hub.app.user.dto.ConsultantListResponse;
+import com.hub.app.user.dto.ConsultantPortfolioResponse;
+import com.hub.app.user.dto.PortfolioProjectRequest;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.dto.ProfileUpdateRequest;
 import com.hub.app.user.dto.ProfileUpdateResponse;
+import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.ConsultantType;
 import com.hub.app.user.model.Portfolio;
+import com.hub.app.user.model.PortfolioProject;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.UserRepository;
@@ -19,11 +25,15 @@ import com.hub.app.user.service.PortfolioService;
 import com.hub.app.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
@@ -36,6 +46,7 @@ public class UserController {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final ApiErrorBuilder apiErrorBuilder;
+    private final MinioService minioService;
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
@@ -65,7 +76,33 @@ public class UserController {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            return portfolioService.getPortfolioByUser(user)
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can have portfolios");
+            }
+
+            return portfolioService.getPortfolioByConsultant((Consultant) user)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/consultants/{consultantId}/portfolio")
+    public ResponseEntity<?> getConsultantPortfolio(@PathVariable Long consultantId,
+                                                   @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Validate JWT token
+            String token = authHeader.replace("Bearer ", "");
+            if (!jwtService.validateToken(token)) {
+                return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
+                                           ErrorCode.UNAUTHORIZED.getCode(),
+                                           ErrorCode.UNAUTHORIZED.getDefaultMessage());
+            }
+
+            // Get portfolio by consultant ID with formatted response
+            return portfolioService.getConsultantPortfolioForHomeowner(consultantId)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -75,12 +112,40 @@ public class UserController {
 
     @PostMapping("/portfolio")
     public ResponseEntity<?> savePortfolio(@RequestHeader("Authorization") String authHeader,
-                                           @Valid @RequestBody PortfolioRequest request) {
+                                            @Valid @RequestBody PortfolioRequest request) {
         try {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can create portfolios");
+            }
+
+            Portfolio portfolio = portfolioService.saveOrUpdatePortfolio(user, request);
+            return ResponseEntity.ok(portfolio);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/portfolio")
+    public ResponseEntity<?> updatePortfolio(@RequestHeader("Authorization") String authHeader,
+                                             @Valid @RequestBody PortfolioRequest request) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String email = jwtService.extractUsername(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can update portfolios");
+            }
 
             Portfolio portfolio = portfolioService.saveOrUpdatePortfolio(user, request);
             return ResponseEntity.ok(portfolio);
@@ -172,8 +237,54 @@ public class UserController {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                       ErrorCode.INTERNAL_ERROR.getCode(),
-                                       ErrorCode.INTERNAL_ERROR.getDefaultMessage());
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
+        }
+    }
+
+    @PostMapping("/portfolio/projects")
+    public ResponseEntity<?> addPortfolioProject(@RequestHeader("Authorization") String authHeader,
+                                                 @Valid @RequestBody PortfolioProjectRequest projectRequest) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String email = jwtService.extractUsername(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can add portfolio projects");
+            }
+
+            PortfolioProject project = portfolioService.addProjectToPortfolio((Consultant) user, projectRequest);
+            return ResponseEntity.ok(project);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping(value = "/portfolio/upload-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadPortfolioImages(@RequestHeader("Authorization") String authHeader,
+                                                   @RequestPart("files") MultipartFile[] files) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            if (!jwtService.validateToken(token)) {
+                return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
+                                           ErrorCode.UNAUTHORIZED.getCode(),
+                                           ErrorCode.UNAUTHORIZED.getDefaultMessage());
+            }
+
+            List<String> uploadedUrls = new ArrayList<>();
+            for (MultipartFile file : files) {
+                String fileUrl = minioService.uploadFile(file, "Portfolio");
+                uploadedUrls.add(fileUrl);
+            }
+
+            return ResponseEntity.ok(Map.of("imageUrls", uploadedUrls));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }
