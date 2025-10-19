@@ -95,7 +95,7 @@ jobs:
           echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
           echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> .env
           # restart docker-compose
-          docker-compose down
-          docker-compose pull
-          docker-compose up -d
+          docker compose down
+          docker compose pull
+          docker compose up -d
         debug: true
