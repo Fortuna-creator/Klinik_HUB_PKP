@@ -33,7 +33,5 @@ public class CreateProjectRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Land area must be greater than 0")
     private BigDecimal landArea;
 
-    @NotNull(message = "Income is required")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Income must be greater than 0")
     private BigDecimal income;
 }
