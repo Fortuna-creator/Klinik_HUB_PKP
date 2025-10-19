@@ -1058,6 +1058,62 @@
           ]
         },
         {
+          "name": "Get Consultant Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/consultants/{{consultant_id}}/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "consultants", "{{consultant_id}}", "portfolio"]
+            },
+            "description": "Endpoint: GET /api/users/consultants/{consultantId}/portfolio\nMethod: GET\nDescription: Get a specific consultant's portfolio with all their projects.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultantId | Long | - | Yes | ID of the consultant whose portfolio to retrieve |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| consultant | Object | - | Yes | Consultant information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - id | Long | - | Yes | Project ID |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 404 | - | Portfolio not found | Consultant doesn't have a portfolio |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Allows homeowners to view consultant portfolios when selecting consultants\n- Returns complete portfolio information including all projects with images\n- Portfolio may not exist if consultant hasn't created one yet\n- Requires authentication but accessible to all authenticated users"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                    "    throw new Error('JWT token not available. Please login first.');",
+                    "}",
+                    "",
+                    "if (!pm.collectionVariables.get('consultant_id')) {",
+                    "    throw new Error('Consultant ID not available. Please set consultant_id variable.');",
+                    "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Response contains portfolio data\", function () {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('id');",
+                  "        pm.expect(jsonData).to.have.property('consultant');",
+                  "        pm.expect(jsonData).to.have.property('projects');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "Upload Portfolio Images",
           "request": {
             "method": "POST",

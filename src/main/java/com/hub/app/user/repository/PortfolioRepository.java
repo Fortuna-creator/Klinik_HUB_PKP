@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface PortfolioRepository extends JpaRepository<Portfolio, Long> {
     Optional<Portfolio> findByConsultant(Consultant consultant);
+    Optional<Portfolio> findByConsultantId(Long consultantId);
     Optional<Portfolio> findByUser(User user); // Keep for backward compatibility
     List<Portfolio> findByStatus(PortfolioStatus status);
 }

@@ -159,4 +159,11 @@ public class PortfolioService {
         // Return the newly added project
         return saved.getProjects().get(saved.getProjects().size() - 1);
     }
+
+    /**
+     * Get consultant's portfolio by consultant ID
+     */
+    public Optional<Portfolio> getPortfolioByConsultantId(Long consultantId) {
+        return portfolioRepository.findByConsultantId(consultantId);
+    }
 }

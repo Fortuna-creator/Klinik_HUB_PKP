@@ -88,6 +88,27 @@ public class UserController {
         }
     }
 
+    @GetMapping("/consultants/{consultantId}/portfolio")
+    public ResponseEntity<?> getConsultantPortfolio(@PathVariable Long consultantId,
+                                                   @RequestHeader("Authorization") String authHeader) {
+        try {
+            // Validate JWT token
+            String token = authHeader.replace("Bearer ", "");
+            if (!jwtService.validateToken(token)) {
+                return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
+                                           ErrorCode.UNAUTHORIZED.getCode(),
+                                           ErrorCode.UNAUTHORIZED.getDefaultMessage());
+            }
+
+            // Get portfolio by consultant ID
+            return portfolioService.getPortfolioByConsultantId(consultantId)
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     @PostMapping("/portfolio")
     public ResponseEntity<?> savePortfolio(@RequestHeader("Authorization") String authHeader,
                                             @Valid @RequestBody PortfolioRequest request) {
