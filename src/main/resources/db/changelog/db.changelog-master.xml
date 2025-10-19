@@ -14,5 +14,6 @@
     <include file="007-homeowners-table.sql" relativeToChangelogFile="true"/>
     <include file="008-consultant-enhancements.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
+    <include file="009-add-column-users.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
