@@ -132,4 +132,31 @@ public class PortfolioService {
                 .map(portfolio -> portfolio.getStatus() == PortfolioStatus.COMPLETED)
                 .orElse(false);
     }
+
+    /**
+     * Add a project to consultant's portfolio
+     */
+    @Transactional
+    public PortfolioProject addProjectToPortfolio(Consultant consultant, PortfolioProjectRequest projectRequest) {
+        Portfolio portfolio = getPortfolioByConsultant(consultant)
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found for consultant"));
+
+        PortfolioProject project = PortfolioProject.builder()
+                .portfolio(portfolio)
+                .projectName(projectRequest.getProjectName())
+                .price(projectRequest.getPrice())
+                .detailDescription(projectRequest.getDetailDescription())
+                .imageUrls(projectRequest.getImageUrls())
+                .build();
+
+        portfolio.getProjects().add(project);
+
+        // Update portfolio status if it becomes complete
+        portfolio.setStatus(determinePortfolioStatus(portfolio));
+
+        Portfolio saved = portfolioRepository.save(portfolio);
+
+        // Return the newly added project
+        return saved.getProjects().get(saved.getProjects().size() - 1);
+    }
 }

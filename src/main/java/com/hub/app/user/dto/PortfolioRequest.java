@@ -13,5 +13,6 @@ public class PortfolioRequest {
     private String certifications;
     private String linkedinUrl;
     private String websiteUrl;
+    // Projects are now optional - consultants can add them separately
     private List<PortfolioProjectRequest> projects;
 }

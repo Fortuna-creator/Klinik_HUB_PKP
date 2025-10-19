@@ -7,12 +7,14 @@ import com.hub.app.error.ErrorCode;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.storage.MinioService;
 import com.hub.app.user.dto.ConsultantListResponse;
+import com.hub.app.user.dto.PortfolioProjectRequest;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.dto.ProfileUpdateRequest;
 import com.hub.app.user.dto.ProfileUpdateResponse;
 import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.ConsultantType;
 import com.hub.app.user.model.Portfolio;
+import com.hub.app.user.model.PortfolioProject;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.UserRepository;
@@ -215,6 +217,29 @@ public class UserController {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         ErrorCode.INTERNAL_ERROR.getDefaultMessage());
+        }
+    }
+
+    @PostMapping("/portfolio/projects")
+    public ResponseEntity<?> addPortfolioProject(@RequestHeader("Authorization") String authHeader,
+                                                 @Valid @RequestBody PortfolioProjectRequest projectRequest) {
+        try {
+            String token = authHeader.replace("Bearer ", "");
+            String email = jwtService.extractUsername(token);
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can add portfolio projects");
+            }
+
+            PortfolioProject project = portfolioService.addProjectToPortfolio((Consultant) user, projectRequest);
+            return ResponseEntity.ok(project);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

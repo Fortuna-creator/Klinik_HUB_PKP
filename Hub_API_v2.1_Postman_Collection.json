@@ -1000,6 +1000,64 @@
           ]
         },
         {
+          "name": "Add Portfolio Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectName\": \"Modern House Design\",\n  \"price\": 50000.00,\n  \"detailDescription\": \"Complete modern house design with 3D rendering and construction plans\",\n  \"imageUrls\": [\n    \"https://minio.example.com/project1-image1.jpg\",\n    \"https://minio.example.com/project1-image2.jpg\",\n    \"https://minio.example.com/project1-image3.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio/projects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio", "projects"]
+            },
+            "description": "Endpoint: POST /api/users/portfolio/projects\nMethod: POST\nDescription: Add a new project to consultant's portfolio.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projectName | String | 255 | Yes | Name of the project |\n| price | BigDecimal | - | No | Project price/cost |\n| detailDescription | String | - | No | Detailed project description |\n| imageUrls | Array | - | No | Array of image URLs for the project |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Project ID |\n| projectName | String | 255 | Yes | Name of the project |\n| price | BigDecimal | - | No | Project price/cost |\n| detailDescription | String | - | No | Detailed project description |\n| imageUrls | Array | - | No | Array of image URLs |\n| createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or missing required fields |\n| 400 | - | Only consultants can add portfolio projects | User is not a consultant |\n| 400 | - | Portfolio not found for consultant | Consultant doesn't have a portfolio yet |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Consultants must first create a basic portfolio before adding projects\n- Projects are added individually to existing portfolios\n- Image URLs should be obtained from the upload endpoint first\n- Portfolio status is automatically updated when projects are added"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains project data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('projectName');",
+                  "    pm.expect(jsonData).to.have.property('createdAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
           "name": "Upload Portfolio Images",
           "request": {
             "method": "POST",
