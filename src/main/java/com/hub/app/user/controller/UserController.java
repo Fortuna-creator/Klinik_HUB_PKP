@@ -10,6 +10,7 @@ import com.hub.app.user.dto.ConsultantListResponse;
 import com.hub.app.user.dto.PortfolioRequest;
 import com.hub.app.user.dto.ProfileUpdateRequest;
 import com.hub.app.user.dto.ProfileUpdateResponse;
+import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.ConsultantType;
 import com.hub.app.user.model.Portfolio;
 import com.hub.app.user.model.Role;
@@ -72,7 +73,12 @@ public class UserController {
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            return portfolioService.getPortfolioByUser(user)
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can have portfolios");
+            }
+
+            return portfolioService.getPortfolioByConsultant((Consultant) user)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
@@ -88,6 +94,11 @@ public class UserController {
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can create portfolios");
+            }
 
             Portfolio portfolio = portfolioService.saveOrUpdatePortfolio(user, request);
             return ResponseEntity.ok(portfolio);
@@ -106,6 +117,11 @@ public class UserController {
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            // Check if user is a consultant
+            if (!(user instanceof Consultant)) {
+                return ResponseEntity.badRequest().body("Only consultants can update portfolios");
+            }
 
             Portfolio portfolio = portfolioService.saveOrUpdatePortfolio(user, request);
             return ResponseEntity.ok(portfolio);

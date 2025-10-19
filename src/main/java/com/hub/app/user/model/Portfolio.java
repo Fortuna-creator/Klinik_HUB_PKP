@@ -17,8 +17,8 @@ public class Portfolio {
     private Long id;
 
     @OneToOne
-    @JoinColumn(name = "user_id", unique = true)
-    private User user;
+    @JoinColumn(name = "consultant_id", unique = true)
+    private Consultant consultant;
 
     // Basic Information
     private String bio;

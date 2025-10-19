@@ -2,6 +2,7 @@ package com.hub.app.user.service;
 
 import com.hub.app.user.dto.PortfolioProjectRequest;
 import com.hub.app.user.dto.PortfolioRequest;
+import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.Portfolio;
 import com.hub.app.user.model.PortfolioProject;
 import com.hub.app.user.model.PortfolioStatus;
@@ -25,10 +26,20 @@ public class PortfolioService {
     private final PortfolioRepository portfolioRepository;
 
     /**
-     * Get portfolio for a user
+     * Get portfolio for a consultant
+     */
+    public Optional<Portfolio> getPortfolioByConsultant(Consultant consultant) {
+        return portfolioRepository.findByConsultant(consultant);
+    }
+
+    /**
+     * Get portfolio for a user (backward compatibility)
      */
     public Optional<Portfolio> getPortfolioByUser(User user) {
-        return portfolioRepository.findByUser(user);
+        if (user instanceof Consultant) {
+            return getPortfolioByConsultant((Consultant) user);
+        }
+        return Optional.empty();
     }
 
     /**
@@ -36,14 +47,20 @@ public class PortfolioService {
      */
     @Transactional
     public Portfolio saveOrUpdatePortfolio(User user, PortfolioRequest request) {
-        Optional<Portfolio> existingPortfolio = portfolioRepository.findByUser(user);
+        // Check if user is a consultant
+        if (!(user instanceof Consultant)) {
+            throw new IllegalArgumentException("Only consultants can have portfolios");
+        }
+
+        Consultant consultant = (Consultant) user;
+        Optional<Portfolio> existingPortfolio = portfolioRepository.findByConsultant(consultant);
 
         Portfolio portfolio;
         if (existingPortfolio.isPresent()) {
             portfolio = existingPortfolio.get();
         } else {
             portfolio = Portfolio.builder()
-                    .user(user)
+                    .consultant(consultant)
                     .status(PortfolioStatus.DRAFT)
                     .build();
         }
@@ -105,10 +122,13 @@ public class PortfolioService {
     }
 
     /**
-     * Check if user has completed portfolio
+     * Check if consultant has completed portfolio
      */
     public boolean hasCompletedPortfolio(User user) {
-        return getPortfolioByUser(user)
+        if (!(user instanceof Consultant)) {
+            return false;
+        }
+        return getPortfolioByConsultant((Consultant) user)
                 .map(portfolio -> portfolio.getStatus() == PortfolioStatus.COMPLETED)
                 .orElse(false);
     }
