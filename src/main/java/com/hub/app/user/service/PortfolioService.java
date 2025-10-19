@@ -78,6 +78,7 @@ public class PortfolioService {
             portfolio = existingPortfolio.get();
         } else {
             portfolio = Portfolio.builder()
+                    .consultant(consultant)
                     .status(PortfolioStatus.DRAFT)
                     .build();
         }
@@ -170,10 +171,7 @@ public class PortfolioService {
      * Get consultant's portfolios by consultant ID
      */
     public List<Portfolio> getPortfoliosByConsultantId(Long consultantId) {
-        // Since Portfolio no longer has consultant relationship, we need to get portfolios differently
-        // This method needs to be updated to work with the new model structure
-        // For now, return empty list
-        return new ArrayList<>();
+        return portfolioRepository.findByConsultantId(consultantId);
     }
 
     /**
