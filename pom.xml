@@ -215,7 +215,7 @@
                     <rulesets>
                         <ruleset>rulesets/java/unusedcode.xml</ruleset>
                     </rulesets>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
             </plugin>
         </plugins>

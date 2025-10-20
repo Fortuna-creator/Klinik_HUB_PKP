@@ -5,7 +5,6 @@ import com.hub.app.error.ErrorCode;
 import com.hub.app.user.dto.ProfileUpdateRequest;
 import com.hub.app.user.dto.ProfileUpdateResponse;
 import com.hub.app.user.model.HomeOwner;
-import com.hub.app.user.model.User;
 import com.hub.app.user.model.VerificationStatus;
 import com.hub.app.user.repository.HomeOwnerRepository;
 import com.hub.app.user.repository.UserRepository;
