@@ -43,17 +43,8 @@ public class DesignController {
         }
     }
 
-    @PatchMapping("/{id}/select")
-    public ResponseEntity<?> selectDesign(@PathVariable UUID id) {
-        try {
-            DesignResponse design = designService.selectDesign(id);
-            return ResponseEntity.ok(design);
-        } catch (Exception e) {
-            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                        ErrorCode.INTERNAL_ERROR.getCode(),
-                                        e.getMessage());
-        }
-    }
+    // Note: Design selection is not available for consultation flow
+    // This endpoint is only for prototype designs in the design catalog
 
     @GetMapping("/{id}/download/{type}")
     public ResponseEntity<?> downloadDocument(

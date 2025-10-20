@@ -17,8 +17,8 @@ public class ConsultationResponse {
     private String homeOwnerName;
     private Long consultantId;
     private String consultantName;
-    private UUID designId;
-    private String designName;
+    private UUID designId; // Nullable - design will be assigned later by consultant
+    private String designName; // Nullable
     private ConsultationType consultationType;
     private ConsultationChannel channel;
     private ConsultationStatus status;

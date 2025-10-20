@@ -31,13 +31,13 @@ public class ConsultationService {
         Consultant consultant = consultantRepository.findById(request.getConsultantId())
                 .orElseThrow(() -> new RuntimeException("Consultant not found"));
 
-        // Validate design exists
-        designService.getDesignById(request.getDesignId());
+        // Note: Design is not required for consultation creation
+        // Design will be created/uploaded by consultant after consultation starts
 
         Consultation consultation = new Consultation();
         consultation.setHomeOwner(homeOwner);
         consultation.setConsultant(consultant);
-        consultation.setDesign(designService.getDesignEntityById(request.getDesignId()));
+        consultation.setDesign(null); // Design will be assigned later by consultant
         consultation.setConsultationType(request.getConsultationType());
         consultation.setChannel(request.getChannel());
         consultation.setStatus(ConsultationStatus.DRAFT);
@@ -89,8 +89,8 @@ public class ConsultationService {
                 .homeOwnerName(consultation.getHomeOwner().getName())
                 .consultantId(consultation.getConsultant().getId())
                 .consultantName(consultation.getConsultant().getName())
-                .designId(consultation.getDesign().getId())
-                .designName(consultation.getDesign().getName())
+                .designId(consultation.getDesign() != null ? consultation.getDesign().getId() : null)
+                .designName(consultation.getDesign() != null ? consultation.getDesign().getName() : null)
                 .consultationType(consultation.getConsultationType())
                 .channel(consultation.getChannel())
                 .status(consultation.getStatus())

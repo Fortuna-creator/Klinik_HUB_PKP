@@ -28,7 +28,7 @@ public class Consultation {
     private Consultant consultant;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "design_id")
+    @JoinColumn(name = "design_id", nullable = true)
     private Design design;
 
     @Enumerated(EnumType.STRING)
