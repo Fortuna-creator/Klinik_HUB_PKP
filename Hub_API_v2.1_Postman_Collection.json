@@ -65,6 +65,12 @@
       "value": "",
       "type": "string",
       "description": "Project ID for operations"
+    },
+    {
+      "key": "consultation_id",
+      "value": "",
+      "type": "string",
+      "description": "Consultation ID for operations"
     }
   ],
   "item": [
@@ -1929,6 +1935,328 @@
                   "    pm.expect(jsonData).to.have.property('id');",
                   "    pm.expect(jsonData).to.have.property('consultantId');",
                   "    pm.expect(jsonData).to.have.property('consultationType');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Consultation Module",
+      "description": "Consultation management endpoints for home owners and consultants",
+      "item": [
+        {
+          "name": "Create Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consultantId\": {{consultant_id}},\n  \"consultationType\": \"GRATIS\",\n  \"channel\": \"CHAT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations"]
+            },
+            "description": "Endpoint: POST /api/consultations\nMethod: POST\nDescription: Create a new consultation between home owner and consultant.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultationType | String | - | Yes | GRATIS or BERBAYAR |\n| channel | String | - | Yes | CHAT, VIDEO, or WHATSAPP |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| designId | UUID | - | No | Design ID (null initially) |\n| designName | String | 100 | No | Design name (null initially) |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| status | String | - | Yes | Consultation status |\n| startedAt | Instant | - | No | Consultation start time |\n| completedAt | Instant | - | No | Consultation completion time |\n| createdAt | Instant | - | Yes | Creation timestamp |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only home owners can create consultations |\n| 404 | USER_NOT_FOUND | User not found | Consultant ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Home owner selects consultant and consultation type\n- Design is not required at creation - will be uploaded by consultant later\n- Initial status is MENUNGGU_KONFIRMASI_KONSULTAN"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultant_id')) {",
+                  "    throw new Error('Consultant ID not available. Please set consultant_id variable.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultation data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('consultantId');",
+                  "    pm.expect(jsonData).to.have.property('consultationType');",
+                  "    pm.collectionVariables.set('consultation_id', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Consultations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations"]
+            },
+            "description": "Endpoint: GET /api/consultations\nMethod: GET\nDescription: Retrieve all consultations for the authenticated user.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultations | Array | - | Yes | Array of consultation objects |\n| - id | UUID | - | Yes | Consultation ID |\n| - homeOwnerId | Long | - | Yes | Home owner user ID |\n| - homeOwnerName | String | 100 | Yes | Home owner name |\n| - consultantId | Long | - | Yes | Consultant user ID |\n| - consultantName | String | 100 | Yes | Consultant name |\n| - consultationType | String | - | Yes | Consultation type |\n| - channel | String | - | Yes | Communication channel |\n| - status | String | - | Yes | Consultation status |\n| - createdAt | Instant | - | Yes | Creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns consultations filtered by user role (home owner or consultant)\n- Home owners see their consultations, consultants see consultations assigned to them"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Consultation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}"]
+            },
+            "description": "Endpoint: GET /api/consultations/{id}\nMethod: GET\nDescription: Retrieve a specific consultation by ID.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| designId | UUID | - | No | Design ID |\n| designName | String | 100 | No | Design name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| status | String | - | Yes | Consultation status |\n| startedAt | Instant | - | No | Consultation start time |\n| completedAt | Instant | - | No | Consultation completion time |\n| createdAt | Instant | - | Yes | Creation timestamp |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | User does not have access to this consultation |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Users can only access consultations they are involved in (as home owner or consultant)\n- Returns detailed consultation information including design details if available"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultation details\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('consultantId');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}/accept",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}", "accept"]
+            },
+            "description": "Endpoint: POST /api/consultations/{id}/accept\nMethod: POST\nDescription: Consultant accepts a consultation request.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| status | String | - | Yes | Updated status (MENUNGGU_JADWAL_SURVEY) |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only assigned consultant can accept |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Invalid status transition | Consultation is not in acceptable status |\n\nAdditional Notes:\n- Only the assigned consultant can accept the consultation\n- Changes status from MENUNGGU_KONFIRMASI_KONSULTAN to MENUNGGU_JADWAL_SURVEY\n- Triggers survey scheduling workflow"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status changed to MENUNGGU_JADWAL_SURVEY\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('MENUNGGU_JADWAL_SURVEY');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}", "reject"]
+            },
+            "description": "Endpoint: POST /api/consultations/{id}/reject\nMethod: POST\nDescription: Consultant rejects a consultation request.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| status | String | - | Yes | Updated status (SELESAI) |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only assigned consultant can reject |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Invalid status transition | Consultation is not in rejectable status |\n\nAdditional Notes:\n- Only the assigned consultant can reject the consultation\n- Changes status from MENUNGGU_KONFIRMASI_KONSULTAN to SELESAI\n- Ends the consultation process permanently"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status changed to SELESAI\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('SELESAI');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Finalize Consultation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}/finalize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}", "finalize"]
+            },
+            "description": "Endpoint: PATCH /api/consultations/{id}/finalize\nMethod: PATCH\nDescription: Home owner finalizes a completed consultation.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| status | String | - | Yes | Updated status (FINAL) |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only home owner can finalize |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Invalid status transition | Consultation is not in finalizable status |\n\nAdditional Notes:\n- Only the home owner can finalize their consultation\n- Changes status to FINAL when consultation is complete and satisfactory\n- Marks the consultation as successfully completed"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status changed to FINAL\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('FINAL');",
                   "});"
                 ],
                 "type": "text/javascript"

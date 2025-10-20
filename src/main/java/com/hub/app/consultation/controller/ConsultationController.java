@@ -81,6 +81,38 @@ public class ConsultationController {
         }
     }
 
+    @PostMapping("/{id}/accept")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> acceptConsultation(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+            ConsultationResponse response = consultationService.acceptConsultation(id, consultantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/reject")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> rejectConsultation(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+            ConsultationResponse response = consultationService.rejectConsultation(id, consultantId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        e.getMessage());
+        }
+    }
+
     @PatchMapping("/{id}/finalize")
     @PreAuthorize("hasRole('HOME_OWNER')")
     public ResponseEntity<?> finalizeConsultation(

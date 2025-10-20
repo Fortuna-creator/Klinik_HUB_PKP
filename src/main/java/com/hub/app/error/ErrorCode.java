@@ -26,7 +26,12 @@ public enum ErrorCode {
     INVALID_COORDINATE("INVALID_COORDINATE", HttpStatus.BAD_REQUEST, "Format koordinat tidak valid"),
 
     // Project-specific
-    PROJECT_NOT_FOUND("PROJECT_NOT_FOUND", HttpStatus.NOT_FOUND, "Project not found");
+    PROJECT_NOT_FOUND("PROJECT_NOT_FOUND", HttpStatus.NOT_FOUND, "Project not found"),
+
+    // Consultation-specific
+    CONSULTATION_NOT_FOUND("CONSULTATION_NOT_FOUND", HttpStatus.NOT_FOUND, "Consultation not found"),
+    SURVEY_SCHEDULE_NOT_FOUND("SURVEY_SCHEDULE_NOT_FOUND", HttpStatus.NOT_FOUND, "Survey schedule not found"),
+    INVALID_STATUS("INVALID_STATUS", HttpStatus.BAD_REQUEST, "Invalid status transition");
 
     private final String code;
     private final HttpStatus httpStatus;

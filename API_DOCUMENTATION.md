@@ -1,3 +1,17 @@
+# Hub API Documentation
+
+## Overview
+The Hub API provides comprehensive endpoints for authentication, consultation management, and user services. This documentation covers all available API endpoints with detailed request/response examples and integration guidelines.
+
+## Table of Contents
+- [Authentication API](#hub-authentication-api-documentation)
+- [Consultation API](#hub-consultation-api-documentation)
+- [File Operations API](#hub-file-operations-api-documentation)
+- [Project API](#hub-project-api-documentation)
+- [User API](#hub-user-api-documentation)
+
+---
+
 # Hub Authentication API Documentation
 
 ## Overview
@@ -211,3 +225,300 @@ User account is inactive
 
 ## Postman Collection
 Import `Hub_Auth_Postman_Collection.json` for testing all endpoints with pre-configured requests.
+
+---
+
+# Hub Consultation API Documentation
+
+## Overview
+The Hub Consultation API provides endpoints for managing consultation requests between home owners and consultants, including consultation creation, status management, and lifecycle operations.
+
+## Base URL
+```
+http://localhost:8080/api/consultations
+```
+
+## Authentication
+All endpoints require JWT token authentication. Include the token in the Authorization header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+## Endpoints
+
+### 1. Create Consultation
+**Endpoint:** `POST /api/consultations`
+
+**Description:** Creates a new consultation request from a home owner to a consultant.
+
+**Authorization:** Required (Home Owner role)
+
+**Request Body:**
+```json
+{
+  "consultantId": 1,
+  "consultationType": "GRATIS",
+  "channel": "CHAT"
+}
+```
+
+**Request Parameters:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| consultantId | number | Yes | ID of the consultant to request consultation from |
+| consultationType | string | Yes | Type of consultation: `GRATIS` or `BERBAYAR` |
+| channel | string | Yes | Communication channel: `CHAT`, `VIDEO`, or `WHATSAPP` |
+
+**Response (Success - 200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "homeOwnerId": 2,
+  "homeOwnerName": "John Doe",
+  "consultantId": 1,
+  "consultantName": "Jane Smith",
+  "designId": null,
+  "designName": null,
+  "consultationType": "GRATIS",
+  "channel": "CHAT",
+  "status": "MENUNGGU_KONFIRMASI_KONSULTAN",
+  "startedAt": null,
+  "completedAt": null,
+  "createdAt": "2025-10-20T09:50:00Z",
+  "updatedAt": "2025-10-20T09:50:00Z"
+}
+```
+
+**Response (Error - 500):**
+```json
+{
+  "errorCode": "INTERNAL_ERROR",
+  "message": "An error occurred during consultation creation"
+}
+```
+
+### 2. Get Consultations
+**Endpoint:** `GET /api/consultations`
+
+**Description:** Retrieves all consultations for the authenticated user (filtered by role).
+
+**Authorization:** Required (Home Owner or Consultant role)
+
+**Response (Success - 200):**
+```json
+[
+  {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "homeOwnerId": 2,
+    "homeOwnerName": "John Doe",
+    "consultantId": 1,
+    "consultantName": "Jane Smith",
+    "designId": "660e8400-e29b-41d4-a716-446655440001",
+    "designName": "Modern House Design",
+    "consultationType": "GRATIS",
+    "channel": "CHAT",
+    "status": "MENUNGGU_JADWAL_SURVEY",
+    "startedAt": null,
+    "completedAt": null,
+    "createdAt": "2025-10-20T09:50:00Z",
+    "updatedAt": "2025-10-20T09:50:00Z"
+  }
+]
+```
+
+### 3. Get Consultation by ID
+**Endpoint:** `GET /api/consultations/{id}`
+
+**Description:** Retrieves a specific consultation by ID.
+
+**Authorization:** Required (Home Owner or Consultant role)
+
+**Path Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| id | string | Yes | UUID of the consultation |
+
+**Response (Success - 200):** Same as create consultation response
+
+**Response (Error - 500):**
+```json
+{
+  "errorCode": "INTERNAL_ERROR",
+  "message": "Consultation not found or access denied"
+}
+```
+
+### 4. Accept Consultation
+**Endpoint:** `POST /api/consultations/{id}/accept`
+
+**Description:** Consultant accepts a consultation request, changing status to waiting for survey schedule.
+
+**Authorization:** Required (Consultant role)
+
+**Path Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| id | string | Yes | UUID of the consultation |
+
+**Response (Success - 200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "MENUNGGU_JADWAL_SURVEY",
+  "homeOwnerId": 2,
+  "homeOwnerName": "John Doe",
+  "consultantId": 1,
+  "consultantName": "Jane Smith",
+  "consultationType": "GRATIS",
+  "channel": "CHAT",
+  "createdAt": "2025-10-20T09:50:00Z",
+  "updatedAt": "2025-10-20T09:50:00Z"
+}
+```
+
+**Response (Error - 500):**
+```json
+{
+  "errorCode": "INTERNAL_ERROR",
+  "message": "Invalid status transition"
+}
+```
+
+### 5. Reject Consultation
+**Endpoint:** `POST /api/consultations/{id}/reject`
+
+**Description:** Consultant rejects a consultation request, marking it as completed (rejected).
+
+**Authorization:** Required (Consultant role)
+
+**Path Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| id | string | Yes | UUID of the consultation |
+
+**Response (Success - 200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "SELESAI",
+  "homeOwnerId": 2,
+  "homeOwnerName": "John Doe",
+  "consultantId": 1,
+  "consultantName": "Jane Smith",
+  "consultationType": "GRATIS",
+  "channel": "CHAT",
+  "createdAt": "2025-10-20T09:50:00Z",
+  "updatedAt": "2025-10-20T09:50:00Z"
+}
+```
+
+### 6. Finalize Consultation
+**Endpoint:** `PATCH /api/consultations/{id}/finalize`
+
+**Description:** Home owner finalizes a completed consultation.
+
+**Authorization:** Required (Home Owner role)
+
+**Path Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| id | string | Yes | UUID of the consultation |
+
+**Response (Success - 200):**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "FINAL",
+  "homeOwnerId": 2,
+  "homeOwnerName": "John Doe",
+  "consultantId": 1,
+  "consultantName": "Jane Smith",
+  "consultationType": "GRATIS",
+  "channel": "CHAT",
+  "createdAt": "2025-10-20T09:50:00Z",
+  "updatedAt": "2025-10-20T09:50:00Z"
+}
+```
+
+## Consultation Status Flow
+
+```
+MENUNGGU_KONFIRMASI_KONSULTAN (Waiting for consultant confirmation)
+    ├── Accept → MENUNGGU_JADWAL_SURVEY (Waiting for survey schedule)
+    └── Reject → SELESAI (Completed/Rejected)
+
+MENUNGGU_JADWAL_SURVEY
+    └── Schedule survey → MENUNGGU_APPROVAL_JADWAL (Waiting for schedule approval)
+
+MENUNGGU_APPROVAL_JADWAL
+    ├── Approve → SURVEY_DIJADWALKAN (Survey scheduled)
+    └── Propose new schedule → MENUNGGU_APPROVAL_JADWAL (loop)
+
+SURVEY_DIJADWALKAN
+    └── Survey completed → SURVEY_SELESAI (Survey completed)
+
+SURVEY_SELESAI
+    └── Start consultation → AKTIF (Active consultation)
+
+AKTIF
+    ├── Enter revision → REVISI (Revision phase)
+    └── Complete → FINAL (Final)
+
+REVISI
+    └── Complete revision → FINAL
+
+FINAL
+    └── Mark as done → SELESAI
+```
+
+## Status Codes
+
+| Code | Description |
+|------|-------------|
+| 200 | Success |
+| 400 | Bad Request (validation errors) |
+| 401 | Unauthorized (invalid/missing token) |
+| 403 | Forbidden (insufficient permissions) |
+| 404 | Not Found |
+| 500 | Internal Server Error |
+
+## Integration Steps
+
+### 1. Consultation Creation Flow
+1. Home owner calls `POST /api/consultations` with consultant ID, type, and channel
+2. System creates consultation with status `MENUNGGU_KONFIRMASI_KONSULTAN`
+3. Consultant receives notification (implementation depends on notification system)
+
+### 2. Consultation Acceptance Flow
+1. Consultant calls `POST /api/consultations/{id}/accept` to accept
+2. Status changes to `MENUNGGU_JADWAL_SURVEY`
+3. System can proceed with survey scheduling workflow
+
+### 3. Consultation Rejection Flow
+1. Consultant calls `POST /api/consultations/{id}/reject` to reject
+2. Status changes to `SELESAI` (consultation ends)
+
+### 4. Consultation Finalization Flow
+1. Home owner calls `PATCH /api/consultations/{id}/finalize` when satisfied
+2. Status changes to `FINAL`
+
+## Error Handling
+- Always check HTTP status codes
+- Handle 401 errors by re-authenticating
+- Validate consultation IDs are valid UUIDs
+- Check user permissions for role-based endpoints
+- Implement retry logic for 500 errors
+
+## Security Considerations
+- JWT tokens required for all endpoints
+- Role-based access control (HOME_OWNER vs CONSULTANT)
+- Consultation ownership validation
+- Status transition validation to prevent invalid state changes
+
+## Postman Collection
+Import `Hub_API_v2.1_Postman_Collection.json` for testing consultation endpoints with pre-configured requests.
