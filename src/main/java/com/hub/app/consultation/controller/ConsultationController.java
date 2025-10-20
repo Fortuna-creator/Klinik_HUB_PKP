@@ -2,6 +2,7 @@ package com.hub.app.consultation.controller;
 
 import com.hub.app.consultation.dto.ConsultationResponse;
 import com.hub.app.consultation.dto.CreateConsultationRequest;
+import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.ConsultationService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class ConsultationController {
 
     private final ConsultationService consultationService;
+    private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
     @PostMapping
@@ -28,9 +30,7 @@ public class ConsultationController {
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody CreateConsultationRequest request) {
         try {
-            // Extract user ID from JWT token (simplified - in real implementation, use JWT service)
-            Long homeOwnerId = extractUserIdFromToken(authHeader);
-
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
             ConsultationResponse response = consultationService.createConsultation(homeOwnerId, request);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -44,8 +44,8 @@ public class ConsultationController {
     @PreAuthorize("hasRole('HOME_OWNER') or hasRole('CONSULTANT')")
     public ResponseEntity<?> getConsultations(@RequestHeader("Authorization") String authHeader) {
         try {
-            Long userId = extractUserIdFromToken(authHeader);
-            String role = extractRoleFromToken(authHeader);
+            Long userId = jwtService.extractUserId(authHeader);
+            String role = jwtService.extractUserRole(authHeader);
 
             List<ConsultationResponse> responses;
             if ("HOME_OWNER".equals(role)) {
@@ -68,8 +68,8 @@ public class ConsultationController {
             @PathVariable UUID id,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            Long userId = extractUserIdFromToken(authHeader);
-            String role = extractRoleFromToken(authHeader);
+            Long userId = jwtService.extractUserId(authHeader);
+            String role = jwtService.extractUserRole(authHeader);
             boolean isHomeOwner = "HOME_OWNER".equals(role);
 
             ConsultationResponse response = consultationService.getConsultationById(id, userId, isHomeOwner);
@@ -87,7 +87,7 @@ public class ConsultationController {
             @PathVariable UUID id,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            Long homeOwnerId = extractUserIdFromToken(authHeader);
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
 
             ConsultationResponse response = consultationService.finalizeConsultation(id, homeOwnerId);
             return ResponseEntity.ok(response);
@@ -96,16 +96,5 @@ public class ConsultationController {
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         e.getMessage());
         }
-    }
-
-    // Helper methods (in real implementation, use JWT service)
-    private Long extractUserIdFromToken(String authHeader) {
-        // Simplified - extract from JWT
-        return 1L; // Placeholder
-    }
-
-    private String extractRoleFromToken(String authHeader) {
-        // Simplified - extract from JWT
-        return "HOME_OWNER"; // Placeholder
     }
 }

@@ -1,6 +1,7 @@
 package com.hub.app.consultation.controller;
 
 import com.hub.app.consultation.dto.FinalDocumentResponse;
+import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.FinalDocumentService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
@@ -17,6 +18,7 @@ import java.util.UUID;
 public class FinalDocumentController {
 
     private final FinalDocumentService finalDocumentService;
+    private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
     @PostMapping
@@ -28,7 +30,7 @@ public class FinalDocumentController {
             @RequestParam String fileSpektekUrl,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            Long consultantId = extractUserIdFromToken(authHeader);
+            Long consultantId = jwtService.extractUserId(authHeader);
 
             FinalDocumentResponse response = finalDocumentService.uploadFinalDocument(
                     consultationId, fileDedUrl, fileRabUrl, fileSpektekUrl, consultantId);
@@ -46,7 +48,7 @@ public class FinalDocumentController {
             @PathVariable UUID id,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            Long homeOwnerId = extractUserIdFromToken(authHeader);
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
 
             // This would return presigned URLs for download
             return ResponseEntity.ok("Download URLs would be generated here");
@@ -63,7 +65,7 @@ public class FinalDocumentController {
             @PathVariable UUID id,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            Long consultantId = extractUserIdFromToken(authHeader);
+            Long consultantId = jwtService.extractUserId(authHeader);
 
             FinalDocumentResponse response = finalDocumentService.archiveFinalDocument(id, consultantId);
             return ResponseEntity.ok(response);
@@ -72,11 +74,5 @@ public class FinalDocumentController {
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         e.getMessage());
         }
-    }
-
-    // Helper methods (in real implementation, use JWT service)
-    private Long extractUserIdFromToken(String authHeader) {
-        // Simplified - extract from JWT
-        return 1L; // Placeholder
     }
 }

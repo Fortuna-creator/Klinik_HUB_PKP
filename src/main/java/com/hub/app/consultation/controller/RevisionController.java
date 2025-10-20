@@ -2,6 +2,7 @@ package com.hub.app.consultation.controller;
 
 import com.hub.app.consultation.dto.CreateRevisionRequest;
 import com.hub.app.consultation.dto.RevisionResponse;
+import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.RevisionService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class RevisionController {
 
     private final RevisionService revisionService;
+    private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
     @PostMapping
@@ -29,7 +31,7 @@ public class RevisionController {
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody CreateRevisionRequest request) {
         try {
-            Long homeOwnerId = extractUserIdFromToken(authHeader);
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
 
             RevisionResponse response = revisionService.createRevision(consultationId, request, homeOwnerId);
             return ResponseEntity.ok(response);
@@ -46,7 +48,7 @@ public class RevisionController {
             @RequestParam UUID consultationId,
             @RequestHeader("Authorization") String authHeader) {
         try {
-            Long userId = extractUserIdFromToken(authHeader);
+            Long userId = jwtService.extractUserId(authHeader);
 
             List<RevisionResponse> responses = revisionService.getRevisionsByConsultation(consultationId, userId);
             return ResponseEntity.ok(responses);
@@ -55,11 +57,5 @@ public class RevisionController {
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         e.getMessage());
         }
-    }
-
-    // Helper methods (in real implementation, use JWT service)
-    private Long extractUserIdFromToken(String authHeader) {
-        // Simplified - extract from JWT
-        return 1L; // Placeholder
     }
 }
