@@ -21,3 +21,8 @@ jwt:
 
 server:
   port: 8080
+
+simbg:
+  base-url: https://api.simbg.go.id
+  auth:
+    token: ${SIMBG_TOKEN}

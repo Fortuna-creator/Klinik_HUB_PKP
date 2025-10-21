@@ -3,7 +3,6 @@ package com.hub.app.auth.controller;
 import com.hub.app.auth.dto.*;
 import com.hub.app.auth.service.ActivationService;
 import com.hub.app.auth.service.AuthService;
-import com.hub.app.auth.service.JwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
 import jakarta.validation.Valid;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final AuthService authService;
     private final ActivationService activationService;
-    private final JwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
     @PostMapping("/register")

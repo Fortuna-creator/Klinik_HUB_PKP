@@ -6,7 +6,6 @@ import com.hub.app.consultation.service.ChatMessageService;
 import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
