@@ -1307,7 +1307,7 @@
                   "    const jsonData = pm.response.json();",
                   "    if (jsonData.consultants && jsonData.consultants.length > 0) {",
                   "        const consultant = jsonData.consultants[0];",
-                  "        pm.expect(consultant).to.have.property('consultantId');",
+                  "        pm.expect(consultant).to.have.property('id');",
                   "        pm.expect(consultant).to.have.property('fullName');",
                   "        pm.expect(consultant).to.have.property('distanceKm');",
                   "    }",

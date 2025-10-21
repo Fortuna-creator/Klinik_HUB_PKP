@@ -144,7 +144,7 @@ public class ConsultantService {
      */
     private ConsultantResponse mapToConsultantResponse(Consultant consultant, BigDecimal distance) {
         return ConsultantResponse.builder()
-                .consultantId(consultant.getId().toString())
+                .id(consultant.getId().toString())
                 .fullName(consultant.getName())
                 .specialty(consultant.getSpecialty() != null ? consultant.getSpecialty() : "Arsitektur Rumah Layak Huni")
                 .rating(consultant.getRating() != null ? consultant.getRating() : BigDecimal.valueOf(4.8))
