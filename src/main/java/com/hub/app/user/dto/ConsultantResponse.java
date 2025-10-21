@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class ConsultantResponse {
-    private String consultantId;
+    private String id;
     private String fullName;
     private String specialty;
     private BigDecimal rating;
