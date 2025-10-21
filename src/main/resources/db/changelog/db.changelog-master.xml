@@ -13,6 +13,12 @@
     <include file="006-consultants-table.sql" relativeToChangelogFile="true"/>
     <include file="007-homeowners-table.sql" relativeToChangelogFile="true"/>
     <include file="008-consultant-enhancements.sql" relativeToChangelogFile="true"/>
+    <include file="009-add-column-users.sql" relativeToChangelogFile="true"/>
+    <include file="010-portfolio-projects-schema.sql" relativeToChangelogFile="true"/>
+    <include file="011-portfolio-consultant-relationship.sql" relativeToChangelogFile="true"/>
+    <include file="012-consultation-schema.sql" relativeToChangelogFile="true"/>
+    <include file="012-survey-schedules-schema.sql" relativeToChangelogFile="true"/>
+    <include file="013-chat-messages-schema.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

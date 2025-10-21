@@ -1,524 +1,396 @@
-# Hub API Documentation
+# HUB Backend API Documentation
 
-## Overview
-The Hub API provides comprehensive endpoints for authentication, consultation management, and user services. This documentation covers all available API endpoints with detailed request/response examples and integration guidelines.
+## Chat Messages API
 
-## Table of Contents
-- [Authentication API](#hub-authentication-api-documentation)
-- [Consultation API](#hub-consultation-api-documentation)
-- [File Operations API](#hub-file-operations-api-documentation)
-- [Project API](#hub-project-api-documentation)
-- [User API](#hub-user-api-documentation)
+### Overview
+The Chat Messages API allows Home Owners and Consultants to exchange text messages and voice notes during approved consultations.
 
----
+### Authentication
+All endpoints require JWT authentication with `Authorization: Bearer <token>` header.
 
-# Hub Authentication API Documentation
+### Endpoints
 
-## Overview
-The Hub Authentication API provides endpoints for user registration, OTP verification, login, and profile updates with image upload functionality.
+#### 1. Send Message
+**POST** `/api/v1/chats/{consultationId}/messages`
 
-## Base URL
-```
-http://localhost:8080/api/auth
-```
+Send a text message or voice note in a consultation chat.
 
-## Authentication
-Most endpoints require JWT token authentication. Include the token in the Authorization header:
-```
-Authorization: Bearer <jwt_token>
-```
+**Parameters:**
+- `consultationId` (path): UUID of the consultation
+- `messageType` (form): "TEXT" or "VOICE"
+- `messageContent` (form, optional): Text content for TEXT messages
+- `voiceFile` (form, optional): Multipart file for VOICE messages (MP3/M4A only, max 10MB)
 
-## Endpoints
-
-### 1. Register User
-**Endpoint:** `POST /api/auth/register`
-
-**Description:** Registers a new user and sends OTP for verification.
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "confirmPassword": "password123"
-}
-```
-
-**Response (Success - 200):**
-```
-User registered, OTP sent to user@example.com
-```
-
-**Response (Error - 400):**
-```
-Passwords do not match
-```
-or
-```
-Email already exists
-```
-
-### 2. Verify OTP
-**Endpoint:** `POST /api/auth/verify-otp`
-
-**Description:** Verifies the OTP code sent to the user's email.
-
-**Request Body:**
-```json
-{
-  "userId": 1,
-  "otpCode": "123456"
-}
-```
-
-**Response (Success - 200):**
-```
-OTP verified successfully
-```
-
-**Response (Error - 400):**
-```
-Invalid OTP
-```
-
-### 3. Update Profile
-**Endpoint:** `POST /api/auth/profile-update`
-
-**Description:** Updates user profile information with optional KTP and selfie image uploads. Supports both partial and full updates.
-
-**Authentication:** Required (JWT token)
-
-**Content-Type:** `multipart/form-data`
-
-**Request Parameters:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| name | string | Yes | User's full name |
-| phone | string | Yes | User's phone number |
-| address | string | Yes | User's address |
-| ktpNumber | string | Yes | KTP (ID card) number |
-| ktpFile | file | No | KTP image (JPEG/PNG, max 5MB) |
-| selfieFile | file | No | Selfie image (JPEG/PNG, max 5MB) |
-
-**Example Request (cURL):**
+**Request Example (Text Message):**
 ```bash
-curl -X POST "http://localhost:8080/api/auth/profile-update" \
+curl -X POST "http://localhost:8080/api/v1/chats/123e4567-e89b-12d3-a456-426614174000/messages" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
-  -F "name=John Doe" \
-  -F "phone=+1234567890" \
-  -F "address=123 Main St" \
-  -F "ktpNumber=1234567890123456" \
-  -F "ktpFile=@ktp_image.jpg" \
-  -F "selfieFile=@selfie_image.png"
+  -F "messageType=TEXT" \
+  -F "messageContent=Hello, I have a question about the design"
 ```
 
-**Response (Success - 200):**
-```
-Profile updated, awaiting approval
-```
-
-**Response (Error - 400):**
-```
-User not eligible for profile update
-```
-or
-```
-Name is required
+**Request Example (Voice Message):**
+```bash
+curl -X POST "http://localhost:8080/api/v1/chats/123e4567-e89b-12d3-a456-426614174000/messages" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
+  -F "messageType=VOICE" \
+  -F "voiceFile=@voice_note.mp3"
 ```
 
-**Response (Error - 401):**
-```
-Invalid token
-```
-
-**Response (Error - 500):**
-```
-An error occurred
-```
-
-**Image Upload Features:**
-- **Formats:** JPEG, PNG only
-- **Max Size:** 5MB per image
-- **Compression:** Automatic resizing to max 1920x1080 pixels for optimization
-- **Storage:** Secure storage with unique filenames
-- **Validation:** File type and size validation
-
-### 4. Login
-**Endpoint:** `POST /api/auth/login`
-
-**Description:** Authenticates user and returns JWT token.
-
-**Request Body:**
+**Response (200 OK):**
 ```json
 {
-  "email": "user@example.com",
-  "password": "password123"
+  "id": "456e7890-e89b-12d3-a456-426614174001",
+  "consultationId": "123e4567-e89b-12d3-a456-426614174000",
+  "senderId": 1,
+  "receiverId": 2,
+  "messageType": "TEXT",
+  "messageContent": "Hello, I have a question about the design",
+  "fileUrl": null,
+  "createdAt": "2024-01-15T10:30:00Z"
 }
 ```
 
-**Response (Success - 200):**
-```
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
+#### 2. Get Chat Messages
+**GET** `/api/v1/chats/{consultationId}/messages`
 
-**Response (Error - 400):**
-```
-User not found
-```
-or
-```
-Invalid credentials
-```
-or
-```
-User not verified
-```
-or
-```
-User account is inactive
+Retrieve all messages in a consultation chat, ordered by creation time.
+
+**Parameters:**
+- `consultationId` (path): UUID of the consultation
+
+**Request Example:**
+```bash
+curl -X GET "http://localhost:8080/api/v1/chats/123e4567-e89b-12d3-a456-426614174000/messages" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-## Status Codes
-
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 400 | Bad Request (validation errors, invalid data) |
-| 401 | Unauthorized (invalid/missing token) |
-| 500 | Internal Server Error |
-
-## Integration Steps
-
-### 1. User Registration Flow
-1. Call `POST /api/auth/register` with user email and password
-2. System sends OTP to user's email
-3. Call `POST /api/auth/verify-otp` with userId and OTP code
-4. OTP verification completes registration
-
-### 2. Profile Update Flow
-1. User logs in via `POST /api/auth/login` to get JWT token
-2. Call `POST /api/auth/profile-update` with Authorization header and form data
-3. Images are automatically validated, compressed, and stored
-4. Profile status changes to "VERIFICATION_IN_PROCESS"
-5. Admin reviews and approves the profile
-
-### 3. Image Upload Guidelines
-- Prepare images in JPEG or PNG format
-- Ensure file size is under 5MB
-- Images larger than 1920x1080 will be automatically resized
-- Use multipart/form-data for file uploads
-- Images are optional - can update profile without images
-
-### 4. Error Handling
-- Always check response status codes
-- Handle 401 errors by re-authenticating
-- Validate input data before sending requests
-- Implement retry logic for 500 errors
-
-## Security Considerations
-- JWT tokens expire after 1 hour (configurable)
-- Image files are stored securely with unique filenames
-- User authentication required for profile updates
-- Passwords are hashed using BCrypt
-- File uploads are validated for type and size
-
-## Postman Collection
-Import `Hub_Auth_Postman_Collection.json` for testing all endpoints with pre-configured requests.
-
----
-
-# Hub Consultation API Documentation
-
-## Overview
-The Hub Consultation API provides endpoints for managing consultation requests between home owners and consultants, including consultation creation, status management, and lifecycle operations.
-
-## Base URL
-```
-http://localhost:8080/api/consultations
-```
-
-## Authentication
-All endpoints require JWT token authentication. Include the token in the Authorization header:
-```
-Authorization: Bearer <jwt_token>
-```
-
-## Endpoints
-
-### 1. Create Consultation
-**Endpoint:** `POST /api/consultations`
-
-**Description:** Creates a new consultation request from a home owner to a consultant.
-
-**Authorization:** Required (Home Owner role)
-
-**Request Body:**
-```json
-{
-  "consultantId": 1,
-  "consultationType": "GRATIS",
-  "channel": "CHAT"
-}
-```
-
-**Request Parameters:**
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| consultantId | number | Yes | ID of the consultant to request consultation from |
-| consultationType | string | Yes | Type of consultation: `GRATIS` or `BERBAYAR` |
-| channel | string | Yes | Communication channel: `CHAT`, `VIDEO`, or `WHATSAPP` |
-
-**Response (Success - 200):**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "homeOwnerId": 2,
-  "homeOwnerName": "John Doe",
-  "consultantId": 1,
-  "consultantName": "Jane Smith",
-  "designId": null,
-  "designName": null,
-  "consultationType": "GRATIS",
-  "channel": "CHAT",
-  "status": "MENUNGGU_KONFIRMASI_KONSULTAN",
-  "startedAt": null,
-  "completedAt": null,
-  "createdAt": "2025-10-20T09:50:00Z",
-  "updatedAt": "2025-10-20T09:50:00Z"
-}
-```
-
-**Response (Error - 500):**
-```json
-{
-  "errorCode": "INTERNAL_ERROR",
-  "message": "An error occurred during consultation creation"
-}
-```
-
-### 2. Get Consultations
-**Endpoint:** `GET /api/consultations`
-
-**Description:** Retrieves all consultations for the authenticated user (filtered by role).
-
-**Authorization:** Required (Home Owner or Consultant role)
-
-**Response (Success - 200):**
+**Response (200 OK):**
 ```json
 [
   {
-    "id": "550e8400-e29b-41d4-a716-446655440000",
-    "homeOwnerId": 2,
-    "homeOwnerName": "John Doe",
-    "consultantId": 1,
-    "consultantName": "Jane Smith",
-    "designId": "660e8400-e29b-41d4-a716-446655440001",
-    "designName": "Modern House Design",
-    "consultationType": "GRATIS",
-    "channel": "CHAT",
-    "status": "MENUNGGU_JADWAL_SURVEY",
-    "startedAt": null,
-    "completedAt": null,
-    "createdAt": "2025-10-20T09:50:00Z",
-    "updatedAt": "2025-10-20T09:50:00Z"
+    "id": "456e7890-e89b-12d3-a456-426614174001",
+    "consultationId": "123e4567-e89b-12d3-a456-426614174000",
+    "senderId": 1,
+    "receiverId": 2,
+    "messageType": "TEXT",
+    "messageContent": "Hello, I have a question about the design",
+    "fileUrl": null,
+    "createdAt": "2024-01-15T10:30:00Z"
+  },
+  {
+    "id": "567e8901-e89b-12d3-a456-426614174002",
+    "consultationId": "123e4567-e89b-12d3-a456-426614174000",
+    "senderId": 2,
+    "receiverId": 1,
+    "messageType": "VOICE",
+    "messageContent": null,
+    "fileUrl": "/hub-files/chat/voice/voice_note.mp3",
+    "createdAt": "2024-01-15T10:31:00Z"
   }
 ]
 ```
 
-### 3. Get Consultation by ID
-**Endpoint:** `GET /api/consultations/{id}`
+#### 3. Get Latest Message
+**GET** `/api/v1/chats/{consultationId}/messages/latest`
 
-**Description:** Retrieves a specific consultation by ID.
+Retrieve the most recent message in a consultation chat.
 
-**Authorization:** Required (Home Owner or Consultant role)
+**Parameters:**
+- `consultationId` (path): UUID of the consultation
 
-**Path Parameters:**
+**Request Example:**
+```bash
+curl -X GET "http://localhost:8080/api/v1/chats/123e4567-e89b-12d3-a456-426614174000/messages/latest" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | string | Yes | UUID of the consultation |
-
-**Response (Success - 200):** Same as create consultation response
-
-**Response (Error - 500):**
+**Response (200 OK):**
 ```json
 {
-  "errorCode": "INTERNAL_ERROR",
-  "message": "Consultation not found or access denied"
+  "id": "567e8901-e89b-12d3-a456-426614174002",
+  "consultationId": "123e4567-e89b-12d3-a456-426614174000",
+  "senderId": 2,
+  "receiverId": 1,
+  "messageType": "VOICE",
+  "messageContent": null,
+  "fileUrl": "/hub-files/chat/voice/voice_note.mp3",
+  "createdAt": "2024-01-15T10:31:00Z"
 }
 ```
 
-### 4. Accept Consultation
-**Endpoint:** `POST /api/consultations/{id}/accept`
+### Error Responses
 
-**Description:** Consultant accepts a consultation request, changing status to waiting for survey schedule.
-
-**Authorization:** Required (Consultant role)
-
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | string | Yes | UUID of the consultation |
-
-**Response (Success - 200):**
+**400 Bad Request:**
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "MENUNGGU_JADWAL_SURVEY",
-  "homeOwnerId": 2,
-  "homeOwnerName": "John Doe",
-  "consultantId": 1,
-  "consultantName": "Jane Smith",
-  "consultationType": "GRATIS",
-  "channel": "CHAT",
-  "createdAt": "2025-10-20T09:50:00Z",
-  "updatedAt": "2025-10-20T09:50:00Z"
+  "errorCode": "VALIDATION_ERROR",
+  "message": "Message content is required for text messages"
 }
 ```
 
-**Response (Error - 500):**
+**403 Forbidden:**
 ```json
 {
-  "errorCode": "INTERNAL_ERROR",
-  "message": "Invalid status transition"
+  "errorCode": "ACCESS_DENIED",
+  "message": "Unauthorized to send message in this consultation"
 }
 ```
 
-### 5. Reject Consultation
-**Endpoint:** `POST /api/consultations/{id}/reject`
-
-**Description:** Consultant rejects a consultation request, marking it as completed (rejected).
-
-**Authorization:** Required (Consultant role)
-
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | string | Yes | UUID of the consultation |
-
-**Response (Success - 200):**
+**404 Not Found:**
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "SELESAI",
-  "homeOwnerId": 2,
-  "homeOwnerName": "John Doe",
-  "consultantId": 1,
-  "consultantName": "Jane Smith",
-  "consultationType": "GRATIS",
-  "channel": "CHAT",
-  "createdAt": "2025-10-20T09:50:00Z",
-  "updatedAt": "2025-10-20T09:50:00Z"
+  "errorCode": "NOT_FOUND",
+  "message": "Consultation not found"
 }
 ```
 
-### 6. Finalize Consultation
-**Endpoint:** `PATCH /api/consultations/{id}/finalize`
+### Business Rules
 
-**Description:** Home owner finalizes a completed consultation.
+1. **Consultation Status**: Chat is only allowed when consultation status is `AKTIF` (approved).
+2. **User Authorization**: Only Home Owner and Consultant associated with the consultation can access the chat.
+3. **File Upload**: Voice notes must be MP3 or M4A format, maximum 10MB.
+4. **Message Types**: Support TEXT and VOICE message types.
+5. **Real-time**: Currently REST API only; WebSocket implementation pending.
 
-**Authorization:** Required (Home Owner role)
+### Data Models
 
-**Path Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| id | string | Yes | UUID of the consultation |
-
-**Response (Success - 200):**
+#### ChatMessageDTO
 ```json
 {
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "FINAL",
-  "homeOwnerId": 2,
-  "homeOwnerName": "John Doe",
-  "consultantId": 1,
-  "consultantName": "Jane Smith",
-  "consultationType": "GRATIS",
-  "channel": "CHAT",
-  "createdAt": "2025-10-20T09:50:00Z",
-  "updatedAt": "2025-10-20T09:50:00Z"
+  "id": "UUID",
+  "consultationId": "UUID",
+  "senderId": "Long",
+  "receiverId": "Long",
+  "messageType": "TEXT|VOICE",
+  "messageContent": "String (nullable)",
+  "fileUrl": "String (nullable)",
+  "createdAt": "Instant"
 }
 ```
 
-## Consultation Status Flow
+## WebSocket Real-Time Chat API (In-Memory Broker)
 
+### Overview
+The WebSocket API provides **fully real-time chat functionality** using **STOMP over WebSocket with Spring's built-in simple broker**. No external message broker (RabbitMQ, Kafka, Redis) is required - all communication is handled in-memory within the Spring application.
+
+### Architecture Notes
+- **Broker**: Spring WebSocket Simple Broker (in-memory)
+- **Protocol**: STOMP over WebSocket
+- **Authentication**: JWT token validation on WebSocket handshake
+- **Real-time**: Instant message delivery without external dependencies
+
+### WebSocket Configuration
+- **Endpoint**: `ws://localhost:8080/ws/chat`
+- **STOMP Application Prefix**: `/app`
+- **Broker Destinations**:
+  - `/topic/chat/{consultationId}` - Chat room messages
+  - `/topic/chat/{consultationId}/read` - Read status updates
+  - `/queue/notifications/{userId}` - Private notifications
+
+### Authentication
+WebSocket connections require JWT authentication passed in the `Authorization` header during the STOMP CONNECT frame.
+
+### STOMP Message Flow
+
+#### 1. Connect to WebSocket
+```javascript
+const socket = new SockJS('/ws/chat');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({
+    'Authorization': 'Bearer ' + jwtToken
+}, function(frame) {
+    console.log('Connected: ' + frame);
+}, function(error) {
+    console.log('Connection error: ' + error);
+});
 ```
-MENUNGGU_KONFIRMASI_KONSULTAN (Waiting for consultant confirmation)
-    ├── Accept → MENUNGGU_JADWAL_SURVEY (Waiting for survey schedule)
-    └── Reject → SELESAI (Completed/Rejected)
 
-MENUNGGU_JADWAL_SURVEY
-    └── Schedule survey → MENUNGGU_APPROVAL_JADWAL (Waiting for schedule approval)
+#### 2. Subscribe to Chat Room
+```javascript
+// Subscribe to chat messages
+stompClient.subscribe('/topic/chat/' + consultationId, function(message) {
+    const chatMessage = JSON.parse(message.body);
+    console.log('Received message:', chatMessage);
+    // Update UI immediately
+});
 
-MENUNGGU_APPROVAL_JADWAL
-    ├── Approve → SURVEY_DIJADWALKAN (Survey scheduled)
-    └── Propose new schedule → MENUNGGU_APPROVAL_JADWAL (loop)
+// Subscribe to read status updates
+stompClient.subscribe('/topic/chat/' + consultationId + '/read', function(message) {
+    const readStatus = JSON.parse(message.body);
+    console.log('Read status:', readStatus);
+    // Update read receipts
+});
 
-SURVEY_DIJADWALKAN
-    └── Survey completed → SURVEY_SELESAI (Survey completed)
-
-SURVEY_SELESAI
-    └── Start consultation → AKTIF (Active consultation)
-
-AKTIF
-    ├── Enter revision → REVISI (Revision phase)
-    └── Complete → FINAL (Final)
-
-REVISI
-    └── Complete revision → FINAL
-
-FINAL
-    └── Mark as done → SELESAI
+// Subscribe to notifications
+stompClient.subscribe('/user/queue/notifications', function(notification) {
+    const notificationData = JSON.parse(notification.body);
+    console.log('Notification:', notificationData);
+    // Show notification badge
+});
 ```
 
-## Status Codes
+#### 3. Send Messages (Real-time)
+```javascript
+// Send text message - appears instantly for all subscribers
+stompClient.send('/app/chat/' + consultationId + '/send', {}, JSON.stringify({
+    consultationId: consultationId,
+    senderId: currentUserId,
+    receiverId: otherUserId,
+    messageType: 'TEXT',
+    messageContent: 'Hello, how are you?',
+    fileUrl: null
+}));
 
-| Code | Description |
-|------|-------------|
-| 200 | Success |
-| 400 | Bad Request (validation errors) |
-| 401 | Unauthorized (invalid/missing token) |
-| 403 | Forbidden (insufficient permissions) |
-| 404 | Not Found |
-| 500 | Internal Server Error |
+// Send voice message - appears instantly for all subscribers
+stompClient.send('/app/chat/' + consultationId + '/send', {}, JSON.stringify({
+    consultationId: consultationId,
+    senderId: currentUserId,
+    receiverId: otherUserId,
+    messageType: 'VOICE',
+    messageContent: null,
+    fileUrl: '/hub-files/chat/voice/audio.mp3'
+}));
+```
 
-## Integration Steps
+#### 4. Mark Messages as Read (Real-time)
+```javascript
+// Mark as read - updates instantly for all subscribers
+stompClient.send('/app/chat/' + consultationId + '/read/' + messageId, {}, {});
+```
 
-### 1. Consultation Creation Flow
-1. Home owner calls `POST /api/consultations` with consultant ID, type, and channel
-2. System creates consultation with status `MENUNGGU_KONFIRMASI_KONSULTAN`
-3. Consultant receives notification (implementation depends on notification system)
+### Message Payloads
 
-### 2. Consultation Acceptance Flow
-1. Consultant calls `POST /api/consultations/{id}/accept` to accept
-2. Status changes to `MENUNGGU_JADWAL_SURVEY`
-3. System can proceed with survey scheduling workflow
+#### ChatMessagePayload (WebSocket Send)
+```json
+{
+  "consultationId": "UUID",
+  "senderId": "Long",
+  "receiverId": "Long",
+  "messageType": "TEXT|VOICE",
+  "messageContent": "String (nullable)",
+  "fileUrl": "String (nullable)"
+}
+```
 
-### 3. Consultation Rejection Flow
-1. Consultant calls `POST /api/consultations/{id}/reject` to reject
-2. Status changes to `SELESAI` (consultation ends)
+#### ChatMessageResponse (WebSocket Receive)
+```json
+{
+  "id": "UUID",
+  "consultationId": "UUID",
+  "senderId": "Long",
+  "receiverId": "Long",
+  "messageType": "TEXT|VOICE",
+  "messageContent": "String (nullable)",
+  "fileUrl": "String (nullable)",
+  "isRead": "Boolean",
+  "createdAt": "Instant"
+}
+```
 
-### 4. Consultation Finalization Flow
-1. Home owner calls `PATCH /api/consultations/{id}/finalize` when satisfied
-2. Status changes to `FINAL`
+#### Notification Payload (WebSocket)
+```json
+{
+  "type": "NEW_MESSAGE",
+  "consultationId": "UUID",
+  "senderId": "Long",
+  "messageType": "TEXT|VOICE",
+  "createdAt": "Instant"
+}
+```
 
-## Error Handling
-- Always check HTTP status codes
-- Handle 401 errors by re-authenticating
-- Validate consultation IDs are valid UUIDs
-- Check user permissions for role-based endpoints
-- Implement retry logic for 500 errors
+#### Read Status Payload (WebSocket)
+```json
+{
+  "messageId": "UUID",
+  "isRead": true,
+  "readBy": "Long"
+}
+```
 
-## Security Considerations
-- JWT tokens required for all endpoints
-- Role-based access control (HOME_OWNER vs CONSULTANT)
-- Consultation ownership validation
-- Status transition validation to prevent invalid state changes
+### Business Rules
 
-## Postman Collection
-Import `Hub_API_v2.1_Postman_Collection.json` for testing consultation endpoints with pre-configured requests.
+1. **Authentication**: JWT token required for WebSocket connection
+2. **Authorization**: Only consultation participants can join chat room
+3. **Consultation Status**: Only `AKTIF` consultations allow chat
+4. **Real-time Updates**: All messages broadcast instantly to `/topic/chat/{consultationId}`
+5. **Read Receipts**: Messages marked as read update instantly for all subscribers
+6. **Notifications**: New messages trigger instant notifications to receivers
+7. **In-Memory**: No external broker - all routing handled by Spring WebSocket
+
+### Error Handling
+
+WebSocket errors are logged server-side. Client should implement reconnection logic:
+
+```javascript
+stompClient.onStompError = function(frame) {
+    console.log('Broker reported error: ' + frame.headers['message']);
+    console.log('Additional details: ' + frame.body);
+};
+
+// Reconnection logic
+function connect() {
+    const socket = new SockJS('/ws/chat');
+    stompClient = Stomp.over(socket);
+    // ... connection setup
+}
+
+stompClient.onWebSocketClose = function() {
+    setTimeout(connect, 5000); // Reconnect after 5 seconds
+};
+```
+
+### Integration with REST API
+
+The WebSocket implementation works alongside the existing REST API:
+- **REST API**: Initial data loading, message history, mark as read
+- **WebSocket**: Real-time messaging, instant updates
+- **Same Business Logic**: Validation and authorization consistent
+- **Fallback Support**: REST API works when WebSocket unavailable
+
+### Testing Real-time Functionality
+
+#### 1. Start Application
+```bash
+mvn spring-boot:run
+```
+
+#### 2. Test WebSocket Connection
+```javascript
+// In browser console or test script
+const socket = new SockJS('http://localhost:8080/ws/chat');
+const stompClient = Stomp.over(socket);
+
+stompClient.connect({
+    'Authorization': 'Bearer YOUR_JWT_TOKEN'
+}, function() {
+    console.log('Connected to real-time chat!');
+});
+```
+
+#### 3. Test Message Sending
+```javascript
+// Send test message
+stompClient.send('/app/chat/CONSULTATION_ID/send', {}, JSON.stringify({
+    consultationId: 'CONSULTATION_ID',
+    senderId: 1,
+    receiverId: 2,
+    messageType: 'TEXT',
+    messageContent: 'Real-time test message!',
+    fileUrl: null
+}));
+```
+
+#### 4. Verify Instant Delivery
+- Message should appear immediately in all subscribed clients
+- No external broker required
+- Uses Spring's in-memory simple broker
+
+#### CreateChatMessageRequest
+```json
+{
+  "messageType": "TEXT|VOICE",
+  "messageContent": "String (optional for TEXT)",
+  "voiceFile": "MultipartFile (required for VOICE)"
+}
