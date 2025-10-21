@@ -1,6 +1,5 @@
 package com.hub.app.consultation.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.hub.app.consultation.model.ContractStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +12,6 @@ import java.util.UUID;
 public class ContractResponse {
     private UUID id;
     private UUID consultationId;
-    private JsonNode contractData;
     private String pdfUrl;
     private Boolean digitalSignature;
     private ContractStatus status;
