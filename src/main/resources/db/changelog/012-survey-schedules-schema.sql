@@ -17,17 +17,3 @@ CREATE TABLE survey_schedules (
 CREATE INDEX idx_survey_schedules_consultation_id ON survey_schedules(consultation_id);
 CREATE INDEX idx_survey_schedules_status ON survey_schedules(status);
 CREATE INDEX idx_survey_schedules_created_at ON survey_schedules(created_at DESC);
-
--- Create trigger to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_survey_schedules_updated_at()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trigger_update_survey_schedules_updated_at
-    BEFORE UPDATE ON survey_schedules
-    FOR EACH ROW
-    EXECUTE FUNCTION update_survey_schedules_updated_at();
