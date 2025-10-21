@@ -1,6 +1,5 @@
 package com.hub.app.consultation.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -21,9 +20,6 @@ public class Contract {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "consultation_id")
     private Consultation consultation;
-
-    @Column(columnDefinition = "jsonb")
-    private JsonNode contractData;
 
     private String pdfUrl;
     private Boolean digitalSignature;

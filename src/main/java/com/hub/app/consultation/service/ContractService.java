@@ -40,7 +40,6 @@ public class ContractService {
         return ContractResponse.builder()
                 .id(contract.getId())
                 .consultationId(contract.getConsultation().getId())
-                .contractData(contract.getContractData())
                 .pdfUrl(contract.getPdfUrl())
                 .digitalSignature(contract.getDigitalSignature())
                 .status(contract.getStatus())
