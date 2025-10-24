@@ -8,6 +8,8 @@ import java.util.Optional;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import com.hub.app.user.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -18,12 +20,21 @@ import com.hub.app.user.model.User;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OtpService {
     private final OtpRepository otpRepo;
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
+    @Value( "${spring.mail.host}")
+    private final String mailHost;
+    @Value( "${spring.mail.port}")
+    private final Integer mailPort;
+    @Value( "${spring.mail.username}")
+    private final String mailUsername;
+    @Value( "${spring.mail.password}")
+    private final String mailPassword;
 
     public void generateAndSendOtp(User user) {
         // Rate limiting: max 3 OTP per hour per user
@@ -58,6 +69,7 @@ public class OtpService {
         User user = userOptional.get();
         return otpRepo.findTopByUserIdAndUsedFalseOrderByExpiresAtDesc(user.getId())
                 .map(t -> {
+                    log.info("Email config: host={}, port={}, sender={}, password={}", mailHost, mailPort, mailUsername, mailPassword);
                     sendEmail(user.getEmail(), t.getCode());
                     return true;
                 }).orElse(false);
