@@ -26,3 +26,7 @@ simbg:
   base-url: https://api.simbg.go.id
   auth:
     token: ${SIMBG_TOKEN}
+
+logging:
+  pattern:
+    console: "[yyyy-MM-dd HH:mm:ss.SSS] [%level] [%thread] [logger] - %msg%n"
