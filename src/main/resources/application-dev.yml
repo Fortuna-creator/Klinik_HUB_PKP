@@ -46,6 +46,8 @@ spring:
         starttls:
           enable: true
           required: true
+    ssl:
+      enabled: true
 
 minio:
   endpoint: ${MINIO_ENDPOINT:http://minio:9000}
