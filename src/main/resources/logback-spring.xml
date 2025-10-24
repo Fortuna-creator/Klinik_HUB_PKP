@@ -3,7 +3,7 @@
     <!-- Define log directory property -->
     <property name="LOG_DIR" value="logs"/>
     <property name="LOG_FILE" value="hub-backend"/>
-    <property name="LOG_PATTERN" value="[yyyy-MM-dd HH:mm:ss.SSS] [%level] [%thread] [logger] - %msg%n"/>
+    <springProperty name="LOG_PATTERN" source="logging.pattern.console" defaultValue="[yyyy-MM-dd HH:mm:ss.SSS] [%level] [%thread] [logger] - %msg%n"/>
 
     <!-- Console appender for development -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
