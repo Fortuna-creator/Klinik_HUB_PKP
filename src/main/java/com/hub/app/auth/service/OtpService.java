@@ -27,14 +27,15 @@ public class OtpService {
     private final OtpRepository otpRepo;
     private final JavaMailSender mailSender;
     private final UserRepository userRepository;
+
     @Value( "${spring.mail.host}")
-    private final String mailHost;
+    private String mailHost;
     @Value( "${spring.mail.port}")
-    private final Integer mailPort;
+    private Integer mailPort;
     @Value( "${spring.mail.username}")
-    private final String mailUsername;
+    private String mailUsername;
     @Value( "${spring.mail.password}")
-    private final String mailPassword;
+    private String mailPassword;
 
     public void generateAndSendOtp(User user) {
         // Rate limiting: max 3 OTP per hour per user
