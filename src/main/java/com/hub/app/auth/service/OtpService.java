@@ -37,11 +37,11 @@ public class OtpService {
     @Value( "${spring.mail.password}")
     private String mailPassword;
     @Value( "${spring.mail.properties.mail.smtp.auth}")
-    private String mailSmtpAuth;
+    private boolean mailSmtpAuth;
     @Value( "${spring.mail.properties.mail.smtp.starttls.enable}")
-    private String mailStarttlsEnable;
+    private boolean mailStarttlsEnable;
     @Value( "${spring.mail.properties.mail.smtp.starttls.required}")
-    private String mailStarttlsRequired;
+    private boolean mailStarttlsRequired;
 
     public void generateAndSendOtp(User user) {
         // Rate limiting: max 3 OTP per hour per user
