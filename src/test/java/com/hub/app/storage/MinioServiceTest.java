@@ -55,45 +55,46 @@ class MinioServiceTest {
 
     @Test
     void uploadFile_ShouldUploadSuccessfully_WhenValidFile() throws Exception {
-        String fileType = "KTP";
+        String bucketName = "user-identity";
+        String objectPath = "USR12345/PHOTO_KTP/20251022T2015_ab12cd34_ktp.jpg";
 
-        String result = minioService.uploadFile(validImageFile, fileType);
+        minioService.uploadFile(validImageFile, bucketName, objectPath);
 
-        assertNotNull(result);
-        assertTrue(result.contains("hub-files"));
-        assertTrue(result.contains("checksum"));
         verify(minioClient, times(1)).putObject(any(PutObjectArgs.class));
     }
 
     @Test
     void uploadFile_ShouldThrowException_WhenFileTooLarge() {
-        String fileType = "KTP";
+        String bucketName = "user-identity";
+        String objectPath = "USR12345/PHOTO_KTP/large.jpg";
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> minioService.uploadFile(largeFile, fileType));
+            () -> minioService.uploadFile(largeFile, bucketName, objectPath));
 
         assertEquals("Error uploading file to MinIO", exception.getMessage());
-        assertEquals("File size exceeds 2 MB limit", exception.getCause().getMessage());
+        assertEquals("File size exceeds 5 MB limit", exception.getCause().getMessage());
     }
 
     @Test
     void uploadFile_ShouldThrowException_WhenInvalidFileType() {
-        String fileType = "KTP";
+        String bucketName = "user-identity";
+        String objectPath = "USR12345/PHOTO_KTP/test.txt";
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> minioService.uploadFile(invalidTypeFile, fileType));
+            () -> minioService.uploadFile(invalidTypeFile, bucketName, objectPath));
 
         assertEquals("Error uploading file to MinIO", exception.getMessage());
-        assertEquals("Only JPEG and PNG image files are allowed", exception.getCause().getMessage());
+        assertEquals("Unsupported file type. Allowed: JPEG, PNG, PDF, Excel, Word", exception.getCause().getMessage());
     }
 
     @Test
     void downloadFile_ShouldReturnInputStream_WhenFileExists() throws Exception {
-        String fileName = "test.jpg";
+        String bucketName = "user-identity";
+        String objectPath = "USR12345/PHOTO_KTP/test.jpg";
         GetObjectResponse mockResponse = mock(GetObjectResponse.class);
         when(minioClient.getObject(any(GetObjectArgs.class))).thenReturn(mockResponse);
 
-        InputStream result = minioService.downloadFile(fileName);
+        InputStream result = minioService.downloadFile(bucketName, objectPath);
 
         assertNotNull(result);
         assertEquals(mockResponse, result);
@@ -102,12 +103,13 @@ class MinioServiceTest {
 
     @Test
     void downloadFile_ShouldThrowException_WhenFileNotFound() throws Exception {
-        String fileName = "nonexistent.jpg";
+        String bucketName = "user-identity";
+        String objectPath = "USR12345/PHOTO_KTP/nonexistent.jpg";
         when(minioClient.getObject(any(GetObjectArgs.class)))
             .thenThrow(new RuntimeException("Object not found"));
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-            () -> minioService.downloadFile(fileName));
+            () -> minioService.downloadFile(bucketName, objectPath));
 
         assertEquals("Error downloading file from MinIO", exception.getMessage());
     }

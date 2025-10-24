@@ -2,8 +2,9 @@ package com.hub.app.file.controller;
 
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.file.dto.FileUploadResponse;
+import com.hub.app.file.model.FileUpload;
+import com.hub.app.file.service.FileUploadService;
 import com.hub.app.storage.MinioService;
-import com.hub.app.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,6 +15,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.ByteArrayInputStream;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -34,71 +37,94 @@ class FileControllerTest {
     private JwtService jwtService;
 
     @MockitoBean
-    private UserRepository userRepository;
+    private FileUploadService fileUploadService;
 
     @Test
     void uploadFile_ShouldReturnOk_WhenValidRequest() throws Exception {
         // Arrange
         String validToken = "valid.jwt.token";
-        String fileType = "KTP";
+        String usecase = "PHOTO_KTP";
+        String userId = "USR12345";
         MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test image content".getBytes());
-        String expectedUrl = "/hub-files/KTP/uuid-test.jpg?checksum=abc123";
+        FileUploadResponse expectedResponse = new FileUploadResponse(
+                "123e4567-e89b-12d3-a456-426614174000",
+                "user-identity",
+                "USR12345/PHOTO_KTP/20251022T2015_ab12cd34_test.jpg",
+                "test.jpg",
+                "image/jpeg"
+        );
         when(jwtService.validateToken(validToken)).thenReturn(true);
-        when(minioService.uploadFile(any(), eq(fileType))).thenReturn(expectedUrl);
+        when(fileUploadService.uploadFile(usecase, userId, file)).thenReturn(expectedResponse);
 
         // Act & Assert
         mockMvc.perform(multipart("/api/files/upload")
                 .file(file)
-                .param("fileType", fileType)
+                .param("usecase", usecase)
+                .param("userId", userId)
                 .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.fileId").exists())
-                .andExpect(jsonPath("$.fileUrl").value(expectedUrl))
-                .andExpect(jsonPath("$.checksum").value("abc123"));
+                .andExpect(jsonPath("$.fileId").value("123e4567-e89b-12d3-a456-426614174000"))
+                .andExpect(jsonPath("$.bucketName").value("user-identity"))
+                .andExpect(jsonPath("$.objectPath").value("USR12345/PHOTO_KTP/20251022T2015_ab12cd34_test.jpg"))
+                .andExpect(jsonPath("$.originalName").value("test.jpg"))
+                .andExpect(jsonPath("$.mimeType").value("image/jpeg"));
     }
 
     @Test
     void uploadFile_ShouldReturnUnauthorized_WhenInvalidToken() throws Exception {
         // Arrange
         String invalidToken = "invalid.token";
-        String fileType = "KTP";
+        String usecase = "PHOTO_KTP";
+        String userId = "USR12345";
         MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test content".getBytes());
         when(jwtService.validateToken(invalidToken)).thenReturn(false);
 
         // Act & Assert
         mockMvc.perform(multipart("/api/files/upload")
                 .file(file)
-                .param("fileType", fileType)
+                .param("usecase", usecase)
+                .param("userId", userId)
                 .header("Authorization", "Bearer " + invalidToken))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string("Invalid token"));
     }
 
     @Test
-    void uploadFile_ShouldReturnBadRequest_WhenInvalidFileType() throws Exception {
+    void uploadFile_ShouldReturnBadRequest_WhenInvalidUsecase() throws Exception {
         // Arrange
         String validToken = "valid.jwt.token";
-        String invalidFileType = "INVALID";
+        String invalidUsecase = "INVALID_USECASE";
+        String userId = "USR12345";
         MockMultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", "test content".getBytes());
         when(jwtService.validateToken(validToken)).thenReturn(true);
+        when(fileUploadService.uploadFile(invalidUsecase, userId, file))
+                .thenThrow(new IllegalArgumentException("Unsupported usecase: " + invalidUsecase));
 
         // Act & Assert
         mockMvc.perform(multipart("/api/files/upload")
                 .file(file)
-                .param("fileType", invalidFileType)
+                .param("usecase", invalidUsecase)
+                .param("userId", userId)
                 .header("Authorization", "Bearer " + validToken))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Invalid file type. Supported types: KTP, Document, Selfie"));
+                .andExpect(content().string("Unsupported usecase: INVALID_USECASE"));
     }
 
     @Test
     void downloadFile_ShouldReturnFile_WhenValidRequest() throws Exception {
         // Arrange
         String validToken = "valid.jwt.token";
-        String fileId = "KTP/test.jpg";
+        String fileId = "123e4567-e89b-12d3-a456-426614174000";
+        FileUpload fileUpload = new FileUpload();
+        fileUpload.setBucketName("user-identity");
+        fileUpload.setObjectPath("USR12345/PHOTO_KTP/test.jpg");
+        fileUpload.setOriginalName("test.jpg");
+        fileUpload.setMimeType("image/jpeg");
+
         ByteArrayInputStream fileStream = new ByteArrayInputStream("file content".getBytes());
         when(jwtService.validateToken(validToken)).thenReturn(true);
-        when(minioService.downloadFile(fileId)).thenReturn(fileStream);
+        when(fileUploadService.getFileMetadata(UUID.fromString(fileId))).thenReturn(Optional.of(fileUpload));
+        when(minioService.downloadFile("user-identity", "USR12345/PHOTO_KTP/test.jpg")).thenReturn(fileStream);
 
         // Act & Assert
         mockMvc.perform(get("/api/files/download/{fileId}", fileId)
@@ -112,7 +138,7 @@ class FileControllerTest {
     void downloadFile_ShouldReturnUnauthorized_WhenInvalidToken() throws Exception {
         // Arrange
         String invalidToken = "invalid.token";
-        String fileId = "KTP/test.jpg";
+        String fileId = "123e4567-e89b-12d3-a456-426614174000";
         when(jwtService.validateToken(invalidToken)).thenReturn(false);
 
         // Act & Assert
@@ -126,9 +152,9 @@ class FileControllerTest {
     void downloadFile_ShouldReturnNotFound_WhenFileNotFound() throws Exception {
         // Arrange
         String validToken = "valid.jwt.token";
-        String fileId = "nonexistent.jpg";
+        String fileId = "123e4567-e89b-12d3-a456-426614174000";
         when(jwtService.validateToken(validToken)).thenReturn(true);
-        when(minioService.downloadFile(fileId)).thenThrow(new RuntimeException("File not found"));
+        when(fileUploadService.getFileMetadata(UUID.fromString(fileId))).thenReturn(Optional.empty());
 
         // Act & Assert
         mockMvc.perform(get("/api/files/download/{fileId}", fileId)
