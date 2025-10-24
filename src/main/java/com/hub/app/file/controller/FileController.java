@@ -2,8 +2,9 @@ package com.hub.app.file.controller;
 
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.file.dto.FileUploadResponse;
+import com.hub.app.file.model.FileUpload;
+import com.hub.app.file.service.FileUploadService;
 import com.hub.app.storage.MinioService;
-import com.hub.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.InputStreamResource;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/files")
@@ -21,15 +24,16 @@ import java.io.InputStream;
 @Slf4j
 public class FileController {
 
+    private final FileUploadService fileUploadService;
     private final MinioService minioService;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadFile(
             @RequestHeader("Authorization") String authHeader,
-            @RequestPart("file") MultipartFile file,
-            @RequestParam("fileType") String fileType) {
+            @RequestPart("usecase") String usecase,
+            @RequestPart("userId") String userId,
+            @RequestPart("file") MultipartFile file) {
 
         try {
             // Validate JWT token
@@ -38,23 +42,21 @@ public class FileController {
                 return ResponseEntity.status(401).body("Invalid token");
             }
 
-            // Validate file type
-            if (!isValidFileType(fileType)) {
-                return ResponseEntity.badRequest().body("Invalid file type. Supported types: KTP, Document, Selfie");
+            // Validate required parameters
+            if (usecase == null || usecase.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Usecase is required");
+            }
+            if (userId == null || userId.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("UserId is required");
+            }
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is required");
             }
 
-            // Upload file
-            String fileUrl = minioService.uploadFile(file, fileType);
+            // Upload file using new service
+            FileUploadResponse response = fileUploadService.uploadFile(usecase, userId, file);
 
-            // Extract fileId from URL (remove leading slash and checksum)
-            String fileId = extractFileIdFromUrl(fileUrl);
-
-            // Extract checksum from URL
-            String checksum = extractChecksumFromUrl(fileUrl);
-
-            FileUploadResponse response = new FileUploadResponse(fileId, fileUrl, checksum);
-
-            log.info("File uploaded successfully: {}", fileId);
+            log.info("File uploaded successfully: {}", response.getFileId());
             return ResponseEntity.ok(response);
 
         } catch (IllegalArgumentException e) {
@@ -78,15 +80,20 @@ public class FileController {
                 return ResponseEntity.status(401).body("Invalid token");
             }
 
-            // Download file
-            InputStream inputStream = minioService.downloadFile(fileId);
+            // Get file metadata from database
+            Optional<FileUpload> fileUploadOpt = fileUploadService.getFileMetadata(UUID.fromString(fileId));
+            if (fileUploadOpt.isEmpty()) {
+                return ResponseEntity.status(404).body("File not found");
+            }
 
-            // Determine content type based on file extension
-            String contentType = determineContentType(fileId);
+            FileUpload fileUpload = fileUploadOpt.get();
+
+            // Download file from MinIO using bucket and object path
+            InputStream inputStream = minioService.downloadFile(fileUpload.getBucketName(), fileUpload.getObjectPath());
 
             return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + extractFileName(fileId) + "\"")
+                    .contentType(MediaType.parseMediaType(fileUpload.getMimeType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
         } catch (Exception e) {
@@ -95,35 +102,4 @@ public class FileController {
         }
     }
 
-    private boolean isValidFileType(String fileType) {
-        return fileType != null && (fileType.equals("KTP") || fileType.equals("Document") || fileType.equals("Selfie"));
-    }
-
-    private String extractFileIdFromUrl(String fileUrl) {
-        // Remove leading slash and everything after ?
-        int questionMarkIndex = fileUrl.indexOf('?');
-        String path = questionMarkIndex > 0 ? fileUrl.substring(1, questionMarkIndex) : fileUrl.substring(1);
-        // Remove bucket name prefix
-        return path.replaceFirst("hub-files/", "");
-    }
-
-    private String extractChecksumFromUrl(String fileUrl) {
-        int checksumIndex = fileUrl.indexOf("checksum=");
-        return checksumIndex > 0 ? fileUrl.substring(checksumIndex + 9) : "";
-    }
-
-    private String determineContentType(String fileId) {
-        String fileName = extractFileName(fileId).toLowerCase();
-        if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) {
-            return "image/jpeg";
-        } else if (fileName.endsWith(".png")) {
-            return "image/png";
-        }
-        return "application/octet-stream";
-    }
-
-    private String extractFileName(String fileId) {
-        int lastSlashIndex = fileId.lastIndexOf('/');
-        return lastSlashIndex > 0 ? fileId.substring(lastSlashIndex + 1) : fileId;
-    }
 }

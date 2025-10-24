@@ -27,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.UUID;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -299,7 +300,8 @@ public class UserController {
 
             List<String> uploadedUrls = new ArrayList<>();
             for (MultipartFile file : files) {
-                String fileUrl = minioService.uploadFile(file, "Portfolio");
+                String objectPath = "portfolio/" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+                String fileUrl = minioService.uploadFile(file, "hub-files", objectPath);
                 uploadedUrls.add(fileUrl);
             }
 

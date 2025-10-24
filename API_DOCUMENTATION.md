@@ -381,29 +381,38 @@ curl -X GET "http://localhost:8080/api/files/download/documents/document.pdf" \
 ## Project Management API
 
 ### Overview
-The Project Management API allows users to create and manage their projects.
+The Project Management API allows users to create and manage their projects. Projects can have different statuses: PENDING (waiting for consultation acceptance), ACTIVE (consultation accepted), COMPLETED (project finished), or CANCELLED (project cancelled).
+
+### Project Status Flow
+1. **PENDING**: Project created and consultation requested, waiting for consultant acceptance
+2. **ACTIVE**: Consultation accepted by consultant, project is active
+3. **COMPLETED**: Project finished successfully
+4. **CANCELLED**: Project cancelled
 
 ### Authentication
 All endpoints require JWT authentication with `Authorization: Bearer <token>` header.
+
+### Project Status Flow
+1. **PENDING**: Project created and consultation requested, waiting for consultant acceptance
+2. **ACTIVE**: Consultation accepted by consultant, project is active
+3. **COMPLETED**: Project finished successfully
+4. **CANCELLED**: Project cancelled
 
 ### Endpoints
 
 #### 1. Create Project
 **POST** `/api/projects`
 
-Create a new project.
+Create a new project. New projects are automatically assigned ACTIVE status.
 
 **Parameters:**
 - `name` (string, required): Project name
-- `description` (string, optional): Project description
-- `type` (string, required): Project type ("RENOVATION", "NEW_BUILD", "LANDSCAPING")
-- `budget` (number, optional): Project budget
-- `location` (object, optional): Location coordinates
-  - `latitude` (number): Latitude
-  - `longitude` (number): Longitude
-- `timeline` (object, optional): Project timeline
-  - `startDate` (string): Start date (ISO format)
-  - `endDate` (string): End date (ISO format)
+- `longitude` (number, required): Project longitude coordinate
+- `latitude` (number, required): Project latitude coordinate
+- `locationDetail` (string, required): Detailed project location address
+- `type` (string, required): Project type ("PROTOTYPE" or "NON_PROTOTYPE")
+- `landArea` (number, required): Land area in square meters
+- `income` (number, required): Project income/budget
 
 **Request Example:**
 ```bash
@@ -411,36 +420,70 @@ curl -X POST "http://localhost:8080/api/projects" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Home Renovation",
-    "description": "Kitchen and bathroom renovation",
-    "type": "RENOVATION",
-    "budget": 50000,
-    "location": {
-      "latitude": -6.2088,
-      "longitude": 106.8456
-    },
-    "timeline": {
-      "startDate": "2024-01-01",
-      "endDate": "2024-03-01"
-    }
+    "name": "Rumah Minimalis",
+    "longitude": 106.8456,
+    "latitude": -6.2088,
+    "locationDetail": "Jl. Sudirman No. 123, Jakarta Selatan",
+    "type": "PROTOTYPE",
+    "landArea": 200.5,
+    "income": 500000000
   }'
+```
+
+**Response (201 Created):**
+```json
+{
+  "projectId": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "Rumah Minimalis",
+  "type": "PROTOTYPE",
+  "createdAt": "2024-01-15T10:00:00Z"
+}
 ```
 
 #### 2. Get User Projects
 **GET** `/api/projects`
 
-Get list of user's projects with optional filters.
+Get list of user's projects with optional filters. Supports filtering by status to show PENDING projects.
 
 **Parameters:**
-- `page` (query, optional): Page number (0-based)
-- `size` (query, optional): Page size
-- `type` (query, optional): Filter by project type
-- `status` (query, optional): Filter by project status
+- `page` (query, optional): Page number (0-based, default: 0)
+- `size` (query, optional): Page size (default: 10)
+- `type` (query, optional): Filter by project type ("PROTOTYPE" or "NON_PROTOTYPE")
+- `status` (query, optional): Filter by project status ("PENDING", "ACTIVE", "COMPLETED", "CANCELLED")
 
-**Request Example:**
+**Note:** Use `status=PENDING` to view projects that are waiting for consultation acceptance.
+
+**Request Example (Get all projects):**
 ```bash
-curl -X GET "http://localhost:8080/api/projects?page=0&size=10&type=RENOVATION" \
+curl -X GET "http://localhost:8080/api/projects" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Request Example (Get PENDING projects only - projects waiting for consultation acceptance):**
+```bash
+curl -X GET "http://localhost:8080/api/projects?status=PENDING" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Response (200 OK):**
+```json
+{
+  "projects": [
+    {
+      "projectId": "123e4567-e89b-12d3-a456-426614174000",
+      "name": "Rumah Minimalis",
+      "type": "PROTOTYPE",
+      "status": "PENDING",
+      "location": {
+        "longitude": 106.8456,
+        "latitude": -6.2088,
+        "address": "Jl. Sudirman No. 123, Jakarta Selatan"
+      },
+      "landArea": 200.5,
+      "createdAt": "2024-01-15T10:00:00Z"
+    }
+  ]
+}
 ```
 
 #### 3. Get Project Detail
@@ -455,6 +498,24 @@ Get detailed information about a specific project.
 ```bash
 curl -X GET "http://localhost:8080/api/projects/123e4567-e89b-12d3-a456-426614174000" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+```
+
+**Response (200 OK):**
+```json
+{
+  "projectId": "123e4567-e89b-12d3-a456-426614174000",
+  "name": "Rumah Minimalis",
+  "type": "PROTOTYPE",
+  "status": "PENDING",
+  "locationDetail": "Jl. Sudirman No. 123, Jakarta Selatan",
+  "longitude": 106.8456,
+  "latitude": -6.2088,
+  "landArea": 200.5,
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z",
+  "consultation": null,
+  "permit": null
+}
 ```
 
 ## User Management API
@@ -711,16 +772,13 @@ All endpoints require JWT authentication with `Authorization: Bearer <token>` he
 #### 1. Create Consultation
 **POST** `/api/consultations`
 
-Create a new consultation request (homeowner only).
+Create a new consultation request (homeowner only). When a consultation is created, the associated project status automatically changes to PENDING.
 
 **Parameters:**
-- `consultantId` (UUID, required): Target consultant ID
-- `projectId` (UUID, optional): Associated project ID
+- `consultantId` (Long, required): Target consultant ID
+- `projectId` (UUID, required): Associated project ID (project status will automatically change to PENDING)
 - `consultationType` (string, required): "ONLINE" or "OFFLINE"
-- `description` (string, required): Consultation description
-- `preferredSchedule` (object, optional): Preferred schedule
-  - `date` (string): Preferred date (ISO format)
-  - `time` (string): Preferred time
+- `channel` (string, required): "CHAT" or "VIDEO_CALL"
 
 **Request Example:**
 ```bash
@@ -728,11 +786,34 @@ curl -X POST "http://localhost:8080/api/consultations" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." \
   -H "Content-Type: application/json" \
   -d '{
-    "consultantId": "123e4567-e89b-12d3-a456-426614174000",
+    "consultantId": 1,
+    "projectId": "123e4567-e89b-12d3-a456-426614174000",
     "consultationType": "ONLINE",
-    "description": "Need advice on kitchen renovation"
+    "channel": "CHAT"
   }'
 ```
+
+**Response (200 OK):**
+```json
+{
+  "id": "456e7890-e89b-12d3-a456-426614174001",
+  "homeOwnerId": 1,
+  "homeOwnerName": "John Doe",
+  "consultantId": 2,
+  "consultantName": "Jane Consultant",
+  "designId": null,
+  "designName": null,
+  "consultationType": "ONLINE",
+  "channel": "CHAT",
+  "status": "MENUNGGU_KONFIRMASI_KONSULTAN",
+  "startedAt": null,
+  "completedAt": null,
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:00:00Z"
+}
+```
+
+**Note:** After this request, the associated project status will automatically change from ACTIVE to PENDING, indicating it's waiting for consultant acceptance. Use `GET /api/projects?status=PENDING` to view projects in this state.
 
 #### 2. Get Consultations
 **GET** `/api/consultations`
@@ -762,7 +843,7 @@ curl -X GET "http://localhost:8080/api/consultations/123e4567-e89b-12d3-a456-426
 #### 4. Accept Consultation
 **POST** `/api/consultations/{id}/accept`
 
-Accept a consultation request (consultant only).
+Accept a consultation request (consultant only). When a consultation is accepted, the associated project status automatically changes to ACTIVE.
 
 **Parameters:**
 - `id` (path): Consultation UUID
@@ -772,6 +853,28 @@ Accept a consultation request (consultant only).
 curl -X POST "http://localhost:8080/api/consultations/123e4567-e89b-12d3-a456-426614174000/accept" \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
+
+**Response (200 OK):**
+```json
+{
+  "id": "123e4567-e89b-12d3-a456-426614174000",
+  "homeOwnerId": 1,
+  "homeOwnerName": "John Doe",
+  "consultantId": 2,
+  "consultantName": "Jane Consultant",
+  "designId": null,
+  "designName": null,
+  "consultationType": "ONLINE",
+  "channel": "CHAT",
+  "status": "MENUNGGU_JADWAL_SURVEY",
+  "startedAt": null,
+  "completedAt": null,
+  "createdAt": "2024-01-15T10:00:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**Note:** After this request, the associated project status will automatically change from PENDING to ACTIVE, indicating the consultation is now active and the project can proceed.
 
 #### 5. Reject Consultation
 **POST** `/api/consultations/{id}/reject`

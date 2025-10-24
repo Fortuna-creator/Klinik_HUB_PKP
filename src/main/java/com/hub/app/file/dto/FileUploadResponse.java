@@ -7,6 +7,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class FileUploadResponse {
     private String fileId;
-    private String fileUrl;
-    private String checksum;
+    private String bucketName;
+    private String objectPath;
+    private String originalName;
+    private String mimeType;
 }
