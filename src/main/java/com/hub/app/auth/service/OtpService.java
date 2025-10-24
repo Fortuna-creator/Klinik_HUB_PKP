@@ -36,6 +36,12 @@ public class OtpService {
     private String mailUsername;
     @Value( "${spring.mail.password}")
     private String mailPassword;
+    @Value( "${spring.mail.properties.mail.smtp.auth}")
+    private String mailSmtpAuth;
+    @Value( "${spring.mail.properties.mail.smtp.starttls.enable}")
+    private String mailStarttlsEnable;
+    @Value( "${spring.mail.properties.mail.smtp.starttls.required}")
+    private String mailStarttlsRequired;
 
     public void generateAndSendOtp(User user) {
         // Rate limiting: max 3 OTP per hour per user
@@ -87,7 +93,7 @@ public class OtpService {
 
     @Async
     public void sendEmail(String email, String code){
-        log.info("Email config: host={}, port={}, sender={}, password={}", mailHost, mailPort, mailUsername, mailPassword);
+        log.info("Email config: host={}, port={}, sender={}, password={}, auth={}, tls={}, requiredTls={}", mailHost, mailPort, mailUsername, mailPassword, mailSmtpAuth, mailStarttlsEnable, mailStarttlsRequired);
         try{
             var msg = new org.springframework.mail.SimpleMailMessage();
             msg.setTo(email);
