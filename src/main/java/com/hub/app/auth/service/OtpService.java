@@ -69,7 +69,6 @@ public class OtpService {
         User user = userOptional.get();
         return otpRepo.findTopByUserIdAndUsedFalseOrderByExpiresAtDesc(user.getId())
                 .map(t -> {
-                    log.info("Email config: host={}, port={}, sender={}, password={}", mailHost, mailPort, mailUsername, mailPassword);
                     sendEmail(user.getEmail(), t.getCode());
                     return true;
                 }).orElse(false);
@@ -87,6 +86,7 @@ public class OtpService {
 
     @Async
     public void sendEmail(String email, String code){
+        log.info("Email config: host={}, port={}, sender={}, password={}", mailHost, mailPort, mailUsername, mailPassword);
         try{
             var msg = new org.springframework.mail.SimpleMailMessage();
             msg.setTo(email);
