@@ -43,7 +43,8 @@ spring:
     properties:
       smtp:
         auth: true
-        starttls.enable: true
+        starttls:
+          enable: true
 
 minio:
   endpoint: ${MINIO_ENDPOINT:http://minio:9000}
