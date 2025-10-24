@@ -36,14 +36,11 @@ spring:
       enabled: true
 
   mail:
-    host: ${MAIL_HOST:smtp.mailtrap.io}
+    host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:youruser}
-    password: ${MAIL_PASSWORD:yourpass}
+    username: ${MAIL_USERNAME:idayirikzir@gmail.com}
+    password: ${MAIL_PASSWORD:gxhzfrzeabmsavcg}
     properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-      mail.smtp.starttls.required: true
       smtp:
         auth: true
         starttls.enable: true
