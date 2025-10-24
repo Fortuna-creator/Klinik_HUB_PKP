@@ -5,8 +5,12 @@ import com.hub.app.consultation.dto.CreateConsultationRequest;
 import com.hub.app.consultation.model.Consultation;
 import com.hub.app.consultation.model.ConsultationStatus;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.project.model.Project;
+import com.hub.app.project.model.ProjectStatus;
+import com.hub.app.project.repository.ProjectRepository;
 import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.HomeOwner;
+import com.hub.app.user.model.User;
 import com.hub.app.user.repository.ConsultantRepository;
 import com.hub.app.user.repository.HomeOwnerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +32,9 @@ public class ConsultationService {
     @Autowired
     private ConsultantRepository consultantRepository;
 
+    @Autowired
+    private ProjectRepository projectRepository;
+
     public ConsultationResponse acceptConsultation(UUID consultationId, Long consultantId) {
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultation not found"));
@@ -35,6 +42,18 @@ public class ConsultationService {
         if (consultation.getStatus() != ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN) {
             throw new RuntimeException("Invalid status transition");
         }
+
+        // Set project status to ACTIVE when consultation is accepted
+        // Find the project that was set to PENDING for this consultation
+        // Since consultation is linked to home owner, we need to find projects by home owner
+        List<Project> pendingProjects = projectRepository.findByUserAndStatus(consultation.getHomeOwner(), ProjectStatus.PENDING);
+        if (pendingProjects.isEmpty()) {
+            throw new RuntimeException("No pending project found for this consultation");
+        }
+        // For simplicity, assume the first pending project is the one
+        Project project = pendingProjects.get(0);
+        project.setStatus(ProjectStatus.ACTIVE);
+        projectRepository.save(project);
 
         consultation.setStatus(ConsultationStatus.MENUNGGU_JADWAL_SURVEY);
         consultation = consultationRepository.save(consultation);
@@ -60,6 +79,18 @@ public class ConsultationService {
 
         Consultant consultant = consultantRepository.findById(request.getConsultantId())
                 .orElseThrow(() -> new RuntimeException("Consultant not found"));
+
+        Project project = projectRepository.findByProjectId(request.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Check if project belongs to home owner
+        if (!project.getUser().getId().equals(homeOwnerId)) {
+            throw new RuntimeException("Project does not belong to the home owner");
+        }
+
+        // Set project status to PENDING when consultation is created
+        project.setStatus(ProjectStatus.PENDING);
+        projectRepository.save(project);
 
         Consultation consultation = new Consultation();
         consultation.setHomeOwner(homeOwner);

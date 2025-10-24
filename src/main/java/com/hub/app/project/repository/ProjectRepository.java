@@ -18,5 +18,6 @@ public interface ProjectRepository extends JpaRepository<Project, Long> {
     Page<Project> findByUser(User user, Pageable pageable);
     Page<Project> findByUserAndType(User user, ProjectType type, Pageable pageable);
     Page<Project> findByUserAndStatus(User user, ProjectStatus status, Pageable pageable);
+    List<Project> findByUserAndStatus(User user, ProjectStatus status);
     Page<Project> findByUserAndTypeAndStatus(User user, ProjectType type, ProjectStatus status, Pageable pageable);
 }

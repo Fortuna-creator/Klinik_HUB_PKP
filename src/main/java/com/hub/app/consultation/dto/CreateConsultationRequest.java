@@ -5,6 +5,8 @@ import com.hub.app.consultation.model.ConsultationType;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
 public class CreateConsultationRequest {
     @NotNull
@@ -15,4 +17,7 @@ public class CreateConsultationRequest {
 
     @NotNull
     private ConsultationChannel channel;
+
+    @NotNull
+    private UUID projectId;
 }
