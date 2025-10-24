@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.hub.app.auth.model.OtpToken;
@@ -29,7 +30,7 @@ public class OtpService {
             throw new IllegalArgumentException("Too many OTP requests. Please try again later.");
         }
 
-        String code = String.format("%06d", new SecureRandom().nextInt(999999));
+        String code = String.format("%04d", new SecureRandom().nextInt(9999));
         OtpToken token = OtpToken.builder()
                 .userId(user.getId())
                 .code(code)
@@ -39,11 +40,7 @@ public class OtpService {
         otpRepo.save(token);
 
         // kirim OTP via email (bisa SMS jika ada provider)
-        var msg = new org.springframework.mail.SimpleMailMessage();
-        msg.setTo(user.getEmail());
-        msg.setSubject("OTP Registrasi HUB");
-        msg.setText("Kode OTP Anda adalah: " + code);
- //        mailSender.send(msg);
+        sendEmail(user.getEmail(), code);
     }
 
     public boolean verifyOtp(Long userId, String code) {
@@ -54,5 +51,18 @@ public class OtpService {
                     otpRepo.save(t);
                     return true;
                 }).orElse(false);
+    }
+
+    @Async
+    public void sendEmail(String email, String code){
+        try{
+            var msg = new org.springframework.mail.SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("OTP Registrasi HUB");
+            msg.setText("Kode OTP Anda adalah: " + code);
+            mailSender.send(msg);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
