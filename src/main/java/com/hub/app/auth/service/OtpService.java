@@ -3,7 +3,11 @@ package com.hub.app.auth.service;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 
+import com.hub.app.error.DomainException;
+import com.hub.app.error.ErrorCode;
+import com.hub.app.user.repository.UserRepository;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -19,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 public class OtpService {
     private final OtpRepository otpRepo;
     private final JavaMailSender mailSender;
+    private final UserRepository userRepository;
 
     public void generateAndSendOtp(User user) {
         // Rate limiting: max 3 OTP per hour per user
@@ -41,6 +46,21 @@ public class OtpService {
 
         // kirim OTP via email (bisa SMS jika ada provider)
         sendEmail(user.getEmail(), code);
+    }
+
+    public boolean resendOtp(String email){
+        Optional<User> userOptional = userRepository.findByEmail(email);
+
+        if(userOptional.isEmpty()){
+            throw new DomainException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        User user = userOptional.get();
+        return otpRepo.findTopByUserIdAndUsedFalseOrderByExpiresAtDesc(user.getId())
+                .map(t -> {
+                    sendEmail(user.getEmail(), t.getCode());
+                    return true;
+                }).orElse(false);
     }
 
     public boolean verifyOtp(Long userId, String code) {

@@ -3,6 +3,7 @@ package com.hub.app.auth.controller;
 import com.hub.app.auth.dto.*;
 import com.hub.app.auth.service.ActivationService;
 import com.hub.app.auth.service.AuthService;
+import com.hub.app.auth.service.OtpService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ public class AuthController {
     private final AuthService authService;
     private final ActivationService activationService;
     private final ApiErrorBuilder apiErrorBuilder;
+    private final OtpService otpService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody InitialRegisterRequest req) {
@@ -50,6 +52,18 @@ public class AuthController {
             return ResponseEntity.ok(authService.verifyOtp(req));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("An error occurred");
+        }
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<?> resendOtp(@RequestParam String email) {
+        try {
+            otpService.resendOtp(email);
+            return ResponseEntity.ok("Otp email resent successfully");
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
