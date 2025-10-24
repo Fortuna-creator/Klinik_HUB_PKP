@@ -23,45 +23,46 @@ public class MinioService {
 
     private final MinioClient minioClient;
     private final String bucketName = "hub-files";
+    private final String endpoint = "http://localhost:9000";
 
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
-    public String uploadFile(MultipartFile file, String fileType) {
+    public String uploadFile(MultipartFile file, String bucketName, String objectPath) {
         try {
             // 🔍 Validasi ukuran file
             if (file.getSize() > MAX_FILE_SIZE) {
-                throw new RuntimeException("File size exceeds 2 MB limit");
+                throw new RuntimeException("File size exceeds 5 MB limit");
             }
 
-            // 🔍 Validasi tipe file untuk gambar (JPEG, PNG)
+            // 🔍 Validasi tipe file untuk gambar (JPEG, PNG) - bisa diperluas untuk dokumen
             String contentType = file.getContentType();
-            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png"))) {
-                throw new RuntimeException("Only JPEG and PNG image files are allowed");
+            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") &&
+                !contentType.equals("application/pdf") && !contentType.startsWith("application/vnd"))) {
+                throw new RuntimeException("Unsupported file type. Allowed: JPEG, PNG, PDF, Excel, Word");
             }
 
-            // 🔍 Compress image if needed
-            byte[] imageBytes = compressImageIfNeeded(file);
+            // 🔍 Compress image if needed (only for images)
+            byte[] fileBytes;
+            if (contentType.startsWith("image/")) {
+                fileBytes = compressImageIfNeeded(file);
+            } else {
+                fileBytes = file.getBytes();
+            }
 
-            // 🔍 Hitung checksum SHA-256 dari compressed image
-            String checksum = calculateChecksum(new ByteArrayInputStream(imageBytes), "SHA-256");
-
-            // Generate unique filename
-            String fileName = fileType + "/" + UUID.randomUUID() + "-" + file.getOriginalFilename();
-
-            // Upload ke MinIO
-            try (InputStream is = new ByteArrayInputStream(imageBytes)) {
+            // Upload ke MinIO dengan bucket dan path yang ditentukan
+            try (InputStream is = new ByteArrayInputStream(fileBytes)) {
                 minioClient.putObject(
                         PutObjectArgs.builder()
                                 .bucket(bucketName)
-                                .object(fileName)
-                                .stream(is, imageBytes.length, -1)
+                                .object(objectPath)
+                                .stream(is, fileBytes.length, -1)
                                 .contentType(file.getContentType())
                                 .build()
                 );
             }
 
-            // Return URL + checksum untuk verifikasi
-            return "/" + bucketName + "/" + fileName + "?checksum=" + checksum;
+            // Return the file URL
+            return endpoint + "/" + bucketName + "/" + objectPath;
 
         } catch (Exception e) {
             throw new RuntimeException("Error uploading file to MinIO", e);
@@ -102,12 +103,12 @@ public class MinioService {
         return baos.toByteArray();
     }
 
-    public InputStream downloadFile(String fileName) {
+    public InputStream downloadFile(String bucketName, String objectPath) {
         try {
             return minioClient.getObject(
                     GetObjectArgs.builder()
                             .bucket(bucketName)
-                            .object(fileName)
+                            .object(objectPath)
                             .build()
             );
         } catch (Exception e) {
