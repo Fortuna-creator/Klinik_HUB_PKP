@@ -9,7 +9,16 @@ spring:
       ddl-auto: update
     properties:
       javax.persistence.schema-generation.database.action: none
-
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:idayirikzir@gmail.com}
+    password: ${MAIL_PASSWORD:gxhzfrzeabmsavcg}
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
 minio:
   endpoint: http://localhost:9000
   access-key: minioadmin
