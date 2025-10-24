@@ -41,13 +41,12 @@ spring:
     username: ${MAIL_USERNAME:idayirikzir@gmail.com}
     password: ${MAIL_PASSWORD:gxhzfrzeabmsavcg}
     properties:
-      smtp:
-        auth: true
-        starttls:
-          enable: true
-          required: true
-    ssl:
-      enabled: true
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 minio:
   endpoint: ${MINIO_ENDPOINT:http://minio:9000}
