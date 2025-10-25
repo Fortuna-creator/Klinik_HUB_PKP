@@ -23,7 +23,7 @@ public class FavoriteDesignService {
 
     public FavoriteDesignResponse toggleFavorite(Long homeOwnerId, FavoriteDesignRequest request) {
         HomeOwner homeOwner = homeOwnerRepository.findById(homeOwnerId)
-                .orElseThrow(() -> new RuntimeException("HomeOwner not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.HOME_OWNER_NOT_FOUND));
 
         // Validate design exists
         designService.getDesignById(request.getDesignId());

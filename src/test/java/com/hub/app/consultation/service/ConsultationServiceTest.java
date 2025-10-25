@@ -4,6 +4,7 @@ import com.hub.app.consultation.dto.ConsultationResponse;
 import com.hub.app.consultation.dto.CreateConsultationRequest;
 import com.hub.app.consultation.model.*;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.project.repository.ProjectRepository;
 import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.HomeOwner;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,9 @@ class ConsultationServiceTest {
 
     @Mock
     private ConsultationRepository consultationRepository;
+
+    @Mock
+    private ProjectRepository projectRepository;
 
     @InjectMocks
     private ConsultationService consultationService;
@@ -52,6 +56,7 @@ class ConsultationServiceTest {
 
         when(consultationRepository.findByIdAndConsultantId(consultationId, consultantId))
                 .thenReturn(Optional.of(consultation));
+        when(projectRepository.findByUserAndStatus(any(), any())).thenReturn(List.of(new com.hub.app.project.model.Project()));
         when(consultationRepository.save(any(Consultation.class))).thenReturn(consultation);
 
         // Act
@@ -92,9 +97,9 @@ class ConsultationServiceTest {
                 .thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        com.hub.app.error.DomainException exception = assertThrows(com.hub.app.error.DomainException.class, () ->
                 consultationService.acceptConsultation(consultationId, consultantId));
-        assertEquals("Consultation not found", exception.getMessage());
+        assertEquals(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND, exception.getErrorCode());
     }
 
     @Test

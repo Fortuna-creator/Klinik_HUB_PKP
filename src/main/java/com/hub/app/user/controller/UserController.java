@@ -74,11 +74,13 @@ public class UserController {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
             // Check if user is a consultant
             if (!(user instanceof Consultant)) {
-                return ResponseEntity.badRequest().body("Only consultants can have portfolios");
+                return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
+                                            ErrorCode.BAD_REQUEST.getCode(),
+                                            "Only consultants can have portfolios");
             }
 
             List<Portfolio> portfolios = portfolioService.getPortfoliosByConsultant((Consultant) user);
@@ -87,7 +89,9 @@ public class UserController {
             }
             return ResponseEntity.ok(portfolios);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 
@@ -97,18 +101,22 @@ public class UserController {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
             // Check if user is a consultant
             if (!(user instanceof Consultant)) {
-                return ResponseEntity.badRequest().body("Only consultants can have portfolios");
+                return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
+                                            ErrorCode.BAD_REQUEST.getCode(),
+                                            "Only consultants can have portfolios");
             }
 
             return portfolioService.getPortfolioByConsultant((Consultant) user)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 
@@ -129,7 +137,9 @@ public class UserController {
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 
@@ -140,11 +150,13 @@ public class UserController {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
             // Check if user is a consultant
             if (!(user instanceof Consultant)) {
-                return ResponseEntity.badRequest().body("Only consultants can create portfolios");
+                return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
+                                            ErrorCode.BAD_REQUEST.getCode(),
+                                            "Only consultants can create portfolios");
             }
 
             Portfolio portfolio = portfolioService.saveOrUpdatePortfolio(user, request);
@@ -152,7 +164,9 @@ public class UserController {
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 
@@ -163,11 +177,13 @@ public class UserController {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
             // Check if user is a consultant
             if (!(user instanceof Consultant)) {
-                return ResponseEntity.badRequest().body("Only consultants can update portfolios");
+                return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
+                                            ErrorCode.BAD_REQUEST.getCode(),
+                                            "Only consultants can update portfolios");
             }
 
             Portfolio portfolio = portfolioService.saveOrUpdatePortfolio(user, request);
@@ -175,7 +191,9 @@ public class UserController {
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 
@@ -210,8 +228,8 @@ public class UserController {
                 try {
                     consultantType = ConsultantType.valueOf(type.toUpperCase());
                 } catch (IllegalArgumentException e) {
-                    return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
-                                                ErrorCode.BAD_REQUEST.getCode(),
+                    return apiErrorBuilder.error(ErrorCode.VALIDATION_ERROR.getHttpStatus(),
+                                                ErrorCode.VALIDATION_ERROR.getCode(),
                                                 "Invalid consultant type. Must be PROFESSIONAL or STUDENT");
                 }
             }
@@ -272,11 +290,13 @@ public class UserController {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
             // Check if user is a consultant
             if (!(user instanceof Consultant)) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only consultants can add portfolio projects");
+                return apiErrorBuilder.error(ErrorCode.BAD_REQUEST.getHttpStatus(),
+                                            ErrorCode.BAD_REQUEST.getCode(),
+                                            "Only consultants can add portfolio projects");
             }
 
             PortfolioProject project = portfolioService.addProjectToPortfolio((Consultant) user, projectRequest);
@@ -284,7 +304,9 @@ public class UserController {
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 
@@ -308,7 +330,9 @@ public class UserController {
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("imageUrls", uploadedUrls));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        ErrorCode.INTERNAL_ERROR.getDefaultMessage());
         }
     }
 }

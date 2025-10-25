@@ -37,7 +37,7 @@ public class ConsultationService {
 
     public ConsultationResponse acceptConsultation(UUID consultationId, Long consultantId) {
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (consultation.getStatus() != ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN) {
             throw new RuntimeException("Invalid status transition");
@@ -62,7 +62,7 @@ public class ConsultationService {
 
     public ConsultationResponse rejectConsultation(UUID consultationId, Long consultantId) {
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (consultation.getStatus() != ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN) {
             throw new RuntimeException("Invalid status transition");
@@ -75,13 +75,13 @@ public class ConsultationService {
 
     public ConsultationResponse createConsultation(Long homeOwnerId, CreateConsultationRequest request) {
         HomeOwner homeOwner = homeOwnerRepository.findById(homeOwnerId)
-                .orElseThrow(() -> new RuntimeException("Home Owner not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.HOME_OWNER_NOT_FOUND));
 
         Consultant consultant = consultantRepository.findById(request.getConsultantId())
-                .orElseThrow(() -> new RuntimeException("Consultant not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
         Project project = projectRepository.findByProjectId(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.PROJECT_NOT_FOUND));
 
         // Check if project belongs to home owner
         if (!project.getUser().getId().equals(homeOwnerId)) {
@@ -117,17 +117,17 @@ public class ConsultationService {
         Consultation consultation;
         if (isHomeOwner) {
             consultation = consultationRepository.findByIdAndHomeOwnerId(id, userId)
-                    .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
         } else {
             consultation = consultationRepository.findByIdAndConsultantId(id, userId)
-                    .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                    .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
         }
         return mapToResponse(consultation);
     }
 
     public ConsultationResponse finalizeConsultation(UUID id, Long homeOwnerId) {
         Consultation consultation = consultationRepository.findByIdAndHomeOwnerId(id, homeOwnerId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (consultation.getStatus() != ConsultationStatus.FINAL) {
             throw new RuntimeException("Consultation is not in final status");

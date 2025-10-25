@@ -84,7 +84,7 @@ public class ChatMessageService {
     public List<ChatMessageDTO> getChatMessages(UUID consultationId, Long userId) {
         // Validate user has access to this consultation
         Consultation consultation = consultationRepository.findById(consultationId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (!consultation.getHomeOwner().getId().equals(userId) &&
             !consultation.getConsultant().getId().equals(userId)) {
@@ -100,7 +100,7 @@ public class ChatMessageService {
     public ChatMessageDTO getLatestMessage(UUID consultationId, Long userId) {
         // Validate user has access to this consultation
         Consultation consultation = consultationRepository.findById(consultationId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (!consultation.getHomeOwner().getId().equals(userId) &&
             !consultation.getConsultant().getId().equals(userId)) {
@@ -114,7 +114,7 @@ public class ChatMessageService {
     @Transactional
     public void markAsRead(UUID messageId, Long userId) {
         ChatMessage message = chatMessageRepository.findById(messageId)
-                .orElseThrow(() -> new RuntimeException("Message not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.MESSAGE_NOT_FOUND));
 
         // Validate user can mark this message as read
         if (!message.getReceiverId().equals(userId)) {

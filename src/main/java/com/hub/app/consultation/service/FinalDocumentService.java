@@ -43,14 +43,14 @@ public class FinalDocumentService {
         }
 
         FinalDocument finalDocument = finalDocumentRepository.findByConsultationId(consultationId)
-                .orElseThrow(() -> new RuntimeException("Final document not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.FINAL_DOCUMENT_NOT_FOUND));
 
         return mapToResponse(finalDocument);
     }
 
     public FinalDocumentResponse archiveFinalDocument(UUID id, Long consultantId) {
         FinalDocument finalDocument = finalDocumentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Final document not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.FINAL_DOCUMENT_NOT_FOUND));
 
         // Check if consultant owns this document
         if (!finalDocument.getConsultation().getConsultant().getId().equals(consultantId)) {
