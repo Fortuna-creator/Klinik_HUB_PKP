@@ -23,7 +23,7 @@ public class RevisionService {
 
     public RevisionResponse createRevision(UUID consultationId, CreateRevisionRequest request, Long userId) {
         Consultation consultation = consultationRepository.findByIdAndHomeOwnerId(consultationId, userId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         // Check revision limit (max 2 free revisions)
         long revisionCount = revisionRepository.countByConsultationId(consultationId);
@@ -45,7 +45,7 @@ public class RevisionService {
 
     public List<RevisionResponse> getRevisionsByConsultation(UUID consultationId, Long userId) {
         Consultation consultation = consultationRepository.findById(consultationId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         // Check if user has access to this consultation
         if (!consultation.getHomeOwner().getId().equals(userId) &&

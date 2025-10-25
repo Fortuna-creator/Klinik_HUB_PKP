@@ -31,7 +31,22 @@ public enum ErrorCode {
     // Consultation-specific
     CONSULTATION_NOT_FOUND("CONSULTATION_NOT_FOUND", HttpStatus.NOT_FOUND, "Consultation not found"),
     SURVEY_SCHEDULE_NOT_FOUND("SURVEY_SCHEDULE_NOT_FOUND", HttpStatus.NOT_FOUND, "Survey schedule not found"),
-    INVALID_STATUS("INVALID_STATUS", HttpStatus.BAD_REQUEST, "Invalid status transition");
+    INVALID_STATUS("INVALID_STATUS", HttpStatus.BAD_REQUEST, "Invalid status transition"),
+
+    // Design-specific
+    DESIGN_NOT_FOUND("DESIGN_NOT_FOUND", HttpStatus.NOT_FOUND, "Design not found"),
+
+    // Contract-specific
+    CONTRACT_NOT_FOUND("CONTRACT_NOT_FOUND", HttpStatus.NOT_FOUND, "Contract not found"),
+
+    // Final Document-specific
+    FINAL_DOCUMENT_NOT_FOUND("FINAL_DOCUMENT_NOT_FOUND", HttpStatus.NOT_FOUND, "Final document not found"),
+
+    // Message-specific
+    MESSAGE_NOT_FOUND("MESSAGE_NOT_FOUND", HttpStatus.NOT_FOUND, "Message not found"),
+
+    // Home Owner-specific
+    HOME_OWNER_NOT_FOUND("HOME_OWNER_NOT_FOUND", HttpStatus.NOT_FOUND, "Home owner not found");
 
     private final String code;
     private final HttpStatus httpStatus;

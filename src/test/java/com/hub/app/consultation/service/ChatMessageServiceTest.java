@@ -42,6 +42,9 @@ class ChatMessageServiceTest {
     @Mock
     private ChatMessageMapper chatMessageMapper;
 
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private ChatMessageService chatMessageService;
 

@@ -28,7 +28,7 @@ public class ConsultationJwtService {
 
         String email = jwtService.extractUsername(token);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
         return user.getId();
     }
@@ -48,7 +48,7 @@ public class ConsultationJwtService {
 
         String email = jwtService.extractUsername(token);
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
 
         return user.getRole().name();
     }
@@ -68,7 +68,7 @@ public class ConsultationJwtService {
 
         String email = jwtService.extractUsername(token);
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.USER_NOT_FOUND));
     }
 
     /**

@@ -384,26 +384,28 @@ curl -X GET "http://localhost:8080/api/files/download/documents/document.pdf" \
 The Project Management API allows users to create and manage their projects. Projects can have different statuses: PENDING (waiting for consultation acceptance), ACTIVE (consultation accepted), COMPLETED (project finished), or CANCELLED (project cancelled).
 
 ### Project Status Flow
-1. **PENDING**: Project created and consultation requested, waiting for consultant acceptance
-2. **ACTIVE**: Consultation accepted by consultant, project is active
-3. **COMPLETED**: Project finished successfully
-4. **CANCELLED**: Project cancelled
+1. **ACTIVE**: Initial status when project is created (default)
+2. **PENDING**: Project status changes to PENDING when a consultation is created and waiting for consultant acceptance
+3. **ACTIVE**: Project status changes back to ACTIVE when consultation is accepted by consultant
+4. **COMPLETED**: Project finished successfully
+5. **CANCELLED**: Project cancelled
 
 ### Authentication
 All endpoints require JWT authentication with `Authorization: Bearer <token>` header.
 
 ### Project Status Flow
-1. **PENDING**: Project created and consultation requested, waiting for consultant acceptance
-2. **ACTIVE**: Consultation accepted by consultant, project is active
-3. **COMPLETED**: Project finished successfully
-4. **CANCELLED**: Project cancelled
+1. **ACTIVE**: Initial status when project is created (default)
+2. **PENDING**: Project status changes to PENDING when a consultation is created and waiting for consultant acceptance
+3. **ACTIVE**: Project status changes back to ACTIVE when consultation is accepted by consultant
+4. **COMPLETED**: Project finished successfully
+5. **CANCELLED**: Project cancelled
 
 ### Endpoints
 
 #### 1. Create Project
 **POST** `/api/projects`
 
-Create a new project. New projects are automatically assigned ACTIVE status.
+Create a new project. New projects are automatically assigned ACTIVE status. Projects can be linked to consultations, which may change their status to PENDING when a consultation is requested.
 
 **Parameters:**
 - `name` (string, required): Project name

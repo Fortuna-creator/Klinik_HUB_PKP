@@ -23,7 +23,7 @@ public class PaymentService {
 
     public PaymentResponse createPayment(UUID consultationId, CreatePaymentRequest request, Long homeOwnerId) {
         Consultation consultation = consultationRepository.findByIdAndHomeOwnerId(consultationId, homeOwnerId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         Payment payment = new Payment();
         payment.setConsultation(consultation);
@@ -38,7 +38,7 @@ public class PaymentService {
 
     public List<PaymentResponse> getPaymentsByConsultation(UUID consultationId, Long userId) {
         Consultation consultation = consultationRepository.findById(consultationId)
-                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         // Check if user has access
         if (!consultation.getHomeOwner().getId().equals(userId) &&

@@ -27,13 +27,13 @@ public class DesignService {
 
     public DesignResponse getDesignById(UUID id) {
         Design design = designRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Design not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.DESIGN_NOT_FOUND));
         return mapToResponse(design);
     }
 
     public DesignResponse selectDesign(UUID id) {
         Design design = designRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Design not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.DESIGN_NOT_FOUND));
         design.setStatus(DesignStatus.DIPILIH);
         designRepository.save(design);
         return mapToResponse(design);
@@ -41,7 +41,7 @@ public class DesignService {
 
     public Design getDesignEntityById(UUID id) {
         return designRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Design not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.DESIGN_NOT_FOUND));
     }
 
     private DesignResponse mapToResponse(Design design) {

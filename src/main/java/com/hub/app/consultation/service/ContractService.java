@@ -17,13 +17,13 @@ public class ContractService {
 
     public ContractResponse getActiveContract(UUID consultationId) {
         Contract contract = contractRepository.findByConsultationIdAndStatus(consultationId, ContractStatus.AKTIF)
-                .orElseThrow(() -> new RuntimeException("Active contract not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONTRACT_NOT_FOUND));
         return mapToResponse(contract);
     }
 
     public ContractResponse signContract(UUID contractId, Long userId) {
         Contract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new RuntimeException("Contract not found"));
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONTRACT_NOT_FOUND));
 
         // Check if user has access to this contract
         if (!contract.getConsultation().getHomeOwner().getId().equals(userId) &&
