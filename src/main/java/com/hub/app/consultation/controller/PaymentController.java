@@ -8,6 +8,7 @@ import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class PaymentController {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
 
             PaymentResponse response = paymentService.createPayment(consultationId, request, homeOwnerId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -51,7 +52,7 @@ public class PaymentController {
             Long userId = jwtService.extractUserId(authHeader);
 
             List<PaymentResponse> responses = paymentService.getPaymentsByConsultation(consultationId, userId);
-            return ResponseEntity.ok(responses);
+            return ResponseEntity.status(HttpStatus.OK).body(responses);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),

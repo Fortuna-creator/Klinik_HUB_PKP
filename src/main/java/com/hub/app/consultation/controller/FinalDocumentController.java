@@ -6,6 +6,7 @@ import com.hub.app.consultation.service.FinalDocumentService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@ public class FinalDocumentController {
 
             FinalDocumentResponse response = finalDocumentService.uploadFinalDocument(
                     consultationId, fileDedUrl, fileRabUrl, fileSpektekUrl, consultantId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -51,7 +52,7 @@ public class FinalDocumentController {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
 
             // This would return presigned URLs for download
-            return ResponseEntity.ok("Download URLs would be generated here");
+            return ResponseEntity.status(HttpStatus.OK).body("Download URLs would be generated here");
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -68,7 +69,7 @@ public class FinalDocumentController {
             Long consultantId = jwtService.extractUserId(authHeader);
 
             FinalDocumentResponse response = finalDocumentService.archiveFinalDocument(id, consultantId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),

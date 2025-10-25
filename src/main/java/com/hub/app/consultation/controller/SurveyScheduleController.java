@@ -8,6 +8,7 @@ import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.SurveyScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,7 @@ public class SurveyScheduleController {
         try {
             Long consultantId = jwtService.extractUserId(authHeader);
             SurveyScheduleResponse response = surveyScheduleService.createSurveySchedule(consultationId, request, consultantId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -49,7 +50,7 @@ public class SurveyScheduleController {
         try {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             SurveyScheduleResponse response = surveyScheduleService.approveSurveySchedule(consultationId, homeOwnerId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -65,7 +66,7 @@ public class SurveyScheduleController {
         try {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             SurveyScheduleResponse response = surveyScheduleService.rejectSurveySchedule(consultationId, homeOwnerId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -82,7 +83,7 @@ public class SurveyScheduleController {
         try {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             SurveyScheduleResponse response = surveyScheduleService.proposeNewSchedule(consultationId, request, homeOwnerId);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -98,7 +99,7 @@ public class SurveyScheduleController {
         try {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             surveyScheduleService.completeSurvey(consultationId, homeOwnerId);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -113,7 +114,7 @@ public class SurveyScheduleController {
         try {
             Long userId = jwtService.extractUserId(authHeader);
             List<SurveyScheduleResponse> responses = surveyScheduleService.getSurveySchedules(consultationId, userId);
-            return ResponseEntity.ok(responses);
+            return ResponseEntity.status(HttpStatus.OK).body(responses);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),

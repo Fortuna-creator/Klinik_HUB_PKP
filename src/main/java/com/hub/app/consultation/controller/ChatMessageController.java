@@ -7,6 +7,7 @@ import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -42,7 +43,7 @@ public class ChatMessageController {
             request.setVoiceFile(voiceFile);
 
             ChatMessageDTO response = chatMessageService.sendMessage(consultationId, senderId, request);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -59,7 +60,7 @@ public class ChatMessageController {
         try {
             Long userId = jwtService.extractUserId(authHeader);
             List<ChatMessageDTO> messages = chatMessageService.getChatMessages(consultationId, userId);
-            return ResponseEntity.ok(messages);
+            return ResponseEntity.status(HttpStatus.OK).body(messages);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -76,7 +77,7 @@ public class ChatMessageController {
         try {
             Long userId = jwtService.extractUserId(authHeader);
             ChatMessageDTO latestMessage = chatMessageService.getLatestMessage(consultationId, userId);
-            return ResponseEntity.ok(latestMessage);
+            return ResponseEntity.status(HttpStatus.OK).body(latestMessage);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -94,7 +95,7 @@ public class ChatMessageController {
         try {
             Long userId = jwtService.extractUserId(authHeader);
             chatMessageService.markAsRead(messageId, userId);
-            return ResponseEntity.ok().build();
+            return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
