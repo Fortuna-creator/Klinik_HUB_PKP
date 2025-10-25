@@ -3,7 +3,7 @@ databaseChangeLog:
       id: seed-portfolios-data
       author: hub
       changes:
-        # Portfolio for Dr. Ahmad Santoso (user_id: 1001)
+        # Portfolio for Dr. Ahmad Santoso (consultant_id: 1001)
         - insert:
             tableName: portfolios
             columns:
@@ -11,7 +11,7 @@ databaseChangeLog:
                   name: id
                   value: 2001
               - column:
-                  name: user_id
+                  name: consultant_id
                   value: 1001
               - column:
                   name: bio
@@ -141,7 +141,7 @@ databaseChangeLog:
                   name: image_url
                   value: "https://example.com/portfolio/ahmad/project2/img3.jpg"
 
-        # Portfolio for Siti Nurhaliza (user_id: 1002)
+        # Portfolio for Siti Nurhaliza (consultant_id: 1002)
         - insert:
             tableName: portfolios
             columns:
@@ -149,7 +149,7 @@ databaseChangeLog:
                   name: id
                   value: 2002
               - column:
-                  name: user_id
+                  name: consultant_id
                   value: 1002
               - column:
                   name: bio
@@ -270,7 +270,7 @@ databaseChangeLog:
                   name: image_url
                   value: "https://example.com/portfolio/siti/project2/img2.jpg"
 
-        # Portfolio for Budi Prasetyo (user_id: 1003)
+        # Portfolio for Budi Prasetyo (consultant_id: 1003)
         - insert:
             tableName: portfolios
             columns:
@@ -278,7 +278,7 @@ databaseChangeLog:
                   name: id
                   value: 2003
               - column:
-                  name: user_id
+                  name: consultant_id
                   value: 1003
               - column:
                   name: bio
@@ -399,7 +399,7 @@ databaseChangeLog:
                   name: image_url
                   value: "https://example.com/portfolio/budi/project2/img2.jpg"
 
-        # Portfolio for Maya Sari (user_id: 1004)
+        # Portfolio for Maya Sari (consultant_id: 1004)
         - insert:
             tableName: portfolios
             columns:
@@ -407,7 +407,7 @@ databaseChangeLog:
                   name: id
                   value: 2004
               - column:
-                  name: user_id
+                  name: consultant_id
                   value: 1004
               - column:
                   name: bio
@@ -528,7 +528,7 @@ databaseChangeLog:
                   name: image_url
                   value: "https://example.com/portfolio/maya/project2/img2.jpg"
 
-        # Portfolio for Rizki Ramadhan (user_id: 1005)
+        # Portfolio for Rizki Ramadhan (consultant_id: 1005)
         - insert:
             tableName: portfolios
             columns:
@@ -536,7 +536,7 @@ databaseChangeLog:
                   name: id
                   value: 2005
               - column:
-                  name: user_id
+                  name: consultant_id
                   value: 1005
               - column:
                   name: bio
