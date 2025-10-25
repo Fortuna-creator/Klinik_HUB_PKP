@@ -55,7 +55,7 @@ minio:
 
 jwt:
   secret: ${JWT_SECRET:supersecretjwtkey}
-  expiration-ms: 3600000
+  expiration-ms: 36000000000000
 
 server:
   port: ${SERVER_PORT:8080}
