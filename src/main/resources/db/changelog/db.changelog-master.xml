@@ -21,5 +21,6 @@
     <include file="013-chat-messages-schema.sql" relativeToChangelogFile="true"/>
     <include file="014-file-uploads-schema.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
+    <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

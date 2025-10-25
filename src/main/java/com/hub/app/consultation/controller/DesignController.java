@@ -5,6 +5,7 @@ import com.hub.app.consultation.service.DesignService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,7 +24,7 @@ public class DesignController {
     public ResponseEntity<?> getPrototypeDesigns(@RequestParam(required = false) String type) {
         try {
             List<DesignResponse> designs = designService.getPrototypeDesigns();
-            return ResponseEntity.ok(designs);
+            return ResponseEntity.status(HttpStatus.OK).body(designs);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -35,7 +36,7 @@ public class DesignController {
     public ResponseEntity<?> getDesign(@PathVariable UUID id) {
         try {
             DesignResponse design = designService.getDesignById(id);
-            return ResponseEntity.ok(design);
+            return ResponseEntity.status(HttpStatus.OK).body(design);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -53,7 +54,7 @@ public class DesignController {
         try {
             // Implementation for downloading documents via MinIO
             // This would use MinioService to generate presigned URLs
-            return ResponseEntity.ok("Download URL would be generated here");
+            return ResponseEntity.status(HttpStatus.OK).body("Download URL would be generated here");
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -65,7 +66,7 @@ public class DesignController {
     public ResponseEntity<?> getSimbgLink(@PathVariable UUID id) {
         try {
             // Implementation for SIMBG integration
-            return ResponseEntity.ok("SIMBG link would be generated here");
+            return ResponseEntity.status(HttpStatus.OK).body("SIMBG link would be generated here");
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),

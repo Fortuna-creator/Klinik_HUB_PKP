@@ -23,6 +23,7 @@ import com.hub.app.user.service.PortfolioService;
 import com.hub.app.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -218,7 +219,7 @@ public class UserController {
             // Get consultants near location with filters
             ConsultantListResponse response = consultantService.getConsultantsNearLocation(
                     lat, long_param, page, size, consultantType, specialty, sortBy);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } catch (IllegalArgumentException e) {
             // Invalid coordinates
@@ -239,8 +240,8 @@ public class UserController {
             String token = authHeader.replace("Bearer ", "");
             if (!jwtService.validateToken(token)) {
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
-                                           ErrorCode.UNAUTHORIZED.getCode(),
-                                           ErrorCode.UNAUTHORIZED.getDefaultMessage());
+                                            ErrorCode.UNAUTHORIZED.getCode(),
+                                            ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
             String email = jwtService.extractUsername(token);
             User user = userRepository.findByEmail(email)
@@ -249,12 +250,12 @@ public class UserController {
             // Check if user is a HOMEOWNER
             if (user.getRole() != Role.HOMEOWNER) {
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
-                                           ErrorCode.UNAUTHORIZED.getCode(),
-                                           "Access denied: Only homeowners can update their profile");
+                                            ErrorCode.UNAUTHORIZED.getCode(),
+                                            "Access denied: Only homeowners can update their profile");
             }
 
             ProfileUpdateResponse response = homeOwnerService.updateProfile(user.getId(), req);
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
@@ -266,7 +267,7 @@ public class UserController {
 
     @PostMapping("/portfolio/projects")
     public ResponseEntity<?> addPortfolioProject(@RequestHeader("Authorization") String authHeader,
-                                                 @Valid @RequestBody PortfolioProjectRequest projectRequest) {
+                                                  @Valid @RequestBody PortfolioProjectRequest projectRequest) {
         try {
             String token = authHeader.replace("Bearer ", "");
             String email = jwtService.extractUsername(token);
@@ -275,27 +276,27 @@ public class UserController {
 
             // Check if user is a consultant
             if (!(user instanceof Consultant)) {
-                return ResponseEntity.badRequest().body("Only consultants can add portfolio projects");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Only consultants can add portfolio projects");
             }
 
             PortfolioProject project = portfolioService.addProjectToPortfolio((Consultant) user, projectRequest);
-            return ResponseEntity.ok(project);
+            return ResponseEntity.status(HttpStatus.CREATED).body(project);
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
     @PostMapping(value = "/portfolio/upload-images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadPortfolioImages(@RequestHeader("Authorization") String authHeader,
-                                                   @RequestPart("files") MultipartFile[] files) {
+                                                    @RequestPart("files") MultipartFile[] files) {
         try {
             String token = authHeader.replace("Bearer ", "");
             if (!jwtService.validateToken(token)) {
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
-                                           ErrorCode.UNAUTHORIZED.getCode(),
-                                           ErrorCode.UNAUTHORIZED.getDefaultMessage());
+                                            ErrorCode.UNAUTHORIZED.getCode(),
+                                            ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
 
             List<String> uploadedUrls = new ArrayList<>();
@@ -305,9 +306,9 @@ public class UserController {
                 uploadedUrls.add(fileUrl);
             }
 
-            return ResponseEntity.ok(Map.of("imageUrls", uploadedUrls));
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("imageUrls", uploadedUrls));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 }
