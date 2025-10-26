@@ -1,5 +1,8 @@
+--liquibase formatted sql
+
+--changeset hub:021-permits-schema
 -- Create permits table
-CREATE TABLE permits (
+CREATE TABLE IF NOT EXISTS permits (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL,
     simbg_id VARCHAR(255),
@@ -17,5 +20,5 @@ CREATE TABLE permits (
 );
 
 -- Create index for faster lookups
-CREATE INDEX idx_permits_project_id ON permits(project_id);
-CREATE INDEX idx_permits_status ON permits(status);
+CREATE INDEX IF NOT EXISTS idx_permits_project_id ON permits(project_id);
+CREATE INDEX IF NOT EXISTS idx_permits_status ON permits(status);
