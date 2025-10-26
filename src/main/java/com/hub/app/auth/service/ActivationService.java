@@ -5,6 +5,7 @@ import com.hub.app.auth.model.ActivationToken;
 import com.hub.app.auth.repository.ActivationTokenRepository;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.user.model.HomeOwner;
 import com.hub.app.user.model.User;
 import com.hub.app.user.model.UserActivityStatus;
 import com.hub.app.user.model.VerificationStatus;
@@ -28,7 +29,7 @@ public class ActivationService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public User activateAccount(ActivateAccountRequest request) {
+    public HomeOwner activateAccount(ActivateAccountRequest request) {
         // Validate passwords match
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new DomainException(ErrorCode.BAD_REQUEST, "Passwords do not match");
@@ -46,6 +47,10 @@ public class ActivationService {
         }
 
         User user = userOptional.get();
+        if (!(user instanceof HomeOwner)) {
+            throw new DomainException(ErrorCode.BAD_REQUEST, "User is not a HomeOwner");
+        }
+        HomeOwner homeOwner = (HomeOwner) user;
 
         // Check if user is already activated
         if (user.getStatus() == VerificationStatus.VERIFIED) {
@@ -68,19 +73,19 @@ public class ActivationService {
         }
 
         // Activate account
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setStatus(VerificationStatus.VERIFIED);
-        user.setActivityStatus(UserActivityStatus.ACTIVE);
+        homeOwner.setPassword(passwordEncoder.encode(request.getPassword()));
+        homeOwner.setStatus(VerificationStatus.VERIFIED);
+        homeOwner.setActivityStatus(UserActivityStatus.ACTIVE);
 
         // Mark token as used
         token.setUsed(true);
 
-        userRepository.save(user);
+        userRepository.save(homeOwner);
         activationTokenRepository.save(token);
 
-        log.info("Account activated for user: {}", user.getEmail());
+        log.info("Account activated for user: {}", homeOwner.getEmail());
 
-        return user;
+        return homeOwner;
     }
 
     /**
