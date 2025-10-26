@@ -262,8 +262,13 @@ public class PortfolioService {
 
         // Apply pagination
         int startIndex = page * size;
-        int endIndex = Math.min(startIndex + size, allProjects.size());
-        List<ConsultantPortfolioResponse.PortfolioProjectInfo> paginatedProjects = allProjects.subList(startIndex, endIndex);
+        List<ConsultantPortfolioResponse.PortfolioProjectInfo> paginatedProjects;
+        if (startIndex >= allProjects.size()) {
+            paginatedProjects = new ArrayList<>();
+        } else {
+            int endIndex = Math.min(startIndex + size, allProjects.size());
+            paginatedProjects = allProjects.subList(startIndex, endIndex);
+        }
 
         ConsultantPortfolioResponse.ConsultantInfo consultantInfo = ConsultantPortfolioResponse.ConsultantInfo.builder()
                 .id(consultant.getId())
