@@ -3,6 +3,7 @@ package com.hub.app.consultation.controller;
 import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.ConsultationFileService;
 import com.hub.app.error.ApiErrorBuilder;
+import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.file.model.FileUpload;
@@ -62,6 +63,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             List<FileUpload> files = consultationFileService.getContractFiles(consultationId, userId);
             return ResponseEntity.ok(files);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -91,6 +94,8 @@ public class ConsultationFileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Contract file download error", e);
             return ResponseEntity.status(404).body("File not found");
@@ -109,6 +114,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             FileUploadResponse response = consultationFileService.uploadRevisionFile(consultationId, userId, file);
             return ResponseEntity.ok(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Revision file upload error", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
@@ -126,6 +133,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             List<FileUpload> files = consultationFileService.getRevisionFiles(consultationId, userId);
             return ResponseEntity.ok(files);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -155,6 +164,8 @@ public class ConsultationFileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Revision file download error", e);
             return ResponseEntity.status(404).body("File not found");
@@ -173,6 +184,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             FileUploadResponse response = consultationFileService.uploadChatFile(consultationId, userId, file);
             return ResponseEntity.ok(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Chat file upload error", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
@@ -190,6 +203,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             List<FileUpload> files = consultationFileService.getChatFiles(consultationId, userId);
             return ResponseEntity.ok(files);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -219,6 +234,8 @@ public class ConsultationFileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Chat file download error", e);
             return ResponseEntity.status(404).body("File not found");
@@ -237,6 +254,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             FileUploadResponse response = consultationFileService.uploadSurveyPhoto(consultationId, userId, file);
             return ResponseEntity.ok(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Survey photo upload error", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
@@ -254,6 +273,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             List<FileUpload> files = consultationFileService.getSurveyPhotos(consultationId, userId);
             return ResponseEntity.ok(files);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -283,6 +304,8 @@ public class ConsultationFileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Survey photo download error", e);
             return ResponseEntity.status(404).body("File not found");
@@ -301,6 +324,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             FileUploadResponse response = consultationFileService.uploadFinalDocument(consultationId, userId, file);
             return ResponseEntity.ok(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Final document upload error", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
@@ -318,6 +343,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             List<FileUpload> files = consultationFileService.getFinalDocuments(consultationId, userId);
             return ResponseEntity.ok(files);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -347,6 +374,8 @@ public class ConsultationFileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Final document download error", e);
             return ResponseEntity.status(404).body("File not found");
@@ -365,6 +394,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             FileUploadResponse response = consultationFileService.uploadDesignFile(consultationId, userId, file);
             return ResponseEntity.ok(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Design file upload error", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
@@ -382,6 +413,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             List<FileUpload> files = consultationFileService.getDesignFiles(consultationId, userId);
             return ResponseEntity.ok(files);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -411,6 +444,8 @@ public class ConsultationFileController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
                     .body(new InputStreamResource(inputStream));
 
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("Design file download error", e);
             return ResponseEntity.status(404).body("File not found");
@@ -429,6 +464,8 @@ public class ConsultationFileController {
             Long userId = jwtService.extractUserId(authHeader);
             consultationFileService.deleteConsultationFile(consultationId, userId, fileId);
             return ResponseEntity.ok().build();
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             log.error("File deletion error", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),

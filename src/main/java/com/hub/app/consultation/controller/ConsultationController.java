@@ -5,6 +5,7 @@ import com.hub.app.consultation.dto.CreateConsultationRequest;
 import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.ConsultationService;
 import com.hub.app.error.ApiErrorBuilder;
+import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,8 @@ public class ConsultationController {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             ConsultationResponse response = consultationService.createConsultation(homeOwnerId, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -56,6 +59,8 @@ public class ConsultationController {
             }
 
             return ResponseEntity.status(HttpStatus.OK).body(responses);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -75,6 +80,8 @@ public class ConsultationController {
 
             ConsultationResponse response = consultationService.getConsultationById(id, userId, isHomeOwner);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -91,6 +98,8 @@ public class ConsultationController {
             Long consultantId = jwtService.extractUserId(authHeader);
             ConsultationResponse response = consultationService.acceptConsultation(id, consultantId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -107,6 +116,8 @@ public class ConsultationController {
             Long consultantId = jwtService.extractUserId(authHeader);
             ConsultationResponse response = consultationService.rejectConsultation(id, consultantId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -124,6 +135,8 @@ public class ConsultationController {
 
             ConsultationResponse response = consultationService.finalizeConsultation(id, homeOwnerId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -141,6 +154,8 @@ public class ConsultationController {
 
             ConsultationResponse response = consultationService.startActiveConsultation(id, homeOwnerId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -159,6 +174,8 @@ public class ConsultationController {
 
             ConsultationResponse response = consultationService.startRevision(id, homeOwnerId, notes);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -176,6 +193,8 @@ public class ConsultationController {
 
             ConsultationResponse response = consultationService.finalizeWorkflowConsultation(id, homeOwnerId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
