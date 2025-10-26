@@ -4,6 +4,7 @@ import com.hub.app.consultation.dto.ContractResponse;
 import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.ContractService;
 import com.hub.app.error.ApiErrorBuilder;
+import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,6 +37,8 @@ public class ContractController {
             ContractResponse response = contractService.createContractDraft(consultationId, consultantId,
                     contractValue, fileUrl, termsConditionsUrl, scopeOfWorkUrl);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -52,6 +55,8 @@ public class ContractController {
             Long consultantId = jwtService.extractUserId(authHeader);
             ContractResponse response = contractService.requestContractApproval(contractId, consultantId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -68,6 +73,8 @@ public class ContractController {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             ContractResponse response = contractService.approveContract(contractId, homeOwnerId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -85,6 +92,8 @@ public class ContractController {
             Long homeOwnerId = jwtService.extractUserId(authHeader);
             ContractResponse response = contractService.rejectContract(contractId, homeOwnerId, reason);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -99,6 +108,8 @@ public class ContractController {
             Long userId = jwtService.extractUserId(authHeader);
             ContractResponse response = contractService.getContract(consultationId, userId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
@@ -116,6 +127,8 @@ public class ContractController {
 
             ContractResponse response = contractService.signContract(id, userId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),

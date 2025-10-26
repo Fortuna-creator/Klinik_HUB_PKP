@@ -23,7 +23,6 @@ import com.hub.app.user.service.PortfolioService;
 import com.hub.app.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +38,6 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
-@Slf4j
 public class UserController {
     private final UserService userService;
     private final PortfolioService portfolioService;
@@ -52,49 +50,22 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        log.debug("Retrieving all users");
-        List<User> users = userService.getAllUsers();
-        log.debug("Retrieved {} users", users.size());
-        return ResponseEntity.ok(users);
+        return ResponseEntity.ok(userService.getAllUsers());
     }
     
     @PostMapping("/{id}/activate")
     public ResponseEntity<User> activateUser(@PathVariable Long id) {
-        log.info("Activating user with ID: {}", id);
-        try {
-            User user = userService.activateUser(id);
-            log.info("User {} activated successfully", id);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            log.error("Failed to activate user {}", id, e);
-            throw e;
-        }
+        return ResponseEntity.ok(userService.activateUser(id));
     }
 
     @PostMapping("/{id}/deactivate")
     public ResponseEntity<User> deactivateUser(@PathVariable Long id) {
-        log.info("Deactivating user with ID: {}", id);
-        try {
-            User user = userService.deactivateUser(id);
-            log.info("User {} deactivated successfully", id);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            log.error("Failed to deactivate user {}", id, e);
-            throw e;
-        }
+        return ResponseEntity.ok(userService.deactivateUser(id));
     }
 
     @PostMapping("/{id}/self-deactivate")
     public ResponseEntity<User> selfDeactivateUser(@PathVariable Long id) {
-        log.info("User {} self-deactivating", id);
-        try {
-            User user = userService.selfDeactivateUser(id);
-            log.info("User {} self-deactivated successfully", id);
-            return ResponseEntity.ok(user);
-        } catch (Exception e) {
-            log.error("Failed to self-deactivate user {}", id, e);
-            throw e;
-        }
+        return ResponseEntity.ok(userService.selfDeactivateUser(id));
     }
 
     @GetMapping("/portfolio")
@@ -142,6 +113,8 @@ public class UserController {
             return portfolioService.getPortfolioByConsultant((Consultant) user)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
@@ -151,35 +124,25 @@ public class UserController {
 
     @GetMapping("/consultants/{consultantId}/portfolio")
     public ResponseEntity<?> getConsultantPortfolio(@PathVariable Long consultantId,
-                                                     @RequestParam(defaultValue = "0") int page,
-                                                     @RequestParam(defaultValue = "10") int size,
-                                                     @RequestHeader("Authorization") String authHeader) {
-        log.info("getConsultantPortfolio called with consultantId={}, page={}, size={}", consultantId, page, size);
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size,
+                                                    @RequestHeader("Authorization") String authHeader) {
         try {
             // Validate JWT token
             String token = authHeader.replace("Bearer ", "");
-            log.debug("Validating JWT token for consultant portfolio access");
             if (!jwtService.validateToken(token)) {
-                log.warn("Invalid JWT token for consultant portfolio access");
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
                                            ErrorCode.UNAUTHORIZED.getCode(),
                                            ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
-            log.debug("JWT token validated successfully");
 
             // Get portfolio by consultant ID with formatted response
-            log.debug("Calling portfolioService.getConsultantPortfolioForHomeowner({}, {}, {})", consultantId, page, size);
             return portfolioService.getConsultantPortfolioForHomeowner(consultantId, page, size)
-                    .map(portfolio -> {
-                        log.info("Portfolio found for consultantId={}, returning {} projects", consultantId, portfolio.getPortfolios().size());
-                        return ResponseEntity.ok(portfolio);
-                    })
-                    .orElseGet(() -> {
-                        log.info("No portfolio found for consultantId={}", consultantId);
-                        return ResponseEntity.notFound().build();
-                    });
+                    .map(ResponseEntity::ok)
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            log.error("Error in getConsultantPortfolio for consultantId={}", consultantId, e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         ErrorCode.INTERNAL_ERROR.getDefaultMessage());
@@ -256,29 +219,21 @@ public class UserController {
             @RequestParam(required = false) String sortBy,
             @RequestHeader("Authorization") String authHeader) {
 
-        log.info("getConsultantsNearLocation called with lat={}, long={}, page={}, size={}, type={}, specialty={}, sortBy={}",
-                lat, long_param, page, size, type, specialty, sortBy);
-
         try {
             // Validate JWT token
-            log.debug("Validating JWT token for consultants near location request");
             String token = authHeader.replace("Bearer ", "");
             if (!jwtService.validateToken(token)) {
-                log.warn("JWT token validation failed for consultants near location request");
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
                                             ErrorCode.UNAUTHORIZED.getCode(),
                                             ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
-            log.debug("JWT token validated successfully");
 
             // Parse consultant type if provided
             ConsultantType consultantType = null;
             if (type != null && !type.isEmpty()) {
                 try {
                     consultantType = ConsultantType.valueOf(type.toUpperCase());
-                    log.debug("Parsed consultant type: {}", consultantType);
                 } catch (IllegalArgumentException e) {
-                    log.warn("Invalid consultant type provided: {}", type);
                     return apiErrorBuilder.error(ErrorCode.VALIDATION_ERROR.getHttpStatus(),
                                                 ErrorCode.VALIDATION_ERROR.getCode(),
                                                 "Invalid consultant type. Must be PROFESSIONAL or STUDENT");
@@ -286,20 +241,19 @@ public class UserController {
             }
 
             // Get consultants near location with filters
-            log.debug("Calling consultantService.getConsultantsNearLocation with filters");
             ConsultantListResponse response = consultantService.getConsultantsNearLocation(
                     lat, long_param, page, size, consultantType, specialty, sortBy);
-
-            log.info("Successfully retrieved {} consultants near location", response.getConsultants().size());
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid coordinates provided: lat={}, long={}", lat, long_param, e);
+            // Invalid coordinates
             return apiErrorBuilder.error(ErrorCode.INVALID_COORDINATE.getHttpStatus(),
                                         ErrorCode.INVALID_COORDINATE.getCode(),
                                         ErrorCode.INVALID_COORDINATE.getDefaultMessage());
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
-            log.error("Unexpected error in getConsultantsNearLocation", e);
+            // Internal server error
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         ErrorCode.INTERNAL_ERROR.getDefaultMessage());
@@ -383,6 +337,8 @@ public class UserController {
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("imageUrls", uploadedUrls));
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
