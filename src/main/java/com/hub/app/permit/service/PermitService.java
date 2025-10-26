@@ -2,8 +2,7 @@ package com.hub.app.permit.service;
 
 import com.hub.app.integration.simbg.dto.*;
 import com.hub.app.integration.simbg.service.SimbgIntegrationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +13,9 @@ import java.util.List;
  * This service demonstrates how to integrate with SIMBG for building permit applications.
  */
 @Service
+@Slf4j
 public class PermitService {
 
-    private static final Logger logger = LoggerFactory.getLogger(PermitService.class);
 
     @Autowired
     private SimbgIntegrationService simbgIntegrationService;
@@ -39,7 +38,7 @@ public class PermitService {
             String propertyAddress,
             List<DocumentDto> documents) {
 
-        logger.info("Submitting permit application for project ID: {}", projectId);
+        log.info("Submitting permit application for project ID: {}", projectId);
 
         // Create SIMBG registration request
         SimbgRegistrationRequest request = new SimbgRegistrationRequest();
@@ -53,7 +52,7 @@ public class PermitService {
         // Call SIMBG integration service
         SimbgRegistrationResponse response = simbgIntegrationService.registerApplication(request);
 
-        logger.info("Permit application submitted successfully. SIMBG ID: {}", response.getSimbgId());
+        log.info("Permit application submitted successfully. SIMBG ID: {}", response.getSimbgId());
 
         // Here you would typically save the SIMBG ID to your permit/permit_application table
         // savePermitApplication(projectId, response.getSimbgId(), response.getStatus());
@@ -68,11 +67,11 @@ public class PermitService {
      * @return current status from SIMBG
      */
     public SimbgStatusResponse checkPermitStatus(String simbgId) {
-        logger.info("Checking permit status for SIMBG ID: {}", simbgId);
+        log.info("Checking permit status for SIMBG ID: {}", simbgId);
 
         SimbgStatusResponse status = simbgIntegrationService.trackStatus(simbgId);
 
-        logger.info("Permit status for SIMBG ID {}: {}", simbgId, status.getStatus());
+        log.info("Permit status for SIMBG ID {}: {}", simbgId, status.getStatus());
 
         // Here you could update your local permit status based on SIMBG status
         // updatePermitStatus(simbgId, status.getStatus());
@@ -87,11 +86,11 @@ public class PermitService {
      * @return list of official documents
      */
     public List<SimbgDocumentResponse> getPermitDocuments(String simbgId) {
-        logger.info("Retrieving permit documents for SIMBG ID: {}", simbgId);
+        log.info("Retrieving permit documents for SIMBG ID: {}", simbgId);
 
         List<SimbgDocumentResponse> documents = simbgIntegrationService.fetchDocuments(simbgId);
 
-        logger.info("Retrieved {} documents for SIMBG ID: {}", documents.size(), simbgId);
+        log.info("Retrieved {} documents for SIMBG ID: {}", documents.size(), simbgId);
 
         return documents;
     }
@@ -109,7 +108,7 @@ public class PermitService {
             String comments,
             List<AttachmentDto> attachments) {
 
-        logger.info("Updating permit application for SIMBG ID: {}", simbgId);
+        log.info("Updating permit application for SIMBG ID: {}", simbgId);
 
         SimbgUpdateRequest request = new SimbgUpdateRequest();
         request.setComments(comments);
@@ -117,7 +116,7 @@ public class PermitService {
 
         SimbgUpdateResponse response = simbgIntegrationService.updateApplication(simbgId, request);
 
-        logger.info("Permit application updated successfully for SIMBG ID: {}", simbgId);
+        log.info("Permit application updated successfully for SIMBG ID: {}", simbgId);
 
         return response;
     }

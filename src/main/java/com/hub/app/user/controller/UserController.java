@@ -23,6 +23,7 @@ import com.hub.app.user.service.PortfolioService;
 import com.hub.app.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +39,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@Slf4j
 public class UserController {
     private final UserService userService;
     private final PortfolioService portfolioService;
@@ -50,22 +52,49 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+        log.debug("Retrieving all users");
+        List<User> users = userService.getAllUsers();
+        log.debug("Retrieved {} users", users.size());
+        return ResponseEntity.ok(users);
     }
     
     @PostMapping("/{id}/activate")
     public ResponseEntity<User> activateUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.activateUser(id));
+        log.info("Activating user with ID: {}", id);
+        try {
+            User user = userService.activateUser(id);
+            log.info("User {} activated successfully", id);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            log.error("Failed to activate user {}", id, e);
+            throw e;
+        }
     }
 
     @PostMapping("/{id}/deactivate")
     public ResponseEntity<User> deactivateUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.deactivateUser(id));
+        log.info("Deactivating user with ID: {}", id);
+        try {
+            User user = userService.deactivateUser(id);
+            log.info("User {} deactivated successfully", id);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            log.error("Failed to deactivate user {}", id, e);
+            throw e;
+        }
     }
 
     @PostMapping("/{id}/self-deactivate")
     public ResponseEntity<User> selfDeactivateUser(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.selfDeactivateUser(id));
+        log.info("User {} self-deactivating", id);
+        try {
+            User user = userService.selfDeactivateUser(id);
+            log.info("User {} self-deactivated successfully", id);
+            return ResponseEntity.ok(user);
+        } catch (Exception e) {
+            log.error("Failed to self-deactivate user {}", id, e);
+            throw e;
+        }
     }
 
     @GetMapping("/portfolio")
