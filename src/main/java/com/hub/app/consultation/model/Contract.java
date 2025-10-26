@@ -5,7 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Instant;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -17,27 +18,51 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consultation_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "consultation_id", unique = true)
     private Consultation consultation;
 
-    private String pdfUrl;
-    private Boolean digitalSignature;
+    @Column(name = "contract_value")
+    private BigDecimal contractValue;
+
+    @Column(name = "file_url")
+    private String fileUrl;
+
+    @Column(name = "terms_conditions_url")
+    private String termsConditionsUrl;
+
+    @Column(name = "scope_of_work_url")
+    private String scopeOfWorkUrl;
 
     @Enumerated(EnumType.STRING)
-    private ContractStatus status;
+    private ContractStatus status; // DRAFT, REQUEST_FOR_APPROVAL, APPROVED, REJECTED, SIGNED
 
-    private Instant createdAt;
-    private Instant updatedAt;
+    @Column(name = "approval_deadline")
+    private LocalDateTime approvalDeadline;
+
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
+
+    @Column(name = "signed_at")
+    private LocalDateTime signedAt;
+
+    @Column(name = "notes")
+    private String notes;
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = Instant.now();
-        updatedAt = Instant.now();
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = Instant.now();
+        updatedAt = LocalDateTime.now();
     }
 }

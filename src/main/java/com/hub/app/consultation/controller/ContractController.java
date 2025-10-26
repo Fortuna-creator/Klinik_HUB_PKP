@@ -22,16 +22,87 @@ public class ContractController {
     private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
-    @GetMapping("/{consultationId}")
-    @PreAuthorize("hasRole('HOME_OWNER') or hasRole('CONSULTANT')")
-    public ResponseEntity<?> getActiveContract(@PathVariable UUID consultationId) {
+    @PostMapping("/consultations/{consultationId}/draft")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> createContractDraft(
+            @PathVariable UUID consultationId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam java.math.BigDecimal contractValue,
+            @RequestParam String fileUrl,
+            @RequestParam String termsConditionsUrl,
+            @RequestParam String scopeOfWorkUrl) {
         try {
-            ContractResponse response = contractService.getActiveContract(consultationId);
+            Long consultantId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.createContractDraft(consultationId, consultantId,
+                    contractValue, fileUrl, termsConditionsUrl, scopeOfWorkUrl);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @PostMapping("/{contractId}/request-approval")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> requestContractApproval(
+            @PathVariable UUID contractId,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.requestContractApproval(contractId, consultantId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                        ErrorCode.INTERNAL_ERROR.getCode(),
-                                        e.getMessage());
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @PostMapping("/{contractId}/approve")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> approveContract(
+            @PathVariable UUID contractId,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.approveContract(contractId, homeOwnerId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @PostMapping("/{contractId}/reject")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> rejectContract(
+            @PathVariable UUID contractId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String reason) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.rejectContract(contractId, homeOwnerId, reason);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @GetMapping("/consultations/{consultationId}")
+    @PreAuthorize("hasRole('HOME_OWNER') or hasRole('CONSULTANT')")
+    public ResponseEntity<?> getActiveContract(@PathVariable UUID consultationId, @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long userId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.getContract(consultationId, userId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
         }
     }
 

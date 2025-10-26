@@ -126,8 +126,60 @@ public class ConsultationController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                        ErrorCode.INTERNAL_ERROR.getCode(),
-                                        e.getMessage());
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/start-active")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> startActiveConsultation(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+
+            ConsultationResponse response = consultationService.startActiveConsultation(id, homeOwnerId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/start-revision")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> startRevision(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam(required = false) String notes) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+
+            ConsultationResponse response = consultationService.startRevision(id, homeOwnerId, notes);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/finalize-workflow")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> finalizeWorkflowConsultation(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+
+            ConsultationResponse response = consultationService.finalizeWorkflowConsultation(id, homeOwnerId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
         }
     }
 }
