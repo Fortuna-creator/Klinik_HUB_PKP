@@ -256,21 +256,29 @@ public class UserController {
             @RequestParam(required = false) String sortBy,
             @RequestHeader("Authorization") String authHeader) {
 
+        log.info("getConsultantsNearLocation called with lat={}, long={}, page={}, size={}, type={}, specialty={}, sortBy={}",
+                lat, long_param, page, size, type, specialty, sortBy);
+
         try {
             // Validate JWT token
+            log.debug("Validating JWT token for consultants near location request");
             String token = authHeader.replace("Bearer ", "");
             if (!jwtService.validateToken(token)) {
+                log.warn("JWT token validation failed for consultants near location request");
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
                                             ErrorCode.UNAUTHORIZED.getCode(),
                                             ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
+            log.debug("JWT token validated successfully");
 
             // Parse consultant type if provided
             ConsultantType consultantType = null;
             if (type != null && !type.isEmpty()) {
                 try {
                     consultantType = ConsultantType.valueOf(type.toUpperCase());
+                    log.debug("Parsed consultant type: {}", consultantType);
                 } catch (IllegalArgumentException e) {
+                    log.warn("Invalid consultant type provided: {}", type);
                     return apiErrorBuilder.error(ErrorCode.VALIDATION_ERROR.getHttpStatus(),
                                                 ErrorCode.VALIDATION_ERROR.getCode(),
                                                 "Invalid consultant type. Must be PROFESSIONAL or STUDENT");
@@ -278,17 +286,20 @@ public class UserController {
             }
 
             // Get consultants near location with filters
+            log.debug("Calling consultantService.getConsultantsNearLocation with filters");
             ConsultantListResponse response = consultantService.getConsultantsNearLocation(
                     lat, long_param, page, size, consultantType, specialty, sortBy);
+
+            log.info("Successfully retrieved {} consultants near location", response.getConsultants().size());
             return ResponseEntity.status(HttpStatus.OK).body(response);
 
         } catch (IllegalArgumentException e) {
-            // Invalid coordinates
+            log.warn("Invalid coordinates provided: lat={}, long={}", lat, long_param, e);
             return apiErrorBuilder.error(ErrorCode.INVALID_COORDINATE.getHttpStatus(),
                                         ErrorCode.INVALID_COORDINATE.getCode(),
                                         ErrorCode.INVALID_COORDINATE.getDefaultMessage());
         } catch (Exception e) {
-            // Internal server error
+            log.error("Unexpected error in getConsultantsNearLocation", e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         ErrorCode.INTERNAL_ERROR.getDefaultMessage());

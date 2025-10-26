@@ -6,6 +6,7 @@ import com.hub.app.user.model.Consultant;
 import com.hub.app.user.model.ConsultantType;
 import com.hub.app.user.repository.ConsultantRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ConsultantService {
 
     private final ConsultantRepository consultantRepository;
@@ -34,84 +36,126 @@ public class ConsultantService {
      * @return ConsultantListResponse with consultants and pagination info
      */
     public ConsultantListResponse getConsultantsNearLocation(BigDecimal userLat, BigDecimal userLong, int page, int size,
-                                                            ConsultantType type, String specialty, String sortBy) {
-        // Validate coordinates
-        validateCoordinates(userLat, userLong);
+                                                             ConsultantType type, String specialty, String sortBy) {
+        log.info("getConsultantsNearLocation called with lat={}, long={}, page={}, size={}, type={}, specialty={}, sortBy={}",
+                userLat, userLong, page, size, type, specialty, sortBy);
 
-        Pageable pageable = PageRequest.of(page, size);
+        try {
+            // Validate coordinates
+            log.debug("Validating coordinates: lat={}, long={}", userLat, userLong);
+            validateCoordinates(userLat, userLong);
+            log.debug("Coordinates validated successfully");
 
-        // Get all consultants with location data
-        List<Consultant> allConsultants = consultantRepository.findConsultantsWithLocation();
+            Pageable pageable = PageRequest.of(page, size);
 
-        // Apply filters
-        List<Consultant> filteredConsultants = allConsultants.stream()
-                .filter(consultant -> type == null || consultant.getType() == type)
-                .filter(consultant -> specialty == null || specialty.isEmpty() ||
-                        (consultant.getSpecialty() != null && consultant.getSpecialty().toLowerCase().contains(specialty.toLowerCase())))
-                .collect(Collectors.toList());
+            // Get all consultants with location data
+            log.debug("Fetching consultants with location data from repository");
+            List<Consultant> allConsultants = consultantRepository.findConsultantsWithLocation();
+            log.debug("Found {} consultants with location data", allConsultants.size());
 
-        // Calculate distances and create response objects
-        List<ConsultantResponse> consultantsWithDistance = filteredConsultants.stream()
-                .map(consultant -> {
-                    BigDecimal distance = calculateDistance(userLat, userLong,
-                            consultant.getLatitude(), consultant.getLongitude());
-                    return mapToConsultantResponse(consultant, distance);
-                })
-                .collect(Collectors.toList());
+            // Apply filters
+            log.debug("Applying filters: type={}, specialty={}", type, specialty);
+            List<Consultant> filteredConsultants = allConsultants.stream()
+                    .filter(consultant -> type == null || consultant.getType() == type)
+                    .filter(consultant -> specialty == null || specialty.isEmpty() ||
+                            (consultant.getSpecialty() != null && consultant.getSpecialty().toLowerCase().contains(specialty.toLowerCase())))
+                    .collect(Collectors.toList());
+            log.debug("After filtering: {} consultants remain", filteredConsultants.size());
 
-        // Apply sorting
-        if (sortBy != null && !sortBy.isEmpty()) {
-            switch (sortBy.toLowerCase()) {
-                case "name":
-                    consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getFullName));
-                    break;
-                case "experience":
-                    consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getExperienceLevel,
-                            Comparator.nullsLast(Comparator.naturalOrder())));
-                    break;
-                case "rating":
-                    consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getRating,
-                            Comparator.nullsLast(Comparator.reverseOrder())));
-                    break;
-                case "distance":
-                default:
-                    consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getDistanceKm));
-                    break;
+            // Calculate distances and create response objects
+            log.debug("Calculating distances and mapping to response objects");
+            List<ConsultantResponse> consultantsWithDistance = filteredConsultants.stream()
+                    .map(consultant -> {
+                        BigDecimal distance = calculateDistance(userLat, userLong,
+                                consultant.getLatitude(), consultant.getLongitude());
+                        log.trace("Consultant {} distance: {} km", consultant.getId(), distance);
+                        return mapToConsultantResponse(consultant, distance);
+                    })
+                    .collect(Collectors.toList());
+            log.debug("Mapped {} consultants with distance calculations", consultantsWithDistance.size());
+
+            // Apply sorting
+            log.debug("Applying sorting: sortBy={}", sortBy);
+            if (sortBy != null && !sortBy.isEmpty()) {
+                switch (sortBy.toLowerCase()) {
+                    case "name":
+                        consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getFullName));
+                        log.debug("Sorted by name");
+                        break;
+                    case "experience":
+                        consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getExperienceLevel,
+                                Comparator.nullsLast(Comparator.naturalOrder())));
+                        log.debug("Sorted by experience");
+                        break;
+                    case "rating":
+                        consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getRating,
+                                Comparator.nullsLast(Comparator.reverseOrder())));
+                        log.debug("Sorted by rating");
+                        break;
+                    case "distance":
+                    default:
+                        consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getDistanceKm));
+                        log.debug("Sorted by distance (default)");
+                        break;
+                }
+            } else {
+                // Default sort by distance
+                consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getDistanceKm));
+                log.debug("Applied default sorting by distance");
             }
-        } else {
-            // Default sort by distance
-            consultantsWithDistance.sort(Comparator.comparing(ConsultantResponse::getDistanceKm));
+
+            // Apply pagination
+            int total = consultantsWithDistance.size();
+            int fromIndex = page * size;
+            int toIndex = Math.min(fromIndex + size, total);
+            log.debug("Applying pagination: total={}, page={}, size={}, fromIndex={}, toIndex={}",
+                    total, page, size, fromIndex, toIndex);
+
+            List<ConsultantResponse> paginatedConsultants;
+            if (fromIndex >= total) {
+                log.warn("Page {} with size {} exceeds total results {}, returning empty list", page, size, total);
+                paginatedConsultants = List.of();
+            } else {
+                paginatedConsultants = consultantsWithDistance.subList(fromIndex, toIndex);
+                log.debug("Returning {} consultants for page {}", paginatedConsultants.size(), page);
+            }
+
+            ConsultantListResponse response = ConsultantListResponse.builder()
+                    .consultants(paginatedConsultants)
+                    .pagination(ConsultantListResponse.Pagination.builder()
+                            .total(total)
+                            .page(page)
+                            .size(size)
+                            .build())
+                    .build();
+
+            log.info("Successfully processed consultants near location request, returning {} consultants", paginatedConsultants.size());
+            return response;
+        } catch (Exception e) {
+            log.error("Error in getConsultantsNearLocation with params: lat={}, long={}, page={}, size={}, type={}, specialty={}, sortBy={}",
+                    userLat, userLong, page, size, type, specialty, sortBy, e);
+            throw e;
         }
-
-        // Apply pagination
-        int total = consultantsWithDistance.size();
-        int fromIndex = page * size;
-        int toIndex = Math.min(fromIndex + size, total);
-        List<ConsultantResponse> paginatedConsultants = consultantsWithDistance.subList(fromIndex, toIndex);
-
-        return ConsultantListResponse.builder()
-                .consultants(paginatedConsultants)
-                .pagination(ConsultantListResponse.Pagination.builder()
-                        .total(total)
-                        .page(page)
-                        .size(size)
-                        .build())
-                .build();
     }
 
     /**
      * Validate latitude and longitude coordinates
      */
     private void validateCoordinates(BigDecimal lat, BigDecimal lng) {
+        log.debug("Validating coordinates: lat={}, lng={}", lat, lng);
         if (lat == null || lng == null) {
+            log.warn("Coordinates validation failed: null values provided");
             throw new IllegalArgumentException("Coordinates cannot be null");
         }
         if (lat.compareTo(BigDecimal.valueOf(-90)) < 0 || lat.compareTo(BigDecimal.valueOf(90)) > 0) {
+            log.warn("Latitude validation failed: {} is out of range [-90, 90]", lat);
             throw new IllegalArgumentException("Invalid latitude");
         }
         if (lng.compareTo(BigDecimal.valueOf(-180)) < 0 || lng.compareTo(BigDecimal.valueOf(180)) > 0) {
+            log.warn("Longitude validation failed: {} is out of range [-180, 180]", lng);
             throw new IllegalArgumentException("Invalid longitude");
         }
+        log.debug("Coordinates validation passed");
     }
 
     /**
@@ -119,9 +163,12 @@ public class ConsultantService {
      * @return distance in kilometers
      */
     private BigDecimal calculateDistance(BigDecimal lat1, BigDecimal lon1, BigDecimal lat2, BigDecimal lon2) {
+        log.trace("Calculating distance between ({}, {}) and ({}, {})", lat1, lon1, lat2, lon2);
+
         // Since we filter consultants with location, lat2 and lon2 should not be null
         // But keeping the check for safety
         if (lat2 == null || lon2 == null) {
+            log.warn("Null coordinates provided for distance calculation, returning large distance");
             return BigDecimal.valueOf(999999); // Very large distance for null coordinates
         }
 
@@ -136,14 +183,18 @@ public class ConsultantService {
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
         double earthRadiusKm = 6371; // Earth's radius in kilometers
-        return BigDecimal.valueOf(earthRadiusKm * c);
+        BigDecimal distance = BigDecimal.valueOf(earthRadiusKm * c);
+        log.trace("Calculated distance: {} km", distance);
+        return distance;
     }
 
     /**
      * Map Consultant entity to ConsultantResponse DTO
      */
     private ConsultantResponse mapToConsultantResponse(Consultant consultant, BigDecimal distance) {
-        return ConsultantResponse.builder()
+        log.trace("Mapping consultant {} to response DTO", consultant.getId());
+
+        ConsultantResponse response = ConsultantResponse.builder()
                 .id(consultant.getId().toString())
                 .fullName(consultant.getName())
                 .specialty(consultant.getSpecialty() != null ? consultant.getSpecialty() : "Arsitektur Rumah Layak Huni")
@@ -158,5 +209,8 @@ public class ConsultantService {
                 .hourlyRate(consultant.getHourlyRate())
                 .packageCost(consultant.getPackageCost())
                 .build();
+
+        log.trace("Successfully mapped consultant {} to response", consultant.getId());
+        return response;
     }
 }
