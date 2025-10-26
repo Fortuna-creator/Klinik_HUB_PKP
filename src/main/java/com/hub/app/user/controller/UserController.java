@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
@@ -122,7 +122,9 @@ public class UserController {
 
     @GetMapping("/consultants/{consultantId}/portfolio")
     public ResponseEntity<?> getConsultantPortfolio(@PathVariable Long consultantId,
-                                                   @RequestHeader("Authorization") String authHeader) {
+                                                    @RequestParam(defaultValue = "0") int page,
+                                                    @RequestParam(defaultValue = "10") int size,
+                                                    @RequestHeader("Authorization") String authHeader) {
         try {
             // Validate JWT token
             String token = authHeader.replace("Bearer ", "");
@@ -133,7 +135,7 @@ public class UserController {
             }
 
             // Get portfolio by consultant ID with formatted response
-            return portfolioService.getConsultantPortfolioForHomeowner(consultantId)
+            return portfolioService.getConsultantPortfolioForHomeowner(consultantId, page, size)
                     .map(ResponseEntity::ok)
                     .orElse(ResponseEntity.notFound().build());
         } catch (Exception e) {
