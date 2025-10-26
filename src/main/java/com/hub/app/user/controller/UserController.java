@@ -151,23 +151,35 @@ public class UserController {
 
     @GetMapping("/consultants/{consultantId}/portfolio")
     public ResponseEntity<?> getConsultantPortfolio(@PathVariable Long consultantId,
-                                                    @RequestParam(defaultValue = "0") int page,
-                                                    @RequestParam(defaultValue = "10") int size,
-                                                    @RequestHeader("Authorization") String authHeader) {
+                                                     @RequestParam(defaultValue = "0") int page,
+                                                     @RequestParam(defaultValue = "10") int size,
+                                                     @RequestHeader("Authorization") String authHeader) {
+        log.info("getConsultantPortfolio called with consultantId={}, page={}, size={}", consultantId, page, size);
         try {
             // Validate JWT token
             String token = authHeader.replace("Bearer ", "");
+            log.debug("Validating JWT token for consultant portfolio access");
             if (!jwtService.validateToken(token)) {
+                log.warn("Invalid JWT token for consultant portfolio access");
                 return apiErrorBuilder.error(ErrorCode.UNAUTHORIZED.getHttpStatus(),
                                            ErrorCode.UNAUTHORIZED.getCode(),
                                            ErrorCode.UNAUTHORIZED.getDefaultMessage());
             }
+            log.debug("JWT token validated successfully");
 
             // Get portfolio by consultant ID with formatted response
+            log.debug("Calling portfolioService.getConsultantPortfolioForHomeowner({}, {}, {})", consultantId, page, size);
             return portfolioService.getConsultantPortfolioForHomeowner(consultantId, page, size)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+                    .map(portfolio -> {
+                        log.info("Portfolio found for consultantId={}, returning {} projects", consultantId, portfolio.getPortfolios().size());
+                        return ResponseEntity.ok(portfolio);
+                    })
+                    .orElseGet(() -> {
+                        log.info("No portfolio found for consultantId={}", consultantId);
+                        return ResponseEntity.notFound().build();
+                    });
         } catch (Exception e) {
+            log.error("Error in getConsultantPortfolio for consultantId={}", consultantId, e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         ErrorCode.INTERNAL_ERROR.getDefaultMessage());
