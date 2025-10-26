@@ -8,6 +8,7 @@ import com.hub.app.user.model.Portfolio;
 import com.hub.app.user.model.PortfolioProject;
 import com.hub.app.user.model.PortfolioStatus;
 import com.hub.app.user.model.User;
+import com.hub.app.user.repository.ConsultantRepository;
 import com.hub.app.user.repository.PortfolioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 public class PortfolioService {
 
     private final PortfolioRepository portfolioRepository;
+    private final ConsultantRepository consultantRepository;
 
     /**
      * Get portfolios for a consultant
@@ -186,10 +188,42 @@ public class PortfolioService {
      * Get consultant's portfolios with formatted response for homeowners
      */
     public Optional<ConsultantPortfolioResponse> getConsultantPortfoliosForHomeowner(Long consultantId) {
-        // Since Portfolio no longer has consultant relationship, we need to get consultant separately
-        // This method needs to be updated to work with the new model structure
-        // For now, return empty as the consultant info is no longer in Portfolio
-        return Optional.empty();
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return Optional.empty();
+        }
+
+        List<Portfolio> portfolios = getPortfoliosByConsultantId(consultantId);
+        if (portfolios.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // Get all projects from all portfolios
+        List<ConsultantPortfolioResponse.PortfolioProjectInfo> projectInfos = portfolios.stream()
+                .flatMap(portfolio -> portfolio.getProjects().stream())
+                .map(project -> ConsultantPortfolioResponse.PortfolioProjectInfo.builder()
+                        .id(project.getId())
+                        .projectName(project.getProjectName())
+                        .price(project.getPrice())
+                        .detailDescription(project.getDetailDescription())
+                        .imageUrls(project.getImageUrls())
+                        .createdAt(project.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        ConsultantPortfolioResponse.ConsultantInfo consultantInfo = ConsultantPortfolioResponse.ConsultantInfo.builder()
+                .id(consultant.getId())
+                .name(consultant.getName())
+                .email(consultant.getEmail())
+                .specialization(consultant.getSpecialty())
+                .build();
+
+        ConsultantPortfolioResponse response = ConsultantPortfolioResponse.builder()
+                .consultant(consultantInfo)
+                .portfolios(projectInfos)
+                .build();
+
+        return Optional.of(response);
     }
 
     /**
@@ -197,5 +231,52 @@ public class PortfolioService {
      */
     public Optional<ConsultantPortfolioResponse> getConsultantPortfolioForHomeowner(Long consultantId) {
         return getConsultantPortfoliosForHomeowner(consultantId);
+    }
+
+    /**
+     * Get consultant's portfolio with formatted response for homeowners with pagination
+     */
+    public Optional<ConsultantPortfolioResponse> getConsultantPortfolioForHomeowner(Long consultantId, int page, int size) {
+        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+        if (consultant == null) {
+            return Optional.empty();
+        }
+
+        List<Portfolio> portfolios = getPortfoliosByConsultantId(consultantId);
+        if (portfolios.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // Get all projects from all portfolios and apply pagination
+        List<ConsultantPortfolioResponse.PortfolioProjectInfo> allProjects = portfolios.stream()
+                .flatMap(portfolio -> portfolio.getProjects().stream())
+                .map(project -> ConsultantPortfolioResponse.PortfolioProjectInfo.builder()
+                        .id(project.getId())
+                        .projectName(project.getProjectName())
+                        .price(project.getPrice())
+                        .detailDescription(project.getDetailDescription())
+                        .imageUrls(project.getImageUrls())
+                        .createdAt(project.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+
+        // Apply pagination
+        int startIndex = page * size;
+        int endIndex = Math.min(startIndex + size, allProjects.size());
+        List<ConsultantPortfolioResponse.PortfolioProjectInfo> paginatedProjects = allProjects.subList(startIndex, endIndex);
+
+        ConsultantPortfolioResponse.ConsultantInfo consultantInfo = ConsultantPortfolioResponse.ConsultantInfo.builder()
+                .id(consultant.getId())
+                .name(consultant.getName())
+                .email(consultant.getEmail())
+                .specialization(consultant.getSpecialty())
+                .build();
+
+        ConsultantPortfolioResponse response = ConsultantPortfolioResponse.builder()
+                .consultant(consultantInfo)
+                .portfolios(paginatedProjects)
+                .build();
+
+        return Optional.of(response);
     }
 }
