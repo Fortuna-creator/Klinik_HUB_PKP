@@ -1,7 +1,12 @@
 package com.hub.app.project.service;
 
+import com.hub.app.consultation.model.*;
+import com.hub.app.consultation.repository.*;
+import com.hub.app.consultation.service.*;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.permit.model.Permit;
+import com.hub.app.permit.repository.PermitRepository;
 import com.hub.app.project.dto.*;
 import com.hub.app.project.model.Project;
 import com.hub.app.project.model.ProjectStatus;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +32,13 @@ import java.util.stream.Collectors;
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
+    private final ConsultationRepository consultationRepository;
+    private final ConsultationHistoryService consultationHistoryService;
+    private final SurveyScheduleRepository surveyScheduleRepository;
+    private final DocumentVersionRepository documentVersionRepository;
+    private final ContractRepository contractRepository;
+    private final PermitRepository permitRepository;
+    private final RevisionRepository revisionRepository;
 
     @Transactional
     public CreateProjectResponse createProject(CreateProjectRequest request, User user) {
@@ -104,6 +117,33 @@ public class ProjectService {
     }
 
     private ProjectDetailResponse mapToProjectDetailResponse(Project project) {
+        // Find consultation for this project (assuming one consultation per project)
+        Optional<Consultation> consultationOpt = consultationRepository.findByHomeOwnerId(project.getUser().getId())
+                .stream()
+                .filter(c -> c.getHomeOwner().getId().equals(project.getUser().getId()))
+                .findFirst();
+
+        ProjectDetailResponse.ConsultationInfo consultationInfo = null;
+        if (consultationOpt.isPresent()) {
+            Consultation consultation = consultationOpt.get();
+            consultationInfo = buildConsultationInfo(consultation);
+        }
+
+        // Get permit information
+        ProjectDetailResponse.PermitInfo permitInfo = null;
+        Optional<Permit> permitOpt = permitRepository.findByProjectId(project.getProjectId());
+        if (permitOpt.isPresent()) {
+            Permit permit = permitOpt.get();
+            permitInfo = ProjectDetailResponse.PermitInfo.builder()
+                    .permitId(permit.getId())
+                    .permitType(permit.getPermitType())
+                    .status(permit.getStatus().name())
+                    .submittedAt(permit.getSubmittedAt())
+                    .dedDocumentUrl(permit.getDedDocumentUrl())
+                    .pbgDocumentUrl(permit.getPbgDocumentUrl())
+                    .build();
+        }
+
         return ProjectDetailResponse.builder()
                 .projectId(project.getProjectId())
                 .name(project.getName())
@@ -115,8 +155,146 @@ public class ProjectService {
                 .landArea(project.getLandArea())
                 .createdAt(project.getCreatedAt())
                 .updatedAt(project.getUpdatedAt())
-                .consultation(null) // TODO: Add consultation integration
-                .permit(null) // TODO: Add permit integration
+                .consultation(consultationInfo)
+                .permit(permitInfo)
+                .build();
+    }
+
+    private ProjectDetailResponse.ConsultationInfo buildConsultationInfo(Consultation consultation) {
+        List<ConsultationHistory> history = consultationHistoryService.getConsultationHistory(consultation.getId());
+        List<SurveySchedule> surveySchedules = surveyScheduleRepository.findByConsultationIdOrderByCreatedAtDesc(consultation.getId());
+
+        // Get current survey schedule (latest approved or completed)
+        SurveySchedule currentSchedule = surveySchedules.stream()
+                .filter(s -> "APPROVED".equals(s.getStatus().name()) || "COMPLETED".equals(s.getStatus().name()))
+                .findFirst()
+                .orElse(null);
+
+        // Get document versions
+        List<DocumentVersion> documentVersions = documentVersionRepository.findByConsultationIdOrderByUploadedAtDesc(consultation.getId());
+
+        // Build current document versions
+        DocumentVersion currentDed = documentVersions.stream()
+                .filter(d -> "DED".equals(d.getDocumentType()) && "FINAL".equals(d.getStatus()))
+                .findFirst()
+                .orElse(null);
+
+        DocumentVersion currentBoq = documentVersions.stream()
+                .filter(d -> "BOQ".equals(d.getDocumentType()) && "FINAL".equals(d.getStatus()))
+                .findFirst()
+                .orElse(null);
+
+        DocumentVersion currentRab = documentVersions.stream()
+                .filter(d -> "RAB".equals(d.getDocumentType()) && "FINAL".equals(d.getStatus()))
+                .findFirst()
+                .orElse(null);
+
+        // Build document exchange history
+        List<ProjectDetailResponse.DocumentExchange> exchangeHistory = documentVersions.stream()
+                .map(this::mapToDocumentExchange)
+                .collect(Collectors.toList());
+
+        return ProjectDetailResponse.ConsultationInfo.builder()
+                .consultationId(consultation.getId())
+                .consultantName(consultation.getConsultant().getName())
+                .scheduledAt(currentSchedule != null ? currentSchedule.getProposedDateTime().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .status(consultation.getStatus().name())
+                .notes("Konsultasi desain rumah minimalis dengan fokus efisiensi ruang")
+                .currentSurveySchedule(currentSchedule != null ? mapToSurveyScheduleInfo(currentSchedule) : null)
+                .consultationHistory(history.stream()
+                        .map(this::mapToConsultationStep)
+                        .collect(Collectors.toList()))
+                .documentExchange(ProjectDetailResponse.DocumentExchangeInfo.builder()
+                        .currentDed(currentDed != null ? mapToDocumentVersion(currentDed) : null)
+                        .currentBoq(currentBoq != null ? mapToDocumentVersion(currentBoq) : null)
+                        .currentRab(currentRab != null ? mapToDocumentVersion(currentRab) : null)
+                        .exchangeHistory(exchangeHistory)
+                        .build())
+                .revisionRequests(buildRevisionRequests(consultation.getId()))
+                .surveySchedules(surveySchedules.stream()
+                        .map(this::mapToSurveyScheduleInfo)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    private ProjectDetailResponse.ConsultationStep mapToConsultationStep(ConsultationHistory history) {
+        return ProjectDetailResponse.ConsultationStep.builder()
+                .step(history.getStep())
+                .state(history.getState())
+                .title(history.getTitle())
+                .subtitle(history.getSubtitle())
+                .files(history.getFiles())
+                .attachments(history.getAttachments())
+                .metadata(ProjectDetailResponse.ConsultationMetadata.builder()
+                        .dateTime(history.getDateTime())
+                        .actor(history.getActor())
+                        .status(history.getStatus())
+                        .notes(history.getNotes())
+                        .surveyCost(history.getSurveyCost())
+                        .surveyLocation(history.getSurveyLocation())
+                        .build())
+                .build();
+    }
+
+    private ProjectDetailResponse.DocumentVersion mapToDocumentVersion(DocumentVersion doc) {
+        return ProjectDetailResponse.DocumentVersion.builder()
+                .documentType(doc.getDocumentType())
+                .version(doc.getVersion())
+                .fileUrl(doc.getFileUrl())
+                .uploadedAt(doc.getUploadedAt())
+                .uploadedBy(doc.getUploadedBy())
+                .status(doc.getStatus())
+                .build();
+    }
+
+    private ProjectDetailResponse.DocumentExchange mapToDocumentExchange(DocumentVersion doc) {
+        return ProjectDetailResponse.DocumentExchange.builder()
+                .documentType(doc.getDocumentType())
+                .action("UPLOAD")
+                .version(doc.getVersion())
+                .fileUrl(doc.getFileUrl())
+                .timestamp(doc.getUploadedAt())
+                .actor(doc.getUploadedBy())
+                .notes(doc.getNotes())
+                .build();
+    }
+
+    private ProjectDetailResponse.SurveyScheduleInfo mapToSurveyScheduleInfo(SurveySchedule schedule) {
+        return ProjectDetailResponse.SurveyScheduleInfo.builder()
+                .scheduleId(schedule.getId())
+                .proposedDateTime(schedule.getProposedDateTime() != null ? schedule.getProposedDateTime().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .status(schedule.getStatus().name())
+                .notes(schedule.getNotes())
+                .proposedBy("CONSULTANT")
+                .createdAt(schedule.getCreatedAt() != null ? schedule.getCreatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .updatedAt(schedule.getUpdatedAt() != null ? schedule.getUpdatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .surveyCost(schedule.getSurveyCost())
+                .surveyLocation(schedule.getSurveyLocation())
+                .estimatedDurationHours(schedule.getEstimatedDurationHours())
+                .surveyType(schedule.getSurveyType() != null ? schedule.getSurveyType() : "ON_SITE")
+                .build();
+    }
+
+    private List<ProjectDetailResponse.RevisionRequest> buildRevisionRequests(UUID consultationId) {
+        List<Revision> revisions = revisionRepository.findByConsultationIdOrderByCreatedAtDesc(consultationId);
+        return revisions.stream()
+                .map(this::mapToRevisionRequest)
+                .collect(Collectors.toList());
+    }
+
+    private ProjectDetailResponse.RevisionRequest mapToRevisionRequest(Revision revision) {
+        return ProjectDetailResponse.RevisionRequest.builder()
+                .revisionId(revision.getId())
+                .title("Revision " + revision.getVersion())
+                .description(revision.getNotes())
+                .priority("NORMAL") // Default priority
+                .status(revision.getStatus().name())
+                .requestedAt(revision.getCreatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime())
+                .completedAt(revision.getStatus() == RevisionStatus.APPROVED ?
+                    revision.getUpdatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .requestedBy("HOMEOWNER") // Default, could be enhanced
+                .affectedDocuments(List.of()) // TODO: Add affected documents
+                .resolution(revision.getStatus() == RevisionStatus.APPROVED ? "Revision completed successfully" : null)
                 .build();
     }
 }

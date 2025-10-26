@@ -37,11 +37,23 @@ public class ChatMessage {
     @Column(name = "file_url")
     private String fileUrl;
 
+    @Column(name = "file_name")
+    private String fileName;
+
+    @Column(name = "file_size")
+    private Long fileSize;
+
     @Column(name = "is_read", nullable = false)
     private Boolean isRead = false;
 
+    @Column(name = "read_at")
+    private Instant readAt;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     @PrePersist
     protected void onCreate() {

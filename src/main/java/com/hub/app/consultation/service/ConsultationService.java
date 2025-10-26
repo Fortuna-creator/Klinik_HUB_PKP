@@ -2,9 +2,11 @@ package com.hub.app.consultation.service;
 
 import com.hub.app.consultation.dto.ConsultationResponse;
 import com.hub.app.consultation.dto.CreateConsultationRequest;
+import com.hub.app.consultation.event.ConsultationEvent;
 import com.hub.app.consultation.model.Consultation;
 import com.hub.app.consultation.model.ConsultationStatus;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.consultation.service.ConsultationWorkflowService;
 import com.hub.app.project.model.Project;
 import com.hub.app.project.model.ProjectStatus;
 import com.hub.app.project.repository.ProjectRepository;
@@ -13,7 +15,8 @@ import com.hub.app.user.model.HomeOwner;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.ConsultantRepository;
 import com.hub.app.user.repository.HomeOwnerRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -21,26 +24,22 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ConsultationService {
 
-    @Autowired
-    private ConsultationRepository consultationRepository;
-
-    @Autowired
-    private HomeOwnerRepository homeOwnerRepository;
-
-    @Autowired
-    private ConsultantRepository consultantRepository;
-
-    @Autowired
-    private ProjectRepository projectRepository;
+    private final ConsultationRepository consultationRepository;
+    private final HomeOwnerRepository homeOwnerRepository;
+    private final ConsultantRepository consultantRepository;
+    private final ProjectRepository projectRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ConsultationWorkflowService workflowService;
 
     public ConsultationResponse acceptConsultation(UUID consultationId, Long consultantId) {
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
                 .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (consultation.getStatus() != ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN) {
-            throw new RuntimeException("Invalid status transition");
+            throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.INVALID_STATUS);
         }
 
         // Set project status to ACTIVE when consultation is accepted
@@ -48,7 +47,7 @@ public class ConsultationService {
         // Since consultation is linked to home owner, we need to find projects by home owner
         List<Project> pendingProjects = projectRepository.findByUserAndStatus(consultation.getHomeOwner(), ProjectStatus.PENDING);
         if (pendingProjects.isEmpty()) {
-            throw new RuntimeException("No pending project found for this consultation");
+            throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.PROJECT_NOT_FOUND);
         }
         // For simplicity, assume the first pending project is the one
         Project project = pendingProjects.get(0);
@@ -57,6 +56,12 @@ public class ConsultationService {
 
         consultation.setStatus(ConsultationStatus.MENUNGGU_JADWAL_SURVEY);
         consultation = consultationRepository.save(consultation);
+
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, consultation, "CONSULTATION_ACCEPTED", "CONSULTATION", "ACCEPTED", "CONSULTANT"
+        ));
+
         return mapToResponse(consultation);
     }
 
@@ -65,11 +70,17 @@ public class ConsultationService {
                 .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (consultation.getStatus() != ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN) {
-            throw new RuntimeException("Invalid status transition");
+            throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.INVALID_STATUS);
         }
 
         consultation.setStatus(ConsultationStatus.SELESAI); // Consultation rejected
         consultation = consultationRepository.save(consultation);
+
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, consultation, "CONSULTATION_CREATED", "CONSULTATION", "CREATED", "HOMEOWNER"
+        ));
+
         return mapToResponse(consultation);
     }
 
@@ -85,7 +96,7 @@ public class ConsultationService {
 
         // Check if project belongs to home owner
         if (!project.getUser().getId().equals(homeOwnerId)) {
-            throw new RuntimeException("Project does not belong to the home owner");
+            throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.UNAUTHORIZED);
         }
 
         // Set project status to PENDING when consultation is created
@@ -130,13 +141,34 @@ public class ConsultationService {
                 .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.CONSULTATION_NOT_FOUND));
 
         if (consultation.getStatus() != ConsultationStatus.FINAL) {
-            throw new RuntimeException("Consultation is not in final status");
+            throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.INVALID_STATUS);
         }
 
         consultation.setStatus(ConsultationStatus.SELESAI);
         consultation.setCompletedAt(Instant.now());
         consultation = consultationRepository.save(consultation);
+
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, consultation, "CONSULTATION_COMPLETED", "CONSULTATION", "COMPLETED", "HOMEOWNER"
+        ));
+
         return mapToResponse(consultation);
+    }
+
+    public ConsultationResponse startActiveConsultation(UUID consultationId, Long homeOwnerId) {
+        workflowService.startActiveConsultation(consultationId, homeOwnerId);
+        return getConsultationById(consultationId, homeOwnerId, true);
+    }
+
+    public ConsultationResponse startRevision(UUID consultationId, Long homeOwnerId, String revisionNotes) {
+        workflowService.startRevision(consultationId, homeOwnerId, revisionNotes);
+        return getConsultationById(consultationId, homeOwnerId, true);
+    }
+
+    public ConsultationResponse finalizeWorkflowConsultation(UUID consultationId, Long homeOwnerId) {
+        workflowService.finalizeConsultation(consultationId, homeOwnerId);
+        return getConsultationById(consultationId, homeOwnerId, true);
     }
 
     public ConsultationResponse mapToResponse(Consultation consultation) {

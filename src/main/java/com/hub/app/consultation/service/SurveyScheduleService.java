@@ -2,6 +2,7 @@ package com.hub.app.consultation.service;
 
 import com.hub.app.consultation.dto.CreateSurveyScheduleRequest;
 import com.hub.app.consultation.dto.SurveyScheduleResponse;
+import com.hub.app.consultation.event.ConsultationEvent;
 import com.hub.app.consultation.model.Consultation;
 import com.hub.app.consultation.model.ConsultationStatus;
 import com.hub.app.consultation.model.SurveySchedule;
@@ -11,6 +12,7 @@ import com.hub.app.consultation.repository.SurveyScheduleRepository;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +27,8 @@ public class SurveyScheduleService {
 
     private final SurveyScheduleRepository surveyScheduleRepository;
     private final ConsultationRepository consultationRepository;
+    private final ApplicationEventPublisher eventPublisher;
+    private final ConsultationHistoryService historyService;
 
     @PreAuthorize("hasRole('CONSULTANT')")
     @Transactional
@@ -48,6 +52,12 @@ public class SurveyScheduleService {
         consultation.setStatus(ConsultationStatus.MENUNGGU_APPROVAL_JADWAL);
         consultationRepository.save(consultation);
 
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, consultation, "SURVEY_SCHEDULED", "SURVEY", "SCHEDULED", "CONSULTANT",
+            null, null, saved.getSurveyCost(), saved.getSurveyLocation()
+        ));
+
         return mapToResponse(saved);
     }
 
@@ -66,6 +76,11 @@ public class SurveyScheduleService {
         // Update consultation status
         consultation.setStatus(ConsultationStatus.SURVEY_DIJADWALKAN);
         consultationRepository.save(consultation);
+
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, consultation, "SURVEY_APPROVED", "SURVEY", "APPROVED", "HOMEOWNER"
+        ));
 
         return mapToResponse(saved);
     }
@@ -134,6 +149,26 @@ public class SurveyScheduleService {
         // Update consultation status
         consultation.setStatus(ConsultationStatus.SURVEY_SELESAI);
         consultationRepository.save(consultation);
+
+        // Get the completed survey schedule for history
+        SurveySchedule completedSchedule = surveyScheduleRepository.findByConsultationIdAndStatus(consultationId, SurveyStatus.COMPLETED)
+                .orElse(null);
+
+        // Create history event
+        historyService.createHistoryEvent(
+            consultation,
+            "SURVEY",
+            "COMPLETED",
+            "Survey selesai dilakukan",
+            "Survey lokasi telah berhasil diselesaikan",
+            java.util.Arrays.asList("https://hub-files.survey.photos.1.jpg", "https://hub-files.survey.photos.2.jpg"),
+            java.util.Arrays.asList("https://hub-files.survey.report.pdf"),
+            "SYSTEM",
+            "COMPLETED",
+            "Survey telah selesai",
+            completedSchedule != null ? completedSchedule.getSurveyCost() : null,
+            completedSchedule != null ? completedSchedule.getSurveyLocation() : null
+        );
     }
 
     public List<SurveyScheduleResponse> getSurveySchedules(UUID consultationId, Long userId) {

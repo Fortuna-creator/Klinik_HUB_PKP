@@ -13,4 +13,9 @@ public class CreateChatMessageRequest {
     private String messageContent;
 
     private MultipartFile voiceFile;
+
+    // File attachment fields
+    private String fileUrl;
+    private String fileName;
+    private Long fileSize;
 }

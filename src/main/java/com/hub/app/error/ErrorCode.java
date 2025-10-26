@@ -46,7 +46,10 @@ public enum ErrorCode {
     MESSAGE_NOT_FOUND("MESSAGE_NOT_FOUND", HttpStatus.NOT_FOUND, "Message not found"),
 
     // Home Owner-specific
-    HOME_OWNER_NOT_FOUND("HOME_OWNER_NOT_FOUND", HttpStatus.NOT_FOUND, "Home owner not found");
+    HOME_OWNER_NOT_FOUND("HOME_OWNER_NOT_FOUND", HttpStatus.NOT_FOUND, "Home owner not found"),
+
+    // Workflow-specific
+    WORKFLOW_ERROR("WORKFLOW_ERROR", HttpStatus.BAD_REQUEST, "Workflow validation error");
 
     private final String code;
     private final HttpStatus httpStatus;
