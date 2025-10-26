@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -215,7 +216,7 @@ public class PortfolioService {
                 .id(consultant.getId())
                 .name(consultant.getName())
                 .email(consultant.getEmail())
-                .specialization(consultant.getSpecialty())
+                .specialization(consultant.getSpecialty() != null ? consultant.getSpecialty() : "")
                 .build();
 
         ConsultantPortfolioResponse response = ConsultantPortfolioResponse.builder()
@@ -237,51 +238,74 @@ public class PortfolioService {
      * Get consultant's portfolio with formatted response for homeowners with pagination
      */
     public Optional<ConsultantPortfolioResponse> getConsultantPortfolioForHomeowner(Long consultantId, int page, int size) {
-        Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
-        if (consultant == null) {
-            return Optional.empty();
+        log.info("getConsultantPortfolioForHomeowner called with consultantId={}, page={}, size={}", consultantId, page, size);
+
+        try {
+            Consultant consultant = consultantRepository.findById(consultantId).orElse(null);
+            log.debug("Consultant lookup result: {}", consultant != null ? "found" : "not found");
+            if (consultant == null) {
+                log.info("Consultant with id {} not found", consultantId);
+                return Optional.empty();
+            }
+
+            List<Portfolio> portfolios = getPortfoliosByConsultantId(consultantId);
+            log.debug("Found {} portfolios for consultant {}", portfolios.size(), consultantId);
+            if (portfolios.isEmpty()) {
+                log.info("No portfolios found for consultant {}", consultantId);
+                return Optional.empty();
+            }
+
+            // Get all projects from all portfolios and apply pagination
+            log.debug("Processing projects from {} portfolios", portfolios.size());
+            List<ConsultantPortfolioResponse.PortfolioProjectInfo> allProjects = portfolios.stream()
+                    .flatMap((Portfolio portfolio) -> {
+                        log.debug("Portfolio {} has {} projects", portfolio.getId(), portfolio.getProjects() != null ? portfolio.getProjects().size() : 0);
+                        return portfolio.getProjects() != null ? portfolio.getProjects().stream() : Stream.<PortfolioProject>empty();
+                    })
+                    .map((PortfolioProject project) -> {
+                        log.debug("Processing project: {} (id={})", project.getProjectName(), project.getId());
+                        return ConsultantPortfolioResponse.PortfolioProjectInfo.builder()
+                                .id(project.getId())
+                                .projectName(project.getProjectName())
+                                .price(project.getPrice())
+                                .detailDescription(project.getDetailDescription())
+                                .imageUrls(project.getImageUrls())
+                                .createdAt(project.getCreatedAt())
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+
+            log.debug("Total projects found: {}", allProjects.size());
+
+            // Apply pagination
+            int startIndex = page * size;
+            List<ConsultantPortfolioResponse.PortfolioProjectInfo> paginatedProjects;
+            if (startIndex >= allProjects.size()) {
+                log.debug("Start index {} >= total projects {}, returning empty list", startIndex, allProjects.size());
+                paginatedProjects = new ArrayList<>();
+            } else {
+                int endIndex = Math.min(startIndex + size, allProjects.size());
+                log.debug("Applying pagination: start={}, end={}, total={}", startIndex, endIndex, allProjects.size());
+                paginatedProjects = allProjects.subList(startIndex, endIndex);
+            }
+
+            ConsultantPortfolioResponse.ConsultantInfo consultantInfo = ConsultantPortfolioResponse.ConsultantInfo.builder()
+                    .id(consultant.getId())
+                    .name(consultant.getName())
+                    .email(consultant.getEmail())
+                    .specialization(consultant.getSpecialty())
+                    .build();
+
+            ConsultantPortfolioResponse response = ConsultantPortfolioResponse.builder()
+                    .consultant(consultantInfo)
+                    .portfolios(paginatedProjects)
+                    .build();
+
+            log.info("Successfully built response for consultant {} with {} projects", consultantId, paginatedProjects.size());
+            return Optional.of(response);
+        } catch (Exception e) {
+            log.error("Error in getConsultantPortfolioForHomeowner for consultantId={}", consultantId, e);
+            throw e;
         }
-
-        List<Portfolio> portfolios = getPortfoliosByConsultantId(consultantId);
-        if (portfolios.isEmpty()) {
-            return Optional.empty();
-        }
-
-        // Get all projects from all portfolios and apply pagination
-        List<ConsultantPortfolioResponse.PortfolioProjectInfo> allProjects = portfolios.stream()
-                .flatMap(portfolio -> portfolio.getProjects().stream())
-                .map(project -> ConsultantPortfolioResponse.PortfolioProjectInfo.builder()
-                        .id(project.getId())
-                        .projectName(project.getProjectName())
-                        .price(project.getPrice())
-                        .detailDescription(project.getDetailDescription())
-                        .imageUrls(project.getImageUrls())
-                        .createdAt(project.getCreatedAt())
-                        .build())
-                .collect(Collectors.toList());
-
-        // Apply pagination
-        int startIndex = page * size;
-        List<ConsultantPortfolioResponse.PortfolioProjectInfo> paginatedProjects;
-        if (startIndex >= allProjects.size()) {
-            paginatedProjects = new ArrayList<>();
-        } else {
-            int endIndex = Math.min(startIndex + size, allProjects.size());
-            paginatedProjects = allProjects.subList(startIndex, endIndex);
-        }
-
-        ConsultantPortfolioResponse.ConsultantInfo consultantInfo = ConsultantPortfolioResponse.ConsultantInfo.builder()
-                .id(consultant.getId())
-                .name(consultant.getName())
-                .email(consultant.getEmail())
-                .specialization(consultant.getSpecialty())
-                .build();
-
-        ConsultantPortfolioResponse response = ConsultantPortfolioResponse.builder()
-                .consultant(consultantInfo)
-                .portfolios(paginatedProjects)
-                .build();
-
-        return Optional.of(response);
     }
 }
