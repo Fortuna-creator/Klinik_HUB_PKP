@@ -61,7 +61,7 @@ public class Project {
             projectId = UUID.randomUUID();
         }
         if (status == null) {
-            status = ProjectStatus.ACTIVE;
+            status = ProjectStatus.CREATED;
         }
     }
 
