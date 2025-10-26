@@ -21,7 +21,6 @@
     <include file="013-chat-messages-schema.sql" relativeToChangelogFile="true"/>
     <include file="014-file-uploads-schema.sql" relativeToChangelogFile="true"/>
     <include file="017-consultation-history-schema.sql" relativeToChangelogFile="true"/>
-    <include file="018-contract-schema.sql" relativeToChangelogFile="true"/>
     <include file="019-document-versions-schema.sql" relativeToChangelogFile="true"/>
     <include file="020-update-survey-schedule-schema.sql" relativeToChangelogFile="true"/>
     <include file="021-permits-schema.sql" relativeToChangelogFile="true"/>
