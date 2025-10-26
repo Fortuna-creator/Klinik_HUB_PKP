@@ -3,6 +3,7 @@ package com.hub.app.auth.service;
 import com.hub.app.auth.dto.LoginResponse;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.user.model.HomeOwner;
 import com.hub.app.user.model.VerificationStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import com.hub.app.auth.dto.VerifyOtpRequest;
 import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import com.hub.app.user.model.UserActivityStatus;
+import com.hub.app.user.repository.HomeOwnerRepository;
 import com.hub.app.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -24,28 +26,28 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
+    private final HomeOwnerRepository homeOwnerRepository;
     private final OtpService otpService;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
  
     @Transactional
-    public User register(String email, String password) {
+    public HomeOwner register(String email, String password) {
         if (userRepository.existsByEmail(email)) {
             throw new DomainException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
         }
 
-        User u = User.builder()
-                .email(email)
-                .password(encoder.encode(password))
-                .role(Role.HOMEOWNER)
-                .status(VerificationStatus.UNVERIFIED)
-                .activityStatus(UserActivityStatus.INACTIVE)
-                .build();
+        HomeOwner homeOwner = new HomeOwner();
+        homeOwner.setEmail(email);
+        homeOwner.setPassword(encoder.encode(password));
+        homeOwner.setRole(Role.HOMEOWNER);
+        homeOwner.setStatus(VerificationStatus.UNVERIFIED);
+        homeOwner.setActivityStatus(UserActivityStatus.INACTIVE);
 
-        userRepository.save(u);
+        homeOwnerRepository.save(homeOwner);
 
-        otpService.generateAndSendOtp(u);
-        return u;
+        otpService.generateAndSendOtp(homeOwner);
+        return homeOwner;
     }
 
 
