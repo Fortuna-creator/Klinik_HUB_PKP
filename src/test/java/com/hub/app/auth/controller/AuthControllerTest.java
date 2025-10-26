@@ -8,6 +8,7 @@ import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.user.model.HomeOwner;
 import com.hub.app.user.model.User;
 import com.hub.app.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -53,9 +54,9 @@ class AuthControllerTest {
         request.setEmail("test@example.com");
         request.setPassword("password123");
         request.setConfirmPassword("password123");
-        User mockUser = new User();
-        mockUser.setEmail("test@example.com");
-        when(authService.register(anyString(), anyString())).thenReturn(mockUser);
+        HomeOwner mockHomeOwner = new HomeOwner();
+        mockHomeOwner.setEmail("test@example.com");
+        when(authService.register(anyString(), anyString())).thenReturn(mockHomeOwner);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
