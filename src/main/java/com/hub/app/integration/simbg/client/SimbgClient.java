@@ -2,8 +2,7 @@ package com.hub.app.integration.simbg.client;
 
 import com.hub.app.integration.simbg.dto.*;
 import com.hub.app.integration.simbg.exception.SimbgIntegrationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -17,9 +16,9 @@ import java.util.List;
  * Client for communicating with SIMBG API.
  */
 @Component
+@Slf4j
 public class SimbgClient {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimbgClient.class);
 
     private final WebClient webClient;
 
@@ -34,14 +33,14 @@ public class SimbgClient {
      * @return the registration response
      */
     public Mono<SimbgRegistrationResponse> registerApplication(SimbgRegistrationRequest request) {
-        logger.info("Registering application with SIMBG: {}", request.getExternalReference());
+        log.info("Registering application with SIMBG: {}", request.getExternalReference());
 
         return webClient.post()
                 .uri("/applications")
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(SimbgRegistrationResponse.class)
-                .doOnSuccess(response -> logger.info("Application registered successfully: {}", response.getSimbgId()))
+                .doOnSuccess(response -> log.info("Application registered successfully: {}", response.getSimbgId()))
                 .doOnError(error -> handleError("Failed to register application", error));
     }
 
@@ -52,13 +51,13 @@ public class SimbgClient {
      * @return the status response
      */
     public Mono<SimbgStatusResponse> trackStatus(String simbgId) {
-        logger.info("Tracking status for SIMBG ID: {}", simbgId);
+        log.info("Tracking status for SIMBG ID: {}", simbgId);
 
         return webClient.get()
                 .uri("/applications/{simbgId}", simbgId)
                 .retrieve()
                 .bodyToMono(SimbgStatusResponse.class)
-                .doOnSuccess(response -> logger.info("Status retrieved for SIMBG ID: {}", simbgId))
+                .doOnSuccess(response -> log.info("Status retrieved for SIMBG ID: {}", simbgId))
                 .doOnError(error -> handleError("Failed to track status for SIMBG ID: " + simbgId, error));
     }
 
@@ -69,14 +68,14 @@ public class SimbgClient {
      * @return list of document responses
      */
     public Mono<List<SimbgDocumentResponse>> fetchDocuments(String simbgId) {
-        logger.info("Fetching documents for SIMBG ID: {}", simbgId);
+        log.info("Fetching documents for SIMBG ID: {}", simbgId);
 
         return webClient.get()
                 .uri("/applications/{simbgId}/documents", simbgId)
                 .retrieve()
                 .bodyToFlux(SimbgDocumentResponse.class)
                 .collectList()
-                .doOnSuccess(documents -> logger.info("Fetched {} documents for SIMBG ID: {}", documents.size(), simbgId))
+                .doOnSuccess(documents -> log.info("Fetched {} documents for SIMBG ID: {}", documents.size(), simbgId))
                 .doOnError(error -> handleError("Failed to fetch documents for SIMBG ID: " + simbgId, error));
     }
 
@@ -88,14 +87,14 @@ public class SimbgClient {
      * @return the update response
      */
     public Mono<SimbgUpdateResponse> updateApplication(String simbgId, SimbgUpdateRequest request) {
-        logger.info("Updating application for SIMBG ID: {}", simbgId);
+        log.info("Updating application for SIMBG ID: {}", simbgId);
 
         return webClient.post()
                 .uri("/applications/{simbgId}/update", simbgId)
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(SimbgUpdateResponse.class)
-                .doOnSuccess(response -> logger.info("Application updated successfully for SIMBG ID: {}", simbgId))
+                .doOnSuccess(response -> log.info("Application updated successfully for SIMBG ID: {}", simbgId))
                 .doOnError(error -> handleError("Failed to update application for SIMBG ID: " + simbgId, error));
     }
 
@@ -106,7 +105,7 @@ public class SimbgClient {
      * @param error the throwable error
      */
     private void handleError(String message, Throwable error) {
-        logger.error(message, error);
+        log.error(message, error);
 
         if (error instanceof WebClientResponseException responseException) {
             HttpStatus status = (HttpStatus) responseException.getStatusCode();
