@@ -20,7 +20,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 
   config:
-    import: optional:consul:consul:8500
+    import: "optional:consul:"
 
   cloud:
     compatibility-verifier:
@@ -31,7 +31,11 @@ spring:
       discovery:
         enabled: true
       config:
+        format: yaml
         enabled: true
+        default-context: hub-backend
+        watch:
+          enabled: true
         fail-fast: true
         retry:
           enabled: true
@@ -39,8 +43,8 @@ spring:
           max-interval: 2000
           multiplier: 1.1
           max-attempts: 6
-    refresh:
-      enabled: true
+      refresh:
+        enabled: true
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
