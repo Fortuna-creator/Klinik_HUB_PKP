@@ -36,8 +36,15 @@ spring:
         default-context: hub-backend
         watch:
           enabled: true
-    refresh:
-      enabled: true
+        fail-fast: true
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-interval: 2000
+          multiplier: 1.1
+          max-attempts: 6
+      refresh:
+        enabled: true
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -78,3 +85,5 @@ logging:
     com.hub.backend: DEBUG
     com.hub.app: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.cloud.consul: DEBUG
+    org.springframework.core.env: DEBUG
