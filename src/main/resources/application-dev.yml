@@ -20,7 +20,7 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
 
   config:
-    import: optional:consul:consul:8500
+    import: "optional:consul:"
 
   cloud:
     compatibility-verifier:
@@ -33,6 +33,9 @@ spring:
       config:
         format: yaml
         enabled: true
+        default-context: hub-backend
+        watch:
+          enabled: true
     refresh:
       enabled: true
 
