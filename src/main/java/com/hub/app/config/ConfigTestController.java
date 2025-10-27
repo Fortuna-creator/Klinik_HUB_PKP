@@ -45,6 +45,7 @@ public class ConfigTestController {
         }
         config.put("propertySources", sources);
         config.put("consulConfigFound", consulFound);
+        config.put("configSource", consulFound ? "CONSUL" : "ENVIRONMENT_VARIABLES");
 
         // Periksa properti penting
         Map<String, Object> properties = new HashMap<>();
@@ -61,6 +62,29 @@ public class ConfigTestController {
         properties.put("consulPort", environment.getProperty("spring.cloud.consul.port"));
 
         config.put("properties", properties);
+
+        // Add Consul connectivity diagnosis
+        Map<String, Object> consulDiagnosis = new HashMap<>();
+        consulDiagnosis.put("host", environment.getProperty("spring.cloud.consul.host"));
+        consulDiagnosis.put("port", environment.getProperty("spring.cloud.consul.port"));
+        consulDiagnosis.put("configEnabled", environment.getProperty("spring.cloud.consul.config.enabled", "true"));
+        consulDiagnosis.put("failFast", environment.getProperty("spring.cloud.consul.config.fail-fast", "false"));
+
+        // Basic connectivity check
+        String consulHost = environment.getProperty("spring.cloud.consul.host");
+        String consulPort = environment.getProperty("spring.cloud.consul.port");
+        boolean hostReachable = false;
+        if (consulHost != null && consulPort != null) {
+            try {
+                java.net.InetAddress.getByName(consulHost);
+                hostReachable = true;
+            } catch (Exception e) {
+                hostReachable = false;
+            }
+        }
+        consulDiagnosis.put("hostReachable", hostReachable);
+
+        config.put("consulDiagnosis", consulDiagnosis);
 
         // Status keseluruhan
         config.put("status", consulFound ? "CONFIG_LOADED_FROM_CONSUL" : "USING_DEFAULT_CONFIG");
