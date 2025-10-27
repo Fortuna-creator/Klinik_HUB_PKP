@@ -41,4 +41,4 @@ server:
 simbg:
   base-url: https://api.simbg.go.id
   auth:
-    token: ${SIMBG_TOKEN}
+    token: ${SIMBG_TOKEN:}
