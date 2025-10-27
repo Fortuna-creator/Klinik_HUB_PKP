@@ -45,6 +45,7 @@ public class ConfigTestController {
         }
         config.put("propertySources", sources);
         config.put("consulConfigFound", consulFound);
+        config.put("configSource", consulFound ? "CONSUL" : "ENVIRONMENT_VARIABLES");
 
         // Periksa properti penting
         Map<String, Object> properties = new HashMap<>();

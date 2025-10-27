@@ -38,8 +38,10 @@ public class ConfigVerificationListener implements ApplicationListener<Applicati
         }
 
         if (!consulConfigFound) {
-            logger.error("✗ TIDAK ADA sumber konfigurasi Consul yang ditemukan!");
-            logger.error("Aplikasi mungkin menggunakan konfigurasi default atau environment variables");
+            logger.warn("⚠ Konsul tidak tersedia, menggunakan environment variables sebagai fallback");
+            logger.info("Untuk production, pastikan Consul berjalan dan berisi konfigurasi yang diperlukan");
+        } else {
+            logger.info("✓ Konfigurasi berhasil dimuat dari Consul");
         }
 
         // Verifikasi properti penting
