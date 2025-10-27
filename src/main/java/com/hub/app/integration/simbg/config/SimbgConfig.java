@@ -50,10 +50,17 @@ public class SimbgConfig {
     @Bean("simbgWebClient")
     public WebClient simbgWebClient() {
         logger.info("Creating SIMBG WebClient with baseUrl: {}", baseUrl);
-        return WebClient.builder()
-                .baseUrl(baseUrl)
-                .defaultHeader("Authorization", "Bearer " + auth.getToken())
-                .build();
+        WebClient.Builder builder = WebClient.builder()
+                .baseUrl(baseUrl);
+
+        if (auth.getToken() != null && !auth.getToken().isEmpty()) {
+            builder.defaultHeader("Authorization", "Bearer " + auth.getToken());
+            logger.info("SIMBG WebClient configured with authentication token");
+        } else {
+            logger.warn("SIMBG WebClient created without authentication token - SIMBG_TOKEN not configured");
+        }
+
+        return builder.build();
     }
 
     // Getters and Setters
