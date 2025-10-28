@@ -26,4 +26,5 @@ public class ConsultationResponse {
     private Instant completedAt;
     private Instant createdAt;
     private Instant updatedAt;
+    private UUID projectId;
 }

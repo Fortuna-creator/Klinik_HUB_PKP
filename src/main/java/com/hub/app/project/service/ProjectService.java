@@ -75,7 +75,7 @@ public class ProjectService {
         if (user.getRole().equals(Role.CONSULTANT)) {
             List<Consultation> consultations = consultationRepository.findByConsultantId(user.getId());
             if(!consultations.isEmpty()) {
-                projectsPage = projectRepository.findByUserIdIn(consultations.stream().map(c -> c.getHomeOwner().getId()).toList(), pageable);
+                projectsPage = projectRepository.findByProjectIdIn(consultations.stream().map(Consultation::getProjectId).toList(), pageable);
             } else {
                 projectsPage = projectRepository.findByUser(user, pageable);
             }
