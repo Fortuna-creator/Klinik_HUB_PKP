@@ -12,6 +12,7 @@ import com.hub.app.project.model.Project;
 import com.hub.app.project.model.ProjectStatus;
 import com.hub.app.project.model.ProjectType;
 import com.hub.app.project.repository.ProjectRepository;
+import com.hub.app.user.model.Role;
 import com.hub.app.user.model.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -69,14 +71,24 @@ public class ProjectService {
         Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 10);
 
         Page<Project> projectsPage;
-        if (type != null && status != null) {
-            projectsPage = projectRepository.findByUserAndTypeAndStatus(user, type, status, pageable);
-        } else if (type != null) {
-            projectsPage = projectRepository.findByUserAndType(user, type, pageable);
-        } else if (status != null) {
-            projectsPage = projectRepository.findByUserAndStatus(user, status, pageable);
+
+        if (user.getRole().equals(Role.CONSULTANT)) {
+            List<Consultation> consultations = consultationRepository.findByConsultantId(user.getId());
+            if(!consultations.isEmpty()) {
+                projectsPage = projectRepository.findByUserIdIn(consultations.stream().map(c -> c.getHomeOwner().getId()).toList(), pageable);
+            } else {
+                projectsPage = projectRepository.findByUser(user, pageable);
+            }
         } else {
-            projectsPage = projectRepository.findByUser(user, pageable);
+            if (type != null && status != null) {
+                projectsPage = projectRepository.findByUserAndTypeAndStatus(user, type, status, pageable);
+            } else if (type != null) {
+                projectsPage = projectRepository.findByUserAndType(user, type, pageable);
+            } else if (status != null) {
+                projectsPage = projectRepository.findByUserAndStatus(user, status, pageable);
+            } else {
+                projectsPage = projectRepository.findByUser(user, pageable);
+            }
         }
 
         List<ProjectListResponse> responses = projectsPage.getContent().stream()
@@ -197,7 +209,7 @@ public class ProjectService {
         return ProjectDetailResponse.ConsultationInfo.builder()
                 .consultationId(consultation.getId())
                 .consultantName(consultation.getConsultant().getName())
-                .scheduledAt(currentSchedule != null ? currentSchedule.getProposedDateTime().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .scheduledAt(currentSchedule != null ? currentSchedule.getProposedDateTime().atZone(ZoneOffset.UTC).toLocalDateTime() : null)
                 .status(consultation.getStatus().name())
                 .notes("Konsultasi desain rumah minimalis dengan fokus efisiensi ruang")
                 .currentSurveySchedule(currentSchedule != null ? mapToSurveyScheduleInfo(currentSchedule) : null)
@@ -262,12 +274,12 @@ public class ProjectService {
     private ProjectDetailResponse.SurveyScheduleInfo mapToSurveyScheduleInfo(SurveySchedule schedule) {
         return ProjectDetailResponse.SurveyScheduleInfo.builder()
                 .scheduleId(schedule.getId())
-                .proposedDateTime(schedule.getProposedDateTime() != null ? schedule.getProposedDateTime().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .proposedDateTime(schedule.getProposedDateTime() != null ? schedule.getProposedDateTime().atZone(ZoneOffset.UTC).toLocalDateTime() : null)
                 .status(schedule.getStatus().name())
                 .notes(schedule.getNotes())
                 .proposedBy("CONSULTANT")
-                .createdAt(schedule.getCreatedAt() != null ? schedule.getCreatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
-                .updatedAt(schedule.getUpdatedAt() != null ? schedule.getUpdatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                .createdAt(schedule.getCreatedAt() != null ? schedule.getCreatedAt().atZone(ZoneOffset.UTC).toLocalDateTime() : null)
+                .updatedAt(schedule.getUpdatedAt() != null ? schedule.getUpdatedAt().atZone(ZoneOffset.UTC).toLocalDateTime() : null)
                 .surveyCost(schedule.getSurveyCost())
                 .surveyLocation(schedule.getSurveyLocation())
                 .estimatedDurationHours(schedule.getEstimatedDurationHours())
@@ -289,9 +301,9 @@ public class ProjectService {
                 .description(revision.getNotes())
                 .priority("NORMAL") // Default priority
                 .status(revision.getStatus().name())
-                .requestedAt(revision.getCreatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime())
+                .requestedAt(revision.getCreatedAt().atZone(ZoneOffset.UTC).toLocalDateTime())
                 .completedAt(revision.getStatus() == RevisionStatus.APPROVED ?
-                    revision.getUpdatedAt().atZone(java.time.ZoneOffset.UTC).toLocalDateTime() : null)
+                    revision.getUpdatedAt().atZone(ZoneOffset.UTC).toLocalDateTime() : null)
                 .requestedBy("HOMEOWNER") // Default, could be enhanced
                 .affectedDocuments(List.of()) // TODO: Add affected documents
                 .resolution(revision.getStatus() == RevisionStatus.APPROVED ? "Revision completed successfully" : null)
