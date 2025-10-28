@@ -109,6 +109,7 @@ public class ConsultationService {
         consultation.setConsultationType(request.getConsultationType());
         consultation.setChannel(request.getChannel());
         consultation.setStatus(ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN);
+        consultation.setProjectId(project.getProjectId());
 
         consultation = consultationRepository.save(consultation);
         return mapToResponse(consultation);
@@ -187,6 +188,7 @@ public class ConsultationService {
                 .completedAt(consultation.getCompletedAt())
                 .createdAt(consultation.getCreatedAt())
                 .updatedAt(consultation.getUpdatedAt())
+                .projectId(consultation.getProjectId())
                 .build();
     }
 }

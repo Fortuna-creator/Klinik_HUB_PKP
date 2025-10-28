@@ -24,6 +24,7 @@
     <include file="019-document-versions-schema.sql" relativeToChangelogFile="true"/>
     <include file="020-update-survey-schedule-schema.sql" relativeToChangelogFile="true"/>
     <include file="021-permits-schema.sql" relativeToChangelogFile="true"/>
+    <include file="022-consultation-column.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
 

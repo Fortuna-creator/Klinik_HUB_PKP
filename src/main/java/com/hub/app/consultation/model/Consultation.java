@@ -45,6 +45,7 @@ public class Consultation {
 
     private Instant createdAt;
     private Instant updatedAt;
+    private UUID projectId;
 
     @PrePersist
     protected void onCreate() {
