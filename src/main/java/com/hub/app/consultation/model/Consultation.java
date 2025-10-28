@@ -46,6 +46,8 @@ public class Consultation {
     private Instant createdAt;
     private Instant updatedAt;
 
+    private Long projectId;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
