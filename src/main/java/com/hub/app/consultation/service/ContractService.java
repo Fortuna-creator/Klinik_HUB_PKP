@@ -67,9 +67,9 @@ public class ContractService {
     }
 
     @Transactional
-    public ContractResponse requestContractApproval(UUID consultationId, Long consultantId) {
+    public ContractResponse requestContractApproval(UUID contractId, Long consultantId) {
 
-        Contract contract = contractRepository.findByConsultationId(consultationId)
+        Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
 
         if (!contract.getConsultation().getConsultant().getId().equals(consultantId)) {
@@ -82,6 +82,10 @@ public class ContractService {
 
         contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
         contract = contractRepository.save(contract);
+
+        // Update consultation status
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK);
+        consultationRepository.save(contract.getConsultation());
 
         // Create history event
         historyService.createHistoryEvent(
@@ -101,9 +105,9 @@ public class ContractService {
     }
 
     @Transactional
-    public ContractResponse approveContract(UUID consultationId, Long homeOwnerId) {
+    public ContractResponse approveContract(UUID contractId, Long homeOwnerId) {
 
-        Contract contract = contractRepository.findByConsultationId(consultationId)
+        Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
 
         if (!contract.getConsultation().getHomeOwner().getId().equals(homeOwnerId)) {
@@ -117,6 +121,10 @@ public class ContractService {
         contract.setStatus(ContractStatus.APPROVED);
         contract.setApprovedAt(LocalDateTime.now());
         contract = contractRepository.save(contract);
+
+        // Update consultation status
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.KONTRAK_DISETUJUI);
+        consultationRepository.save(contract.getConsultation());
 
         // Create history event
         historyService.createHistoryEvent(
@@ -136,9 +144,9 @@ public class ContractService {
     }
 
     @Transactional
-    public ContractResponse rejectContract(UUID consultationId, Long homeOwnerId, String reason) {
+    public ContractResponse rejectContract(UUID contractId, Long homeOwnerId, String reason) {
 
-        Contract contract = contractRepository.findByConsultationId(consultationId)
+        Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
 
         if (!contract.getConsultation().getHomeOwner().getId().equals(homeOwnerId)) {
@@ -148,6 +156,10 @@ public class ContractService {
         contract.setStatus(ContractStatus.REJECTED);
         contract.setNotes(reason);
         contract = contractRepository.save(contract);
+
+        // Update consultation status back to contract preparation
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENYIAPKAN_KONTRAK);
+        consultationRepository.save(contract.getConsultation());
 
         // Create history event
         historyService.createHistoryEvent(
@@ -181,6 +193,52 @@ public class ContractService {
     }
 
     @Transactional
+    public ContractResponse requestContractRevision(UUID contractId, Long homeOwnerId, String revisionNotes) {
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new RuntimeException("Contract not found"));
+
+        if (!contract.getConsultation().getHomeOwner().getId().equals(homeOwnerId)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        if (contract.getStatus() != ContractStatus.REQUEST_FOR_APPROVAL) {
+            throw new RuntimeException("Invalid contract status for revision request");
+        }
+
+        // Create new contract draft with revision notes
+        Contract newContract = new Contract();
+        newContract.setConsultation(contract.getConsultation());
+        newContract.setContractValue(contract.getContractValue());
+        newContract.setFileUrl(contract.getFileUrl());
+        newContract.setTermsConditionsUrl(contract.getTermsConditionsUrl());
+        newContract.setScopeOfWorkUrl(contract.getScopeOfWorkUrl());
+        newContract.setStatus(ContractStatus.DRAFT);
+        newContract.setApprovalDeadline(LocalDateTime.now().plusDays(7));
+        newContract.setNotes("Revision requested: " + revisionNotes);
+        newContract = contractRepository.save(newContract);
+
+        // Update consultation status back to contract preparation
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENYIAPKAN_KONTRAK);
+        consultationRepository.save(contract.getConsultation());
+
+        // Create history event
+        historyService.createHistoryEvent(
+            contract.getConsultation(),
+            "CONTRACT",
+            "REVISION_REQUESTED",
+            "Permintaan revisi kontrak",
+            "Homeowner meminta revisi kontrak dengan catatan: " + revisionNotes,
+            java.util.Arrays.asList(),
+            java.util.Arrays.asList(),
+            "HOMEOWNER",
+            "REVISION_REQUESTED",
+            revisionNotes
+        );
+
+        return mapToResponse(newContract);
+    }
+
+    @Transactional
     public ContractResponse signContract(UUID contractId, Long userId) {
         Contract contract = contractRepository.findById(contractId)
                 .orElseThrow(() -> new RuntimeException("Contract not found"));
@@ -199,6 +257,11 @@ public class ContractService {
         contract.setStatus(ContractStatus.SIGNED);
         contract.setSignedAt(LocalDateTime.now());
         contract = contractRepository.save(contract);
+
+        // Update consultation status to survey scheduling when both parties have signed
+        // For now, we'll assume both parties need to sign, but this could be enhanced
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_JADWAL_SURVEY);
+        consultationRepository.save(contract.getConsultation());
 
         // Create history event
         historyService.createHistoryEvent(

@@ -96,8 +96,27 @@ public class ContractController {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                         ErrorCode.INTERNAL_ERROR.getCode(),
-                                         e.getMessage());
+                                          ErrorCode.INTERNAL_ERROR.getCode(),
+                                          e.getMessage());
+        }
+    }
+
+    @PostMapping("/{contractId}/request-revision")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> requestContractRevision(
+            @PathVariable UUID contractId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam String revisionNotes) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.requestContractRevision(contractId, homeOwnerId, revisionNotes);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                          ErrorCode.INTERNAL_ERROR.getCode(),
+                                          e.getMessage());
         }
     }
 
