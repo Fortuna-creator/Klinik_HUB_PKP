@@ -137,10 +137,7 @@ public class ProjectService {
 
     private ProjectDetailResponse mapToProjectDetailResponse(Project project) {
         // Find consultation for this project (assuming one consultation per project)
-        Optional<Consultation> consultationOpt = consultationRepository.findByHomeOwnerId(project.getUser().getId())
-                .stream()
-                .filter(c -> c.getHomeOwner().getId().equals(project.getUser().getId()))
-                .findFirst();
+        Optional<Consultation> consultationOpt = consultationRepository.findByProjectId(project.getProjectId());
 
         ProjectDetailResponse.ConsultationInfo consultationInfo = null;
         if (consultationOpt.isPresent()) {

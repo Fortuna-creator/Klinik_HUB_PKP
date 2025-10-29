@@ -25,4 +25,6 @@ public interface ConsultationRepository extends JpaRepository<Consultation, UUID
     Optional<Consultation> findByIdAndHomeOwnerId(UUID id, Long homeOwnerId);
 
     Optional<Consultation> findByIdAndConsultantId(UUID id, Long consultantId);
+
+    Optional<Consultation> findByProjectId(UUID projectId);
 }
