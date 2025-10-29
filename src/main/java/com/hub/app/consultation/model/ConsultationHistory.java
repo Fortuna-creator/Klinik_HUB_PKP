@@ -35,12 +35,10 @@ public class ConsultationHistory {
     @Column(name = "subtitle")
     private String subtitle;
 
-    @Column(name = "files")
-    @Convert(converter = StringArrayConverter.class)
+    @Column(name = "files", columnDefinition = "TEXT[]")
     private List<String> files;
 
-    @Column(name = "attachments")
-    @Convert(converter = StringArrayConverter.class)
+    @Column(name = "attachments", columnDefinition = "TEXT[]")
     private List<String> attachments;
 
     @Column(name = "date_time")
