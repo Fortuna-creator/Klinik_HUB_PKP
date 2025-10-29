@@ -92,9 +92,16 @@ public class ProjectService {
         Project project = projectRepository.findByProjectId(projectId)
                 .orElseThrow(() -> new DomainException(ErrorCode.PROJECT_NOT_FOUND));
 
-        // Check if project belongs to user
+        // Check if project belongs to user or user is the assigned consultant
         if (!project.getUser().getId().equals(user.getId())) {
-            throw new DomainException(ErrorCode.UNAUTHORIZED);
+            // Check if user is consultant for this project's consultation
+            Optional<Consultation> consultation = consultationRepository.findByHomeOwnerId(project.getUser().getId())
+                    .stream()
+                    .filter(c -> c.getConsultant().getId().equals(user.getId()))
+                    .findFirst();
+            if (consultation.isEmpty()) {
+                throw new DomainException(ErrorCode.UNAUTHORIZED);
+            }
         }
 
         return mapToProjectDetailResponse(project);
