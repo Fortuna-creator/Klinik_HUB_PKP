@@ -12,6 +12,7 @@ import com.hub.app.consultation.repository.SurveyScheduleRepository;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SurveyScheduleService {
 
     private final SurveyScheduleRepository surveyScheduleRepository;
@@ -130,46 +132,73 @@ public class SurveyScheduleService {
         return mapToResponse(saved);
     }
 
-    @PreAuthorize("hasRole('HOME_OWNER')")
+    @PreAuthorize("hasRole('CONSULTANT')")
     @Transactional
-    public void completeSurvey(UUID consultationId, Long homeOwnerId) {
-        Consultation consultation = consultationRepository.findByIdAndHomeOwnerId(consultationId, homeOwnerId)
-                .orElseThrow(() -> new DomainException(ErrorCode.CONSULTATION_NOT_FOUND));
+    public void completeSurvey(UUID consultationId, Long consultantId) {
+        log.info("=== STARTING SURVEY COMPLETION ===");
+        log.info("Consultation ID: {}, Consultant ID: {}", consultationId, consultantId);
 
-        if (consultation.getStatus() != ConsultationStatus.SURVEY_DIJADWALKAN) {
-            throw new DomainException(ErrorCode.INVALID_STATUS);
+        try {
+            Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
+                    .orElseThrow(() -> new DomainException(ErrorCode.CONSULTATION_NOT_FOUND));
+            log.debug("Consultation found: ID={}, Status={}", consultation.getId(), consultation.getStatus());
+
+            if (consultation.getStatus() != ConsultationStatus.SURVEY_DIJADWALKAN) {
+                log.error("Invalid consultation status for survey completion: expected={}, actual={}",
+                         ConsultationStatus.SURVEY_DIJADWALKAN, consultation.getStatus());
+                throw new DomainException(ErrorCode.INVALID_STATUS);
+            }
+
+            // Mark survey schedule as completed
+            log.debug("Updating survey schedule status to COMPLETED");
+            surveyScheduleRepository.findByConsultationIdAndStatus(consultationId, SurveyStatus.APPROVED)
+                    .ifPresentOrElse(schedule -> {
+                        log.debug("Found approved survey schedule: ID={}", schedule.getId());
+                        schedule.setStatus(SurveyStatus.COMPLETED);
+                        surveyScheduleRepository.save(schedule);
+                        log.info("Survey schedule marked as COMPLETED");
+                    }, () -> {
+                        log.warn("No approved survey schedule found for consultation ID: {}", consultationId);
+                    });
+
+            // Update consultation status
+            log.debug("Updating consultation status to SURVEY_SELESAI");
+            consultation.setStatus(ConsultationStatus.SURVEY_SELESAI);
+            consultationRepository.save(consultation);
+            log.info("Consultation status updated to SURVEY_SELESAI");
+
+            // Get the completed survey schedule for history
+            SurveySchedule completedSchedule = surveyScheduleRepository.findByConsultationIdAndStatus(consultationId, SurveyStatus.COMPLETED)
+                    .orElse(null);
+            log.debug("Completed survey schedule: {}", completedSchedule != null ? completedSchedule.getId() : "null");
+
+            // Create history event
+            log.debug("Creating history event for survey completion");
+            historyService.createHistoryEvent(
+                consultation,
+                "SURVEY",
+                "COMPLETED",
+                "Survey selesai dilakukan",
+                "Survey lokasi telah berhasil diselesaikan",
+                java.util.Arrays.asList("https://hub-files.survey.photos.1.jpg", "https://hub-files.survey.photos.2.jpg"),
+                java.util.Arrays.asList("https://hub-files.survey.report.pdf"),
+                "SYSTEM",
+                "COMPLETED",
+                "Survey telah selesai",
+                completedSchedule != null ? completedSchedule.getSurveyCost() : null,
+                completedSchedule != null ? completedSchedule.getSurveyLocation() : null
+            );
+            log.info("=== SURVEY COMPLETION SUCCESSFUL ===");
+        } catch (DomainException e) {
+            log.error("=== SURVEY COMPLETION FAILED - DOMAIN EXCEPTION ===");
+            log.error("Consultation ID: {}, Consultant ID: {}, Error Code: {}, Message: {}",
+                     consultationId, consultantId, e.getErrorCode(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("=== SURVEY COMPLETION FAILED - UNEXPECTED ERROR ===");
+            log.error("Consultation ID: {}, Consultant ID: {}, Error: {}", consultationId, consultantId, e.getMessage(), e);
+            throw e;
         }
-
-        // Mark survey schedule as completed
-        surveyScheduleRepository.findByConsultationIdAndStatus(consultationId, SurveyStatus.APPROVED)
-                .ifPresent(schedule -> {
-                    schedule.setStatus(SurveyStatus.COMPLETED);
-                    surveyScheduleRepository.save(schedule);
-                });
-
-        // Update consultation status
-        consultation.setStatus(ConsultationStatus.SURVEY_SELESAI);
-        consultationRepository.save(consultation);
-
-        // Get the completed survey schedule for history
-        SurveySchedule completedSchedule = surveyScheduleRepository.findByConsultationIdAndStatus(consultationId, SurveyStatus.COMPLETED)
-                .orElse(null);
-
-        // Create history event
-        historyService.createHistoryEvent(
-            consultation,
-            "SURVEY",
-            "COMPLETED",
-            "Survey selesai dilakukan",
-            "Survey lokasi telah berhasil diselesaikan",
-            java.util.Arrays.asList("https://hub-files.survey.photos.1.jpg", "https://hub-files.survey.photos.2.jpg"),
-            java.util.Arrays.asList("https://hub-files.survey.report.pdf"),
-            "SYSTEM",
-            "COMPLETED",
-            "Survey telah selesai",
-            completedSchedule != null ? completedSchedule.getSurveyCost() : null,
-            completedSchedule != null ? completedSchedule.getSurveyLocation() : null
-        );
     }
 
     public List<SurveyScheduleResponse> getSurveySchedules(UUID consultationId, Long userId) {
