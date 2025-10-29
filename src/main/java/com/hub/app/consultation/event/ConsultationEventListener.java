@@ -17,13 +17,21 @@ public class ConsultationEventListener {
     @EventListener
     @Async
     public void handleConsultationEvent(ConsultationEvent event) {
+        log.info("=== EVENT LISTENER TRIGGERED ===");
+        log.info("Event Type: {}, Step: {}, State: {}, Actor: {}", event.getEventType(), event.getStep(), event.getState(), event.getActor());
+        log.info("Consultation ID: {}", event.getConsultation().getId());
+
         try {
             log.info("Processing consultation event: {} - {} - {}",
                     event.getEventType(), event.getStep(), event.getState());
 
             String title = generateTitle(event);
             String subtitle = generateSubtitle(event);
+            String notes = generateNotes(event);
 
+            log.debug("Generated content - Title: {}, Subtitle: {}, Notes: {}", title, subtitle, notes);
+
+            log.info("=== CALLING HISTORY SERVICE ===");
             historyService.createHistoryEvent(
                 event.getConsultation(),
                 event.getStep(),
@@ -34,13 +42,16 @@ public class ConsultationEventListener {
                 event.getAttachments(),
                 event.getActor(),
                 event.getState(),
-                generateNotes(event),
+                notes,
                 event.getSurveyCost(),
                 event.getSurveyLocation()
             );
 
+            log.info("=== EVENT PROCESSING COMPLETED SUCCESSFULLY ===");
+
         } catch (Exception e) {
-            log.error("Error processing consultation event: {}", e.getMessage(), e);
+            log.error("=== EVENT PROCESSING FAILED ===");
+            log.error("Event Type: {}, Step: {}, State: {}, Error: {}", event.getEventType(), event.getStep(), event.getState(), e.getMessage(), e);
         }
     }
 

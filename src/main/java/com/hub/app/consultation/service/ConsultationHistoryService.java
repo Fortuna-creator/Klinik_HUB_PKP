@@ -22,19 +22,23 @@ public class ConsultationHistoryService {
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                  String title, String subtitle, List<String> files,
-                                  List<String> attachments, String actor, String status,
-                                  String notes) {
+                                   String title, String subtitle, List<String> files,
+                                   List<String> attachments, String actor, String status,
+                                   String notes) {
         log.debug("Creating history event for consultation ID: {}, step: {}, state: {}", consultation.getId(), step, state);
         createHistoryEvent(consultation, step, state, title, subtitle, files, attachments,
-                          actor, status, notes, null, null);
+                           actor, status, notes, null, null);
     }
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                  String title, String subtitle, List<String> files,
-                                  List<String> attachments, String actor, String status,
-                                  String notes, BigDecimal surveyCost, String surveyLocation) {
+                                   String title, String subtitle, List<String> files,
+                                   List<String> attachments, String actor, String status,
+                                   String notes, BigDecimal surveyCost, String surveyLocation) {
+
+        log.info("=== STARTING HISTORY EVENT CREATION ===");
+        log.info("Consultation ID: {}, Step: {}, State: {}, Actor: {}", consultation.getId(), step, state, actor);
+        log.info("Title: {}, Survey Cost: {}, Survey Location: {}", title, surveyCost, surveyLocation);
 
         ConsultationHistory history = new ConsultationHistory();
         history.setConsultation(consultation);
@@ -51,11 +55,15 @@ public class ConsultationHistoryService {
         history.setSurveyLocation(surveyLocation);
         history.setDateTime(LocalDateTime.now());
 
+        log.debug("History entity prepared: {}", history);
+
         try {
-            historyRepository.save(history);
-            log.info("History event created for consultation ID: {}, step: {}, actor: {}", consultation.getId(), step, actor);
+            ConsultationHistory saved = historyRepository.save(history);
+            log.info("=== HISTORY EVENT CREATED SUCCESSFULLY ===");
+            log.info("Saved history ID: {}, Consultation ID: {}, Step: {}, State: {}", saved.getId(), consultation.getId(), step, state);
         } catch (Exception e) {
-            log.error("Failed to create history event for consultation ID: {}", consultation.getId(), e);
+            log.error("=== HISTORY EVENT CREATION FAILED ===");
+            log.error("Consultation ID: {}, Step: {}, State: {}, Error: {}", consultation.getId(), step, state, e.getMessage(), e);
             throw e;
         }
     }
