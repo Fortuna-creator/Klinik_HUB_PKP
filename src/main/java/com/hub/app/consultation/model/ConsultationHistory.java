@@ -36,11 +36,11 @@ public class ConsultationHistory {
     private String subtitle;
 
     @Column(name = "files")
-    @ElementCollection
+    @Convert(converter = StringArrayConverter.class)
     private List<String> files;
 
     @Column(name = "attachments")
-    @ElementCollection
+    @Convert(converter = StringArrayConverter.class)
     private List<String> attachments;
 
     @Column(name = "date_time")
