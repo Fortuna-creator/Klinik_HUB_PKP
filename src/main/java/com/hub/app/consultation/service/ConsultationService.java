@@ -54,7 +54,7 @@ public class ConsultationService {
         project.setStatus(ProjectStatus.ACTIVE);
         projectRepository.save(project);
 
-        consultation.setStatus(ConsultationStatus.MENUNGGU_JADWAL_SURVEY);
+        consultation.setStatus(ConsultationStatus.MENYIAPKAN_KONTRAK);
         consultation = consultationRepository.save(consultation);
 
         // Publish event for history tracking
