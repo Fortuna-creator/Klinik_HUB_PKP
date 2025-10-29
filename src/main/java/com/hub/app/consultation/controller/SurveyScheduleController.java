@@ -8,6 +8,7 @@ import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.SurveyScheduleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/survey-schedules")
 @RequiredArgsConstructor
+@Slf4j
 public class SurveyScheduleController {
 
     private final SurveyScheduleService surveyScheduleService;
@@ -92,15 +94,23 @@ public class SurveyScheduleController {
     }
 
     @PostMapping("/consultations/{consultationId}/complete")
-    @PreAuthorize("hasRole('HOME_OWNER')")
+    @PreAuthorize("hasRole('CONSULTANT')")
     public ResponseEntity<?> completeSurvey(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader) {
+        log.info("=== RECEIVED COMPLETE SURVEY REQUEST ===");
+        log.info("Consultation ID: {}, Auth Header: {}", consultationId, authHeader != null ? "[PRESENT]" : "[NULL]");
+
         try {
-            Long homeOwnerId = jwtService.extractUserId(authHeader);
-            surveyScheduleService.completeSurvey(consultationId, homeOwnerId);
+            Long consultantId = jwtService.extractUserId(authHeader);
+            log.debug("Extracted Consultant ID: {}", consultantId);
+
+            surveyScheduleService.completeSurvey(consultationId, consultantId);
+            log.info("=== SURVEY COMPLETION REQUEST PROCESSED SUCCESSFULLY ===");
             return ResponseEntity.status(HttpStatus.OK).build();
         } catch (Exception e) {
+            log.error("=== SURVEY COMPLETION REQUEST FAILED ===");
+            log.error("Consultation ID: {}, Error Type: {}, Message: {}", consultationId, e.getClass().getSimpleName(), e.getMessage(), e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                         ErrorCode.INTERNAL_ERROR.getCode(),
                                         e.getMessage());
