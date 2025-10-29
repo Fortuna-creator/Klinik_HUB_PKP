@@ -234,6 +234,15 @@ public class ProjectService {
     }
 
     private ProjectDetailResponse.ConsultationStep mapToConsultationStep(ConsultationHistory history) {
+        UUID contractId = null;
+        if ("CONTRACT".equals(history.getStep())) {
+            // Cari contract berdasarkan consultationId
+            Optional<Contract> contractOpt = contractRepository.findByConsultationId(history.getConsultation().getId());
+            if (contractOpt.isPresent()) {
+                contractId = contractOpt.get().getId();
+            }
+        }
+
         return ProjectDetailResponse.ConsultationStep.builder()
                 .step(history.getStep())
                 .state(history.getState())
@@ -248,6 +257,7 @@ public class ProjectService {
                         .notes(history.getNotes())
                         .surveyCost(history.getSurveyCost())
                         .surveyLocation(history.getSurveyLocation())
+                        .contractId(contractId)
                         .build())
                 .build();
     }
