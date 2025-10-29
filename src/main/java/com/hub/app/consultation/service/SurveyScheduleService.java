@@ -45,6 +45,7 @@ public class SurveyScheduleService {
         surveySchedule.setProposedDateTime(request.getProposedDateTime());
         surveySchedule.setNotes(request.getNotes());
         surveySchedule.setStatus(SurveyStatus.PENDING);
+        surveySchedule.setSurveyCost(request.getSurveyCost());
 
         SurveySchedule saved = surveyScheduleRepository.save(surveySchedule);
 
