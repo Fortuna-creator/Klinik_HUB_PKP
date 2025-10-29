@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "consultation_history")
 @Data @NoArgsConstructor @AllArgsConstructor
+@ToString(exclude = "consultation")
 public class ConsultationHistory {
 
     @Id
