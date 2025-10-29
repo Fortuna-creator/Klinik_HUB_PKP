@@ -157,9 +157,12 @@ public class ConsultationService {
         return mapToResponse(consultation);
     }
 
+    /**
+     * @deprecated Use contract signing to activate consultation instead
+     */
+    @Deprecated
     public ConsultationResponse startActiveConsultation(UUID consultationId, Long homeOwnerId) {
-        workflowService.startActiveConsultation(consultationId, homeOwnerId);
-        return getConsultationById(consultationId, homeOwnerId, true);
+        throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.BAD_REQUEST, "Consultation activation is now handled through contract signing");
     }
 
     public ConsultationResponse startRevision(UUID consultationId, Long homeOwnerId, String revisionNotes) {

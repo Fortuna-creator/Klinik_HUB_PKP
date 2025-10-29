@@ -33,6 +33,11 @@ public class ContractService {
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultation not found"));
 
+        // Check if consultation status is SURVEY_SELESAI
+        if (consultation.getStatus() != com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI) {
+            throw new RuntimeException("Contract can only be created after survey is completed");
+        }
+
         // Check if contract already exists
         if (contractRepository.findByConsultationId(consultationId).isPresent()) {
             throw new RuntimeException("Contract already exists for this consultation");
@@ -157,8 +162,8 @@ public class ContractService {
         contract.setNotes(reason);
         contract = contractRepository.save(contract);
 
-        // Update consultation status back to contract preparation
-        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENYIAPKAN_KONTRAK);
+        // Update consultation status back to SURVEY_SELESAI since contract is rejected
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI);
         consultationRepository.save(contract.getConsultation());
 
         // Create history event
@@ -217,8 +222,8 @@ public class ContractService {
         newContract.setNotes("Revision requested: " + revisionNotes);
         newContract = contractRepository.save(newContract);
 
-        // Update consultation status back to contract preparation
-        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENYIAPKAN_KONTRAK);
+        // Update consultation status back to SURVEY_SELESAI since contract revision is requested
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI);
         consultationRepository.save(contract.getConsultation());
 
         // Create history event
@@ -258,10 +263,15 @@ public class ContractService {
         contract.setSignedAt(LocalDateTime.now());
         contract = contractRepository.save(contract);
 
-        // Update consultation status to survey scheduling when both parties have signed
-        // For now, we'll assume both parties need to sign, but this could be enhanced
-        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_JADWAL_SURVEY);
+        // Update consultation status to AKTIF after contract is signed
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.AKTIF);
+        contract.getConsultation().setStartedAt(java.time.Instant.now());
         consultationRepository.save(contract.getConsultation());
+
+        // Publish event
+        eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
+            this, contract.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "SYSTEM"
+        ));
 
         // Create history event
         historyService.createHistoryEvent(
@@ -276,6 +286,20 @@ public class ContractService {
             contract.getConsultation().getHomeOwner().getId().equals(userId) ? "HOMEOWNER" : "CONSULTANT",
             "SIGNED",
             "Kontrak telah ditandatangani"
+        );
+
+        // Create history event for consultation start
+        historyService.createHistoryEvent(
+            contract.getConsultation(),
+            "CONSULTATION",
+            "STARTED",
+            "Konsultasi aktif dimulai",
+            "Konsultasi desain telah dimulai setelah kontrak ditandatangani",
+            java.util.Arrays.asList(),
+            java.util.Arrays.asList(),
+            "SYSTEM",
+            "STARTED",
+            "Konsultasi aktif"
         );
 
         return mapToResponse(contract);

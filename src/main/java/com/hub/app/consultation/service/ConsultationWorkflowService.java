@@ -23,43 +23,14 @@ public class ConsultationWorkflowService {
     private final ConsultationHistoryService historyService;
 
     /**
-     * Transisi dari SURVEY_SELESAI ke AKTIF
-     * Dipanggil setelah survey selesai dan kontrak sudah ditandatangani
+     * Transisi dari SURVEY_SELESAI ke AKTIF sekarang dilakukan melalui penandatanganan kontrak
+     * Method ini tidak lagi digunakan dalam flow baru
+     * @deprecated Use contract signing to activate consultation instead
      */
+    @Deprecated
     @Transactional
     public void startActiveConsultation(UUID consultationId, Long userId) {
-        Consultation consultation = consultationRepository.findByIdAndHomeOwnerId(consultationId, userId)
-                .orElseThrow(() -> new DomainException(ErrorCode.CONSULTATION_NOT_FOUND));
-
-        if (consultation.getStatus() != ConsultationStatus.SURVEY_SELESAI) {
-            throw new DomainException(ErrorCode.INVALID_STATUS);
-        }
-
-        // Validasi bahwa kontrak sudah ditandatangani
-        // (asumsi ada method untuk cek ini, atau bisa ditambahkan validasi di sini)
-
-        consultation.setStatus(ConsultationStatus.AKTIF);
-        consultation.setStartedAt(Instant.now());
-        consultation = consultationRepository.save(consultation);
-
-        // Publish event
-        eventPublisher.publishEvent(new ConsultationEvent(
-            this, consultation, "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "SYSTEM"
-        ));
-
-        // Create history event
-        historyService.createHistoryEvent(
-            consultation,
-            "CONSULTATION",
-            "STARTED",
-            "Konsultasi aktif dimulai",
-            "Konsultasi desain telah dimulai setelah survey selesai",
-            java.util.Arrays.asList(),
-            java.util.Arrays.asList(),
-            "SYSTEM",
-            "STARTED",
-            "Konsultasi aktif"
-        );
+        throw new DomainException(ErrorCode.BAD_REQUEST, "Consultation activation is now handled through contract signing");
     }
 
     /**
@@ -141,22 +112,22 @@ public class ConsultationWorkflowService {
         switch (currentStatus) {
             case MENUNGGU_KONFIRMASI_KONSULTAN:
                 return newStatus == ConsultationStatus.MENUNGGU_JADWAL_SURVEY ||
-                       newStatus == ConsultationStatus.SELESAI;
+                        newStatus == ConsultationStatus.SELESAI;
             case MENUNGGU_JADWAL_SURVEY:
                 return newStatus == ConsultationStatus.MENUNGGU_APPROVAL_JADWAL;
             case MENUNGGU_APPROVAL_JADWAL:
                 return newStatus == ConsultationStatus.SURVEY_DIJADWALKAN ||
-                       newStatus == ConsultationStatus.MENUNGGU_JADWAL_SURVEY;
+                        newStatus == ConsultationStatus.MENUNGGU_JADWAL_SURVEY;
             case SURVEY_DIJADWALKAN:
                 return newStatus == ConsultationStatus.SURVEY_SELESAI;
             case SURVEY_SELESAI:
-                return newStatus == ConsultationStatus.AKTIF;
+                return newStatus == ConsultationStatus.AKTIF; // Contract creation and signing now leads to AKTIF
             case AKTIF:
                 return newStatus == ConsultationStatus.REVISI ||
-                       newStatus == ConsultationStatus.FINAL;
+                        newStatus == ConsultationStatus.FINAL;
             case REVISI:
                 return newStatus == ConsultationStatus.FINAL ||
-                       newStatus == ConsultationStatus.AKTIF; // Kembali ke aktif jika revisi ditolak
+                        newStatus == ConsultationStatus.AKTIF; // Kembali ke aktif jika revisi ditolak
             case FINAL:
                 return newStatus == ConsultationStatus.SELESAI;
             case SELESAI:
