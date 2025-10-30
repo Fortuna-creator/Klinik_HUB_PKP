@@ -4,45 +4,58 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Utility class to resolve bucket names based on usecase.
+ * Utility class to resolve bucket names and paths based on category and subCategory.
  */
 public class BucketResolver {
 
-    private static final Map<String, String> USECASE_TO_BUCKET = new HashMap<>();
+    private static final String BUCKET_NAME = "hub-documents";
+
+    private static final Map<String, String> CATEGORY_TO_PATH = new HashMap<>();
 
     static {
-        // User identity
-        USECASE_TO_BUCKET.put("PHOTO_KTP", "user-identity");
-        USECASE_TO_BUCKET.put("PHOTO_SELFIE", "user-identity");
-
-        // Project documents
-        USECASE_TO_BUCKET.put("DOCUMENT_DED", "project-ded");
-        USECASE_TO_BUCKET.put("DOCUMENT_BOQ", "project-boq");
-        USECASE_TO_BUCKET.put("DOCUMENT_RAB", "project-rab");
-        USECASE_TO_BUCKET.put("IMAGE_MODEL_HOUSE", "housing-models");
-        USECASE_TO_BUCKET.put("IMAGE_HOUSE_PLAN", "housing-layouts");
-
-        // Consultation documents
-        USECASE_TO_BUCKET.put("CONSULTATION_CONTRACT", "consultation-contracts");
-        USECASE_TO_BUCKET.put("CONSULTATION_REVISION", "consultation-revisions");
-        USECASE_TO_BUCKET.put("CONSULTATION_CHAT_FILE", "consultation-chat");
-        USECASE_TO_BUCKET.put("CONSULTATION_SURVEY_PHOTO", "consultation-survey");
-        USECASE_TO_BUCKET.put("CONSULTATION_FINAL_DOC", "consultation-final");
-        USECASE_TO_BUCKET.put("CONSULTATION_DESIGN_FILE", "consultation-designs");
+        CATEGORY_TO_PATH.put("verification", "verification");
+        CATEGORY_TO_PATH.put("contracts", "contracts");
+        CATEGORY_TO_PATH.put("projects", "projects");
+        CATEGORY_TO_PATH.put("design-prototypes", "design-prototypes");
+        CATEGORY_TO_PATH.put("system", "system/templates");
     }
 
     /**
-     * Resolves the bucket name for the given usecase.
+     * Always returns the fixed bucket name for hub documents.
      *
-     * @param usecase the usecase string
      * @return the bucket name
-     * @throws IllegalArgumentException if usecase is not supported
      */
-    public static String resolveBucket(String usecase) {
-        String bucket = USECASE_TO_BUCKET.get(usecase);
-        if (bucket == null) {
-            throw new IllegalArgumentException("Unsupported usecase: " + usecase);
+    public static String resolveBucket() {
+        return BUCKET_NAME;
+    }
+
+    /**
+     * Resolves the path prefix based on category, subCategory, and entityId.
+     *
+     * @param category the category (verification, contracts, projects, design-prototypes, system)
+     * @param subCategory the subCategory (optional)
+     * @param entityId the entity ID
+     * @return the path prefix
+     * @throws IllegalArgumentException if category is not supported
+     */
+    public static String resolvePath(String category, String subCategory, String entityId) {
+        String basePath = CATEGORY_TO_PATH.get(category);
+        if (basePath == null) {
+            throw new IllegalArgumentException("Unsupported category: " + category);
         }
-        return bucket;
+
+        StringBuilder path = new StringBuilder(basePath);
+
+        if ("verification".equals(category) || "contracts".equals(category) || "projects".equals(category)) {
+            path.append("/").append(entityId);
+            if (subCategory != null && !subCategory.trim().isEmpty()) {
+                path.append("/").append(subCategory);
+            }
+        } else if ("design-prototypes".equals(category)) {
+            path.append("/").append(entityId);
+        }
+        // system/templates doesn't need entityId
+
+        return path.toString();
     }
 }

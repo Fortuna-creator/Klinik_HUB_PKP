@@ -1,6 +1,8 @@
 package com.hub.app.file.service;
 
 import com.hub.app.file.dto.FileUploadResponse;
+import com.hub.app.file.dto.FileDownloadResponse;
+import com.hub.app.file.dto.FileListResponse;
 import com.hub.app.file.model.FileUpload;
 import com.hub.app.file.repository.FileUploadRepository;
 import com.hub.app.file.util.BucketResolver;
@@ -12,8 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -24,37 +28,78 @@ public class FileUploadService {
     private final MinioService minioService;
 
     @Transactional
-    public FileUploadResponse uploadFile(String usecase, String userId, MultipartFile file) {
-        // Resolve bucket from usecase
-        String bucketName = BucketResolver.resolveBucket(usecase);
+    public FileUploadResponse uploadFile(String category, String subCategory, String entityId, MultipartFile file) {
+        // Resolve bucket and path
+        String bucketName = BucketResolver.resolveBucket();
+        String pathPrefix = BucketResolver.resolvePath(category, subCategory, entityId);
 
         // Generate unique file name
         String originalFileName = file.getOriginalFilename();
-        String objectPath = FileNameGenerator.generateFileName(userId, usecase, originalFileName);
+        String fileName = FileNameGenerator.generateFileName(entityId, originalFileName);
+        String objectPath = pathPrefix + "/" + fileName;
 
         // Upload to MinIO
-        minioService.uploadFile(file, bucketName, objectPath);
+        String fileUrl = minioService.uploadFile(file, bucketName, objectPath);
 
         // Save metadata to database
         FileUpload fileUpload = new FileUpload();
-        fileUpload.setUserId(userId);
-        fileUpload.setUsecase(usecase);
+        fileUpload.setUserId(entityId); // using entityId as userId for now
+        fileUpload.setUsecase(category + (subCategory != null ? "/" + subCategory : ""));
         fileUpload.setBucketName(bucketName);
         fileUpload.setObjectPath(objectPath);
         fileUpload.setOriginalName(originalFileName);
         fileUpload.setMimeType(file.getContentType());
+        fileUpload.setCategory(category);
+        fileUpload.setSubCategory(subCategory);
+        fileUpload.setEntityId(entityId);
 
         FileUpload savedFile = fileUploadRepository.save(fileUpload);
 
         log.info("File uploaded successfully: {}", savedFile.getFileId());
 
-        return new FileUploadResponse(
-                savedFile.getFileId().toString(),
-                savedFile.getBucketName(),
-                savedFile.getObjectPath(),
-                savedFile.getOriginalName(),
-                savedFile.getMimeType()
-        );
+        return new FileUploadResponse("Upload success", fileUrl);
+    }
+
+    public FileDownloadResponse downloadFile(String path) {
+        String bucketName = BucketResolver.resolveBucket();
+        String presignedUrl = minioService.generatePresignedUrl(bucketName, path);
+        return new FileDownloadResponse(presignedUrl);
+    }
+
+    public FileListResponse listFiles(String category, String entityId) {
+        String bucketName = BucketResolver.resolveBucket();
+        String pathPrefix = BucketResolver.resolvePath(category, null, entityId);
+
+        List<String> objectPaths = minioService.listObjects(bucketName, pathPrefix);
+
+        // Get metadata from database for each file
+        List<FileListResponse.FileInfo> files = objectPaths.stream()
+                .map(objectPath -> {
+                    Optional<FileUpload> metadata = fileUploadRepository.findByObjectPath(objectPath);
+                    if (metadata.isPresent()) {
+                        FileUpload file = metadata.get();
+                        String presignedUrl = minioService.generatePresignedUrl(bucketName, objectPath);
+                        return new FileListResponse.FileInfo(
+                                file.getOriginalName(),
+                                presignedUrl,
+                                file.getUserId(),
+                                file.getUploadedAt()
+                        );
+                    } else {
+                        // Fallback if metadata not found
+                        String fileName = objectPath.substring(objectPath.lastIndexOf('/') + 1);
+                        String presignedUrl = minioService.generatePresignedUrl(bucketName, objectPath);
+                        return new FileListResponse.FileInfo(
+                                fileName,
+                                presignedUrl,
+                                "unknown",
+                                null
+                        );
+                    }
+                })
+                .collect(Collectors.toList());
+
+        return new FileListResponse(files);
     }
 
     public Optional<FileUpload> getFileMetadata(UUID fileId) {
