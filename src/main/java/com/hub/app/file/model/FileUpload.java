@@ -42,4 +42,13 @@ public class FileUpload {
 
     @Column(name = "mime_type", nullable = false)
     private String mimeType;
+
+    @Column(name = "category", nullable = false)
+    private String category;
+
+    @Column(name = "sub_category")
+    private String subCategory;
+
+    @Column(name = "entity_id", nullable = false)
+    private String entityId;
 }

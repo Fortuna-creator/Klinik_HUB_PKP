@@ -1,9 +1,11 @@
 package com.hub.app.storage;
 
-import io.minio.GetObjectArgs;
-import io.minio.MinioClient;
-import io.minio.PutObjectArgs;
+import io.minio.*;
+import io.minio.http.Method;
+import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -14,34 +16,42 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MinioService {
 
     private final MinioClient minioClient;
-    private final String bucketName = "hub-files";
-    private final String endpoint = "http://localhost:9000";
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+    @Value("${minio.endpoint}")
+    private String endpoint;
+
+    @Value("${minio.bucket:hub-documents}")
+    private String bucketName;
+
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    private static final long PRESIGNED_URL_EXPIRY = 7 * 24 * 60 * 60; // 7 days in seconds
 
     public String uploadFile(MultipartFile file, String bucketName, String objectPath) {
         try {
-            // 🔍 Validasi ukuran file
+            // Validate file size
             if (file.getSize() > MAX_FILE_SIZE) {
-                throw new RuntimeException("File size exceeds 5 MB limit");
+                throw new RuntimeException("File size exceeds 10 MB limit");
             }
 
-            // 🔍 Validasi tipe file untuk gambar (JPEG, PNG) - bisa diperluas untuk dokumen
+            // Validate file type (images, PDFs, documents)
             String contentType = file.getContentType();
-            if (contentType == null || (!contentType.equals("image/jpeg") && !contentType.equals("image/png") &&
-                !contentType.equals("application/pdf") && !contentType.startsWith("application/vnd"))) {
-                throw new RuntimeException("Unsupported file type. Allowed: JPEG, PNG, PDF, Excel, Word");
+            if (contentType == null || (!contentType.startsWith("image/") &&
+                !contentType.equals("application/pdf") &&
+                !contentType.startsWith("application/vnd") &&
+                !contentType.startsWith("application/msword"))) {
+                throw new RuntimeException("Unsupported file type. Allowed: Images, PDF, Word, Excel");
             }
 
-            // 🔍 Compress image if needed (only for images)
+            // Compress image if needed (only for images)
             byte[] fileBytes;
             if (contentType.startsWith("image/")) {
                 fileBytes = compressImageIfNeeded(file);
@@ -49,7 +59,7 @@ public class MinioService {
                 fileBytes = file.getBytes();
             }
 
-            // Upload ke MinIO dengan bucket dan path yang ditentukan
+            // Upload to MinIO
             try (InputStream is = new ByteArrayInputStream(fileBytes)) {
                 minioClient.putObject(
                         PutObjectArgs.builder()
@@ -65,6 +75,7 @@ public class MinioService {
             return endpoint + "/" + bucketName + "/" + objectPath;
 
         } catch (Exception e) {
+            log.error("Error uploading file to MinIO: {}", e.getMessage(), e);
             throw new RuntimeException("Error uploading file to MinIO", e);
         }
     }
@@ -112,8 +123,47 @@ public class MinioService {
                             .build()
             );
         } catch (Exception e) {
+            log.error("Error downloading file from MinIO: {}", e.getMessage(), e);
             throw new RuntimeException("Error downloading file from MinIO", e);
         }
+    }
+
+    public String generatePresignedUrl(String bucketName, String objectPath) {
+        try {
+            return minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(objectPath)
+                            .expiry((int) PRESIGNED_URL_EXPIRY, TimeUnit.SECONDS)
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error("Error generating presigned URL: {}", e.getMessage(), e);
+            throw new RuntimeException("Error generating presigned URL", e);
+        }
+    }
+
+    public java.util.List<String> listObjects(String bucketName, String prefix) {
+        java.util.List<String> objectPaths = new java.util.ArrayList<>();
+        try {
+            Iterable<Result<io.minio.messages.Item>> results = minioClient.listObjects(
+                    ListObjectsArgs.builder()
+                            .bucket(bucketName)
+                            .prefix(prefix)
+                            .recursive(false)
+                            .build()
+            );
+
+            for (Result<io.minio.messages.Item> result : results) {
+                io.minio.messages.Item item = result.get();
+                objectPaths.add(item.objectName());
+            }
+        } catch (Exception e) {
+            log.error("Error listing objects from MinIO: {}", e.getMessage(), e);
+            throw new RuntimeException("Error listing objects from MinIO", e);
+        }
+        return objectPaths;
     }
 
     private String calculateChecksum(InputStream inputStream, String algorithm) throws Exception {

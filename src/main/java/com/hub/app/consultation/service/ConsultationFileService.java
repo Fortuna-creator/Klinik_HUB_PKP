@@ -32,7 +32,7 @@ public class ConsultationFileService {
     @Transactional
     public FileUploadResponse uploadContractFile(UUID consultationId, Long userId, MultipartFile file) {
         validateConsultationAccess(consultationId, userId);
-        return fileUploadService.uploadFile("CONSULTATION_CONTRACT", userId.toString(), file);
+        return fileUploadService.uploadFile("CONSULTATION_CONTRACT", consultationId.toString(), userId.toString(), file);
     }
 
     /**
@@ -41,7 +41,7 @@ public class ConsultationFileService {
     @Transactional
     public FileUploadResponse uploadRevisionFile(UUID consultationId, Long userId, MultipartFile file) {
         validateConsultationAccess(consultationId, userId);
-        return fileUploadService.uploadFile("CONSULTATION_REVISION", userId.toString(), file);
+        return fileUploadService.uploadFile("CONSULTATION_REVISION", consultationId.toString(), userId.toString(), file);
     }
 
     /**
@@ -50,7 +50,7 @@ public class ConsultationFileService {
     @Transactional
     public FileUploadResponse uploadChatFile(UUID consultationId, Long userId, MultipartFile file) {
         validateConsultationAccess(consultationId, userId);
-        return fileUploadService.uploadFile("CONSULTATION_CHAT_FILE", userId.toString(), file);
+        return fileUploadService.uploadFile("CONSULTATION_CHAT_FILE", consultationId.toString(), userId.toString(), file);
     }
 
     /**
@@ -59,7 +59,7 @@ public class ConsultationFileService {
     @Transactional
     public FileUploadResponse uploadSurveyPhoto(UUID consultationId, Long userId, MultipartFile file) {
         validateConsultationAccess(consultationId, userId);
-        return fileUploadService.uploadFile("CONSULTATION_SURVEY_PHOTO", userId.toString(), file);
+        return fileUploadService.uploadFile("CONSULTATION_SURVEY_PHOTO", consultationId.toString(), userId.toString(), file);
     }
 
     /**
@@ -68,7 +68,7 @@ public class ConsultationFileService {
     @Transactional
     public FileUploadResponse uploadFinalDocument(UUID consultationId, Long userId, MultipartFile file) {
         validateConsultationAccess(consultationId, userId);
-        return fileUploadService.uploadFile("CONSULTATION_FINAL_DOC", userId.toString(), file);
+        return fileUploadService.uploadFile("CONSULTATION_FINAL_DOC", consultationId.toString(), userId.toString(), file);
     }
 
     /**
@@ -77,7 +77,7 @@ public class ConsultationFileService {
     @Transactional
     public FileUploadResponse uploadDesignFile(UUID consultationId, Long userId, MultipartFile file) {
         validateConsultationAccess(consultationId, userId);
-        return fileUploadService.uploadFile("CONSULTATION_DESIGN_FILE", userId.toString(), file);
+        return fileUploadService.uploadFile("CONSULTATION_DESIGN_FILE", consultationId.toString(), userId.toString(), file);
     }
 
     /**
