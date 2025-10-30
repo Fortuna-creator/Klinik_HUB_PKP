@@ -59,6 +59,7 @@ public class ProjectDetailResponse {
         private BigDecimal surveyCost;
         private String surveyLocation;
         private UUID contractId;
+        private UUID scheduleId;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder

@@ -218,7 +218,7 @@ public class ProjectService {
                 .notes("Konsultasi desain rumah minimalis dengan fokus efisiensi ruang")
                 .currentSurveySchedule(currentSchedule != null ? mapToSurveyScheduleInfo(currentSchedule) : null)
                 .consultationHistory(history.stream()
-                        .map(this::mapToConsultationStep)
+                        .map(h -> mapToConsultationStep(h, currentSchedule))
                         .collect(Collectors.toList()))
                 .documentExchange(ProjectDetailResponse.DocumentExchangeInfo.builder()
                         .currentDed(currentDed != null ? mapToDocumentVersion(currentDed) : null)
@@ -233,7 +233,7 @@ public class ProjectService {
                 .build();
     }
 
-    private ProjectDetailResponse.ConsultationStep mapToConsultationStep(ConsultationHistory history) {
+    private ProjectDetailResponse.ConsultationStep mapToConsultationStep(ConsultationHistory history, SurveySchedule currentSchedule) {
         UUID contractId = null;
         if ("CONTRACT".equals(history.getStep())) {
             // Cari contract berdasarkan consultationId
@@ -241,6 +241,11 @@ public class ProjectService {
             if (contractOpt.isPresent()) {
                 contractId = contractOpt.get().getId();
             }
+        }
+
+        UUID scheduleId = null;
+        if ("SURVEY".equals(history.getStep()) && currentSchedule != null) {
+            scheduleId = currentSchedule.getId();
         }
 
         return ProjectDetailResponse.ConsultationStep.builder()
@@ -258,6 +263,7 @@ public class ProjectService {
                         .surveyCost(history.getSurveyCost())
                         .surveyLocation(history.getSurveyLocation())
                         .contractId(contractId)
+                        .scheduleId(scheduleId)
                         .build())
                 .build();
     }
