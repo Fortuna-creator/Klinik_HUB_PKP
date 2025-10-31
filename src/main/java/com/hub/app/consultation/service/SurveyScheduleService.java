@@ -67,7 +67,7 @@ public class SurveyScheduleService {
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "SURVEY_SCHEDULED", "SURVEY", "SCHEDULED", "CONSULTANT",
-                null, null, saved.getSurveyCost(), saved.getSurveyLocation()
+                null, null, saved.getSurveyCost(), saved.getSurveyLocation(), saved.getId()
             ));
             log.info("Survey schedule creation event published");
 
@@ -207,7 +207,7 @@ public class SurveyScheduleService {
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "SURVEY_RESCHEDULED", "SURVEY", "RESCHEDULED", "CONSULTANT",
-                null, null, saved.getSurveyCost(), saved.getSurveyLocation()
+                null, null, saved.getSurveyCost(), saved.getSurveyLocation(), saved.getId()
             ));
             log.info("New survey schedule proposal event published");
 
