@@ -77,14 +77,14 @@ public class SurveyScheduleController {
     }
 
     @PostMapping("/consultations/{consultationId}/reschedule")
-    @PreAuthorize("hasRole('HOME_OWNER')")
+    @PreAuthorize("hasRole('CONSULTANT')")
     public ResponseEntity<?> proposeNewSchedule(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
             @Valid @RequestBody CreateSurveyScheduleRequest request) {
         try {
-            Long homeOwnerId = jwtService.extractUserId(authHeader);
-            SurveyScheduleResponse response = surveyScheduleService.proposeNewSchedule(consultationId, request, homeOwnerId);
+            Long consultantId = jwtService.extractUserId(authHeader);
+            SurveyScheduleResponse response = surveyScheduleService.proposeNewSchedule(consultationId, request, consultantId);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
