@@ -35,10 +35,20 @@ public class ConsultationHistoryService {
                                    String title, String subtitle, List<String> files,
                                    List<String> attachments, String actor, String status,
                                    String notes, BigDecimal surveyCost, String surveyLocation) {
+        createHistoryEvent(consultation, step, state, title, subtitle, files, attachments,
+                           actor, status, notes, surveyCost, surveyLocation, null);
+    }
+
+    @Transactional
+    public void createHistoryEvent(Consultation consultation, String step, String state,
+                                   String title, String subtitle, List<String> files,
+                                   List<String> attachments, String actor, String status,
+                                   String notes, BigDecimal surveyCost, String surveyLocation,
+                                   UUID scheduleId) {
 
         log.info("=== STARTING HISTORY EVENT CREATION ===");
         log.info("Consultation ID: {}, Step: {}, State: {}, Actor: {}", consultation.getId(), step, state, actor);
-        log.info("Title: {}, Survey Cost: {}, Survey Location: {}", title, surveyCost, surveyLocation);
+        log.info("Title: {}, Survey Cost: {}, Survey Location: {}, Schedule ID: {}", title, surveyCost, surveyLocation, scheduleId);
 
         ConsultationHistory history = new ConsultationHistory();
         history.setConsultation(consultation);
@@ -53,6 +63,7 @@ public class ConsultationHistoryService {
         history.setNotes(notes);
         history.setSurveyCost(surveyCost);
         history.setSurveyLocation(surveyLocation);
+        history.setScheduleId(scheduleId);
         history.setDateTime(LocalDateTime.now());
 
         log.debug("History entity prepared: {}", history);

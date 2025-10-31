@@ -243,13 +243,7 @@ public class ProjectService {
             }
         }
 
-        UUID scheduleId = null;
-        if ("SURVEY".equals(history.getStep()) && surveySchedules != null && !surveySchedules.isEmpty()) {
-            // Find the schedule that corresponds to this SURVEY history entry's state
-            // For example, if state is "SCHEDULED", find the PENDING/APPROVED schedule
-            // If state is "COMPLETED", find the COMPLETED schedule
-            scheduleId = findScheduleIdForSurveyState(history.getState(), surveySchedules);
-        }
+        UUID scheduleId = history.getScheduleId();
 
         return ProjectDetailResponse.ConsultationStep.builder()
                 .step(history.getStep())
@@ -333,39 +327,4 @@ public class ProjectService {
                 .build();
     }
 
-    private UUID findScheduleIdForSurveyState(String state, List<SurveySchedule> surveySchedules) {
-        if (state == null || surveySchedules == null || surveySchedules.isEmpty()) {
-            return null;
-        }
-
-        // Map history state to schedule status
-        // This is a simplified mapping - you may need to adjust based on your business logic
-        switch (state.toUpperCase()) {
-            case "CREATED":
-            case "SCHEDULED":
-                // For scheduled states, find the most recent PENDING or APPROVED schedule
-                return surveySchedules.stream()
-                        .filter(s -> "PENDING".equals(s.getStatus().name()) || "APPROVED".equals(s.getStatus().name()))
-                        .findFirst()
-                        .map(SurveySchedule::getId)
-                        .orElse(null);
-            case "COMPLETED":
-                // For completed state, find the COMPLETED schedule
-                return surveySchedules.stream()
-                        .filter(s -> "COMPLETED".equals(s.getStatus().name()))
-                        .findFirst()
-                        .map(SurveySchedule::getId)
-                        .orElse(null);
-            case "CANCELLED":
-            case "REJECTED":
-                // For cancelled/rejected states, find the most recent REJECTED schedule
-                return surveySchedules.stream()
-                        .filter(s -> "REJECTED".equals(s.getStatus().name()))
-                        .findFirst()
-                        .map(SurveySchedule::getId)
-                        .orElse(null);
-            default:
-                return null;
-        }
-    }
 }

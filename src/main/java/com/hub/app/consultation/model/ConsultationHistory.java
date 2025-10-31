@@ -62,6 +62,9 @@ public class ConsultationHistory {
     @Column(name = "survey_location")
     private String surveyLocation;
 
+    @Column(name = "schedule_id")
+    private UUID scheduleId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
