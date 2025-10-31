@@ -43,14 +43,8 @@ public class ConsultationService {
         }
 
         // Set project status to ACTIVE when consultation is accepted
-        // Find the project that was set to PENDING for this consultation
-        // Since consultation is linked to home owner, we need to find projects by home owner
-        List<Project> pendingProjects = projectRepository.findByUserAndStatus(consultation.getHomeOwner(), ProjectStatus.PENDING);
-        if (pendingProjects.isEmpty()) {
-            throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.PROJECT_NOT_FOUND);
-        }
-        // For simplicity, assume the first pending project is the one
-        Project project = pendingProjects.get(0);
+        Project project = projectRepository.findByProjectId(consultation.getProjectId())
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.PROJECT_NOT_FOUND));
         project.setStatus(ProjectStatus.ACTIVE);
         projectRepository.save(project);
 
