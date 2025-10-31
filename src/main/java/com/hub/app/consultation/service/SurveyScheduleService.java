@@ -111,7 +111,8 @@ public class SurveyScheduleService {
 
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
-                this, consultation, "SURVEY_APPROVED", "SURVEY", "APPROVED", "HOMEOWNER"
+                this, consultation, "SURVEY_APPROVED", "SURVEY", "APPROVED", "HOMEOWNER",
+                null, null, surveySchedule.getSurveyCost(), surveySchedule.getSurveyLocation(), surveySchedule.getId()
             ));
             log.info("Survey approval event published");
 
@@ -155,7 +156,8 @@ public class SurveyScheduleService {
 
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
-                this, consultation, "SURVEY_REJECTED", "SURVEY", "REJECTED", "HOMEOWNER"
+                this, consultation, "SURVEY_REJECTED", "SURVEY", "REJECTED", "HOMEOWNER",
+                null, null, surveySchedule.getSurveyCost(), surveySchedule.getSurveyLocation(), surveySchedule.getId()
             ));
             log.info("Survey rejection event published");
 
