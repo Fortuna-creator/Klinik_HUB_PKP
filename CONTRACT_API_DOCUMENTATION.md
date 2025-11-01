@@ -94,24 +94,30 @@ Content-Type: application/json
 
 #### **Upload Contract File** (Consultant - DRAFT)
 ```http
-POST /api/consultations/{consultationId}/files/contract
+POST /api/files/upload
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
+category: CONSULTATION
+subCategory: CONTRACT
+entityId: 550e8400-e29b-41d4-a716-446655440001
 file: [contract.pdf]
 ```
 
 **Response (200 OK):**
 ```json
 {
-  "message": "File uploaded successfully",
-  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf"
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
+  "originalName": "contract.pdf",
+  "fileSize": 2048576,
+  "uploadedAt": "2024-11-01T14:00:00Z"
 }
 ```
 
 #### **Get Contract Files** (Both - REQUEST_FOR_APPROVAL/APPROVED/SIGNED)
 ```http
-GET /api/consultations/{consultationId}/files/contract
+GET /api/files/list?category=CONSULTATION&entityId=550e8400-e29b-41d4-a716-446655440001
 Authorization: Bearer {token}
 ```
 
@@ -121,8 +127,8 @@ Authorization: Bearer {token}
   "files": [
     {
       "id": "550e8400-e29b-41d4-a716-446655440002",
-      "originalName": "contract.pdf",
       "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
+      "originalName": "contract.pdf",
       "fileSize": 2048576,
       "uploadedAt": "2024-11-01T14:00:00Z"
     }
@@ -132,7 +138,7 @@ Authorization: Bearer {token}
 
 #### **Download Contract File** (Both - REQUEST_FOR_APPROVAL/APPROVED/SIGNED)
 ```http
-GET /api/consultations/{consultationId}/files/contract/{fileId}/download
+GET /api/files/download/{fileId}
 Authorization: Bearer {token}
 ```
 
@@ -140,6 +146,19 @@ Authorization: Bearer {token}
 ```
 Content-Type: application/pdf
 Content-Disposition: attachment; filename="contract.pdf"
+```
+
+**Alternative: Presigned URL (for backward compatibility)**
+```http
+GET /api/files/download-url?path=contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf
+Authorization: Bearer {token}
+```
+
+**Response (200 OK):**
+```json
+{
+  "fileUrl": "https://minio.example.com/consultation-files/contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&..."
+}
 ```
 
 ---
@@ -465,9 +484,12 @@ const ContractFileUpload = ({ consultationId, onUploadSuccess }) => {
     try {
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
+        formData.append('category', 'CONSULTATION');
+        formData.append('subCategory', 'CONTRACT');
+        formData.append('entityId', consultationId);
         formData.append('file', file);
 
-        const response = await fetch(`/api/consultations/${consultationId}/files/contract`, {
+        const response = await fetch('/api/files/upload', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
           body: formData
@@ -538,13 +560,13 @@ const ContractFileViewer = ({ contract }) => {
 
   const loadContractFiles = async () => {
     try {
-      const response = await fetch(`/api/consultations/${contract.consultationId}/files/contract`, {
+      const response = await fetch(`/api/files/list?category=CONSULTATION&entityId=${contract.consultationId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (response.ok) {
         const fileList = await response.json();
-        setFiles(fileList);
+        setFiles(fileList.files || []);
       }
     } catch (error) {
       console.error('Failed to load contract files:', error);
@@ -555,7 +577,7 @@ const ContractFileViewer = ({ contract }) => {
 
   const handleDownload = async (fileId, fileName) => {
     try {
-      const response = await fetch(`/api/consultations/${contract.consultationId}/files/contract/${fileId}/download`, {
+      const response = await fetch(`/api/files/download/${fileId}`, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -615,15 +637,15 @@ const ContractFileViewer = ({ contract }) => {
 
 1. **Consultant Creates Contract Draft**
    - Option 1: `POST /api/contracts/{consultationId}/generate-draft` → Status: `DRAFT`
-   - Option 2: Manual upload via `POST /api/consultations/{consultationId}/files/contract` + `POST /api/contracts/{consultationId}/draft`
-   - **File Operation**: Consultant uploads contract files
+   - Option 2: Manual upload via `POST /api/files/upload` + `POST /api/contracts/consultations/{consultationId}/draft`
+   - **File Operation**: Consultant uploads contract files using FileController
 
 2. **Consultant Requests Approval**
    - `POST /api/contracts/{contractId}/request-approval` → Status: `REQUEST_FOR_APPROVAL`
-   - **File Access**: Home Owner can download contract files via `GET /files/contract/{fileId}/download`
+   - **File Access**: Home Owner can download contract files via `GET /api/files/download/{fileId}`
 
 3. **Home Owner Reviews Contract**
-   - Download and review contract files
+   - Download and review contract files using `GET /api/files/list`
    - Options:
      - `POST /api/contracts/{contractId}/approve` → Status: `APPROVED`
      - `POST /api/contracts/{contractId}/reject` → Status: `REJECTED`
@@ -631,11 +653,11 @@ const ContractFileViewer = ({ contract }) => {
 
 4. **Contract Signing Phase**
    - `PATCH /api/contracts/{id}/sign` → Status: `SIGNED`
-   - **File Access**: Both parties can download signed contract
+   - **File Access**: Both parties can download signed contract using FileController
 
 5. **Contract Completion**
    - Contract is signed and active
-   - **File Access**: Both parties retain access to all contract files
+   - **File Access**: Both parties retain access to all contract files via FileController
 
 ---
 
