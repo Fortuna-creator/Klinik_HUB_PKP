@@ -1,12 +1,15 @@
 package com.hub.app.consultation.service;
 
+import com.hub.app.consultation.dto.ContractGenerationRequest;
 import com.hub.app.consultation.dto.ContractResponse;
+import com.hub.app.consultation.dto.PaymentInstallment;
 import com.hub.app.consultation.event.ConsultationEvent;
 import com.hub.app.consultation.model.Contract;
 import com.hub.app.consultation.model.ContractStatus;
 import com.hub.app.consultation.model.Consultation;
 import com.hub.app.consultation.repository.ContractRepository;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -14,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,7 +26,10 @@ public class ContractService {
 
     private final ContractRepository contractRepository;
     private final ConsultationRepository consultationRepository;
+    private final ProjectRepository projectRepository;
     private final ConsultationHistoryService historyService;
+    private final ContractTemplateService contractTemplateService;
+    private final PaymentInstallmentCalculator paymentCalculator;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
@@ -66,6 +73,77 @@ public class ContractService {
             "CONSULTANT",
             "DRAFT",
             "Nilai kontrak: Rp " + contractValue.toString()
+        );
+
+        return mapToResponse(contract);
+    }
+
+    @Transactional
+    public ContractResponse generateContractDraft(UUID consultationId, Long consultantId, ContractGenerationRequest request) {
+        // Validate consultation exists and belongs to consultant
+        Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+
+        // Check if consultation status is SURVEY_SELESAI
+        if (consultation.getStatus() != com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI) {
+            throw new RuntimeException("Contract can only be created after survey is completed");
+        }
+
+        // Check if contract already exists
+        if (contractRepository.findByConsultationId(consultationId).isPresent()) {
+            throw new RuntimeException("Contract already exists for this consultation");
+        }
+
+        // Get project information for location
+        com.hub.app.project.model.Project project = projectRepository.findByProjectId(consultation.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Calculate payment installments with custom percentages from frontend
+        List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
+            request.getContractValue(), request.getInstallments());
+
+        // Generate contract document from template
+        byte[] contractDocument;
+        try {
+            contractDocument = contractTemplateService.generateContractDocument(
+                consultation.getHomeOwner().getName(),
+                consultation.getConsultant().getName(),
+                request.getContractValue(),
+                project.getLocationDetail(),
+                consultation.getHomeOwner().getAddress(),
+                consultation.getConsultant().getAddress(),
+                installments
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate contract document", e);
+        }
+
+        // Upload document to MinIO (assuming MinIOService is available)
+        // For now, we'll create a placeholder URL
+        String fileUrl = "contracts/" + consultationId + "/draft-contract.docx";
+
+        // Create contract record
+        Contract contract = new Contract();
+        contract.setConsultation(consultation);
+        contract.setContractValue(request.getContractValue());
+        contract.setFileUrl(fileUrl);
+        contract.setStatus(ContractStatus.DRAFT);
+        contract.setApprovalDeadline(java.time.LocalDateTime.now().plusDays(7));
+
+        contract = contractRepository.save(contract);
+
+        // Create history event
+        historyService.createHistoryEvent(
+            consultation,
+            "CONTRACT",
+            "DRAFT_GENERATED",
+            "Draft kontrak digenerate dari template",
+            "Kontrak konsultasi desain dengan nilai Rp " + request.getContractValue().toString(),
+            java.util.Arrays.asList(fileUrl),
+            java.util.Arrays.asList(),
+            "CONSULTANT",
+            "DRAFT",
+            "Nilai kontrak: Rp " + request.getContractValue().toString()
         );
 
         return mapToResponse(contract);

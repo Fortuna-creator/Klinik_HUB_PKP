@@ -1,0 +1,92 @@
+PERJANJIAN KONSULTASI DESAIN RUMAH
+
+Nomor: ${contractNumber}
+Tanggal: ${currentDate}
+
+Pada hari ini, ${currentDay} tanggal ${currentDate}, telah dibuat dan ditandatangani Perjanjian Konsultasi Desain Rumah antara:
+
+**PIHAK PERTAMA (HOME OWNER):**
+${homeOwnerName}
+${homeOwnerAddress}
+NIK: ${homeOwnerNik}
+Selanjutnya disebut sebagai "PIHAK PERTAMA"
+
+**PIHAK KEDUA (KONSULTAN):**
+${consultantName}
+${consultantAddress}
+Nomor Registrasi Konsultan: ${consultantRegistration}
+Selanjutnya disebut sebagai "PIHAK KEDUA"
+
+**PASAL 1**
+**RUANG LINGKUP PEKERJAAN**
+
+PIHAK KEDUA sepakat untuk memberikan jasa konsultasi desain rumah di lokasi:
+${projectLocation}
+
+Ruang lingkup pekerjaan meliputi:
+1. Survei lokasi dan pengukuran
+2. Pembuatan desain arsitektur
+3. Konsultasi teknis selama pelaksanaan
+4. Revisi desain maksimal 2 (dua) kali
+
+**PASAL 2**
+**NILAI KONTRAK DAN PEMBAYARAN**
+
+Nilai kontrak konsultasi ini sebesar: Rp ${contractValue} (Rupiah ${contractValueInWords})
+
+Pembayaran dilakukan secara bertahap sebagai berikut:
+
+**Termin 1:** Rp ${installment1Amount} pada tanggal ${installment1DueDate}
+**Termin 2:** Rp ${installment2Amount} pada tanggal ${installment2DueDate}
+${installment3Clause}
+
+**PASAL 3**
+**JANGKA WAKTU PELAKSANAAN**
+
+Pelaksanaan pekerjaan konsultasi dimulai sejak tanggal penandatanganan kontrak ini dan harus diselesaikan dalam jangka waktu 60 (enam puluh) hari kalender.
+
+**PASAL 4**
+**HAK DAN KEWAJIBAN PARA PIHAK**
+
+**PIHAK PERTAMA berkewajiban:**
+1. Membayar honorarium sesuai dengan ketentuan dalam Pasal 2
+2. Memberikan data dan informasi yang diperlukan untuk pelaksanaan pekerjaan
+3. Menyetujui desain yang telah disepakati
+
+**PIHAK KEDUA berkewajiban:**
+1. Melaksanakan pekerjaan sesuai dengan standar profesi
+2. Menyelesaikan pekerjaan tepat waktu
+3. Memberikan jaminan atas hasil pekerjaan selama 6 (enam) bulan
+
+**PASAL 5**
+**PEMBATALAN DAN PENGAKHIRAN**
+
+Kontrak ini dapat dibatalkan apabila salah satu pihak melanggar ketentuan yang telah disepakati.
+
+**PASAL 6**
+**PENYELESAIAN PERSELISIHAN**
+
+Apabila timbul perselisihan dalam pelaksanaan kontrak ini, para pihak sepakat untuk menyelesaikannya secara musyawarah. Apabila musyawarah tidak mencapai kesepakatan, maka perselisihan akan diselesaikan melalui Pengadilan Negeri Jakarta Selatan.
+
+**PASAL 7**
+**PENUTUP**
+
+Perjanjian ini dibuat dalam rangkap 2 (dua) yang masing-masing mempunyai kekuatan hukum yang sama dan ditandatangani oleh para pihak pada tanggal tersebut di atas.
+
+Demikian perjanjian ini dibuat dengan itikad baik untuk dilaksanakan oleh kedua belah pihak.
+
+**PIHAK PERTAMA**                          **PIHAK KEDUA**
+
+${homeOwnerName}                           ${consultantName}
+
+___________________________               ___________________________
+(Tanda Tangan)                             (Tanda Tangan)
+
+Tanggal: ${currentDate}                    Tanggal: ${currentDate}
+
+**SAKSI:**
+
+1. ___________________________             2. ___________________________
+   (Nama Jelas)                               (Nama Jelas)
+   ___________________________               ___________________________
+   (Tanda Tangan)                            (Tanda Tangan)

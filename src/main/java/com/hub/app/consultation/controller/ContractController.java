@@ -1,5 +1,6 @@
 package com.hub.app.consultation.controller;
 
+import com.hub.app.consultation.dto.ContractGenerationRequest;
 import com.hub.app.consultation.dto.ContractResponse;
 import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.ContractService;
@@ -136,6 +137,25 @@ public class ContractController {
         }
     }
 
+    @PostMapping("/{consultationId}/generate-draft")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> generateContractDraft(
+            @PathVariable UUID consultationId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody ContractGenerationRequest request) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+            ContractResponse response = contractService.generateContractDraft(consultationId, consultantId, request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
+        }
+    }
+
     @PatchMapping("/{id}/sign")
     @PreAuthorize("hasRole('HOME_OWNER') or hasRole('CONSULTANT')")
     public ResponseEntity<?> signContract(
@@ -150,8 +170,8 @@ public class ContractController {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                        ErrorCode.INTERNAL_ERROR.getCode(),
-                                        e.getMessage());
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
         }
     }
 }
