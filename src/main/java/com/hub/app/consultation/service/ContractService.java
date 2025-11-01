@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -77,8 +78,8 @@ public class ContractService {
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "CONTRACT_DRAFT_CREATED", "CONTRACT", "DRAFT_CREATED", "CONSULTANT",
-                java.util.Arrays.asList(request.getFileUrl()),
-                java.util.Arrays.asList(),
+                Arrays.asList(request.getFileUrl()),
+                Arrays.asList(),
                 request.getContractValue(), null, null
             ));
             log.info("Contract draft creation event published");
@@ -97,26 +98,37 @@ public class ContractService {
     }
 
     public byte[] generateContractDraft(UUID consultationId, Long consultantId, ContractGenerationRequest request) {
+        log.info("Generating contract draft document for consultationId: {}, consultantId: {}", consultationId, consultantId);
+
         // Validate consultation exists and belongs to consultant
+        log.debug("Validating consultation exists and belongs to consultant");
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultation not found"));
+        log.debug("Consultation found: {}", consultation.getId());
 
         // Check if consultation status is SURVEY_SELESAI
         if (consultation.getStatus() != com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI) {
+            log.warn("Invalid consultation status for contract generation: expected={}, actual={}",
+                    com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI, consultation.getStatus());
             throw new RuntimeException("Contract can only be created after survey is completed");
         }
 
         // Get project information for location
+        log.debug("Retrieving project information for location details");
         com.hub.app.project.model.Project project = projectRepository.findByProjectId(consultation.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found"));
+        log.debug("Project found: {}", project.getProjectId());
 
         // Calculate payment installments with custom percentages from frontend
+        log.debug("Calculating payment installments with contract value: {}", request.getContractValue());
         List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
             request.getContractValue(), request.getInstallments());
+        log.debug("Calculated {} installments", installments.size());
 
         // Generate contract document from template
         byte[] contractDocument;
         try {
+            log.info("Generating contract document from template");
             contractDocument = contractTemplateService.generateContractDocument(
                 consultation.getHomeOwner().getName(),
                 consultation.getConsultant().getName(),
@@ -126,7 +138,9 @@ public class ContractService {
                 consultation.getConsultant().getAddress(),
                 installments
             );
+            log.info("Contract document generated successfully, size: {} bytes", contractDocument.length);
         } catch (Exception e) {
+            log.error("Failed to generate contract document for consultationId: {}", consultationId, e);
             throw new RuntimeException("Failed to generate contract document", e);
         }
 
@@ -193,19 +207,13 @@ public class ContractService {
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.KONTRAK_DISETUJUI);
         consultationRepository.save(contract.getConsultation());
 
-        // Create history event
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONTRACT",
-            "APPROVED",
-            "Kontrak disetujui homeowner",
-            "Homeowner menyetujui kontrak konsultasi desain",
-            java.util.Arrays.asList(),
-            java.util.Arrays.asList(),
-            "HOMEOWNER",
-            "APPROVED",
-            "Nilai kontrak: Rp " + contract.getContractValue().toString()
-        );
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, contract.getConsultation(), "CONTRACT_APPROVED", "CONTRACT", "APPROVED", "HOMEOWNER",
+            Arrays.asList(),
+            Arrays.asList(),
+            contract.getContractValue(), null, null
+        ));
 
         return mapToResponse(contract);
     }
