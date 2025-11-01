@@ -98,26 +98,37 @@ public class ContractService {
     }
 
     public byte[] generateContractDraft(UUID consultationId, Long consultantId, ContractGenerationRequest request) {
+        log.info("Generating contract draft document for consultationId: {}, consultantId: {}", consultationId, consultantId);
+
         // Validate consultation exists and belongs to consultant
+        log.debug("Validating consultation exists and belongs to consultant");
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultation not found"));
+        log.debug("Consultation found: {}", consultation.getId());
 
         // Check if consultation status is SURVEY_SELESAI
         if (consultation.getStatus() != com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI) {
+            log.warn("Invalid consultation status for contract generation: expected={}, actual={}",
+                    com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI, consultation.getStatus());
             throw new RuntimeException("Contract can only be created after survey is completed");
         }
 
         // Get project information for location
+        log.debug("Retrieving project information for location details");
         com.hub.app.project.model.Project project = projectRepository.findByProjectId(consultation.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found"));
+        log.debug("Project found: {}", project.getProjectId());
 
         // Calculate payment installments with custom percentages from frontend
+        log.debug("Calculating payment installments with contract value: {}", request.getContractValue());
         List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
             request.getContractValue(), request.getInstallments());
+        log.debug("Calculated {} installments", installments.size());
 
         // Generate contract document from template
         byte[] contractDocument;
         try {
+            log.info("Generating contract document from template");
             contractDocument = contractTemplateService.generateContractDocument(
                 consultation.getHomeOwner().getName(),
                 consultation.getConsultant().getName(),
@@ -127,7 +138,9 @@ public class ContractService {
                 consultation.getConsultant().getAddress(),
                 installments
             );
+            log.info("Contract document generated successfully, size: {} bytes", contractDocument.length);
         } catch (Exception e) {
+            log.error("Failed to generate contract document for consultationId: {}", consultationId, e);
             throw new RuntimeException("Failed to generate contract document", e);
         }
 

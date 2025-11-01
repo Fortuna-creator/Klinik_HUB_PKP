@@ -8,6 +8,7 @@ import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -18,6 +19,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/contracts")
 @RequiredArgsConstructor
+@Slf4j
 public class ContractController {
 
     private final ContractService contractService;
@@ -30,13 +32,18 @@ public class ContractController {
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
             @RequestBody ContractGenerationRequest request) {
+        log.info("Creating contract draft for consultationId: {}, request: {}", consultationId, request);
         try {
             Long consultantId = jwtService.extractUserId(authHeader);
+            log.debug("Extracted consultantId: {} from auth header", consultantId);
             ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request);
+            log.info("Contract draft created successfully for consultationId: {}", consultationId);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (DomainException e) {
+            log.warn("Domain exception while creating contract draft for consultationId: {}, error: {}", consultationId, e.getErrorCode().getDefaultMessage());
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
+            log.error("Unexpected error while creating contract draft for consultationId: {}", consultationId, e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                          ErrorCode.INTERNAL_ERROR.getCode(),
                                          e.getMessage());
@@ -139,16 +146,21 @@ public class ContractController {
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
             @RequestBody ContractGenerationRequest request) {
+        log.info("Generating contract draft for consultationId: {}, request: {}", consultationId, request);
         try {
             Long consultantId = jwtService.extractUserId(authHeader);
+            log.debug("Extracted consultantId: {} from auth header", consultantId);
             byte[] contractDocument = contractService.generateContractDraft(consultationId, consultantId, request);
+            log.info("Contract draft generated successfully for consultationId: {}", consultationId);
             return ResponseEntity.status(HttpStatus.OK)
                     .header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
                     .header("Content-Disposition", "attachment; filename=\"contract-draft.docx\"")
                     .body(contractDocument);
         } catch (DomainException e) {
+            log.warn("Domain exception while generating contract draft for consultationId: {}, error: {}", consultationId, e.getErrorCode().getDefaultMessage());
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
+            log.error("Unexpected error while generating contract draft for consultationId: {}", consultationId, e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
                                           ErrorCode.INTERNAL_ERROR.getCode(),
                                           e.getMessage());
