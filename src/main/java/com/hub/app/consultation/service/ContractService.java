@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -77,8 +78,8 @@ public class ContractService {
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "CONTRACT_DRAFT_CREATED", "CONTRACT", "DRAFT_CREATED", "CONSULTANT",
-                java.util.Arrays.asList(request.getFileUrl()),
-                java.util.Arrays.asList(),
+                Arrays.asList(request.getFileUrl()),
+                Arrays.asList(),
                 request.getContractValue(), null, null
             ));
             log.info("Contract draft creation event published");
@@ -193,19 +194,13 @@ public class ContractService {
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.KONTRAK_DISETUJUI);
         consultationRepository.save(contract.getConsultation());
 
-        // Create history event
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONTRACT",
-            "APPROVED",
-            "Kontrak disetujui homeowner",
-            "Homeowner menyetujui kontrak konsultasi desain",
-            java.util.Arrays.asList(),
-            java.util.Arrays.asList(),
-            "HOMEOWNER",
-            "APPROVED",
-            "Nilai kontrak: Rp " + contract.getContractValue().toString()
-        );
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, contract.getConsultation(), "CONTRACT_APPROVED", "CONTRACT", "APPROVED", "HOMEOWNER",
+            Arrays.asList(),
+            Arrays.asList(),
+            contract.getContractValue(), null, null
+        ));
 
         return mapToResponse(contract);
     }
