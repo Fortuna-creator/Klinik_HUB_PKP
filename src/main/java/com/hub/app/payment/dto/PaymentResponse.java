@@ -1,6 +1,6 @@
-package com.hub.app.consultation.dto;
+package com.hub.app.payment.dto;
 
-import com.hub.app.consultation.model.PaymentStatus;
+import com.hub.app.payment.model.PaymentStatus;
 import lombok.Builder;
 import lombok.Data;
 

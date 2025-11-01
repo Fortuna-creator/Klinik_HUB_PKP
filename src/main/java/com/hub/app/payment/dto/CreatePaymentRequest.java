@@ -1,4 +1,4 @@
-package com.hub.app.consultation.dto;
+package com.hub.app.payment.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

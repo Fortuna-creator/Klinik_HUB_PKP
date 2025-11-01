@@ -1,4 +1,4 @@
-package com.hub.app.consultation.model;
+package com.hub.app.payment.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,6 +30,9 @@ public class Payment {
     private PaymentStatus status;
 
     private String paymentGatewayRef;
+
+    @Column(name = "escrow_account_id")
+    private UUID escrowAccountId;
 
     private Instant createdAt;
     private Instant updatedAt;
