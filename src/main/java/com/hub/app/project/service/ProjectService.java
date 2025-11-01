@@ -234,14 +234,7 @@ public class ProjectService {
     }
 
     private ProjectDetailResponse.ConsultationStep mapToConsultationStep(ConsultationHistory history, List<SurveySchedule> surveySchedules) {
-        UUID contractId = null;
-        if ("CONTRACT".equals(history.getStep())) {
-            // Cari contract berdasarkan consultationId
-            Optional<Contract> contractOpt = contractRepository.findByConsultationId(history.getConsultation().getId());
-            if (contractOpt.isPresent()) {
-                contractId = contractOpt.get().getId();
-            }
-        }
+        UUID contractId = history.getContractId();
 
         UUID scheduleId = history.getScheduleId();
 

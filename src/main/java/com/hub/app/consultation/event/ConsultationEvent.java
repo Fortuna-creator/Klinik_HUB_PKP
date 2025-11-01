@@ -20,6 +20,7 @@ public class ConsultationEvent extends ApplicationEvent {
     private final BigDecimal surveyCost;
     private final String surveyLocation;
     private final java.util.UUID scheduleId;
+    private final java.util.UUID contractId;
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
                            String step, String state, String actor) {
@@ -34,6 +35,7 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyCost = null;
         this.surveyLocation = null;
         this.scheduleId = null;
+        this.contractId = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
@@ -50,6 +52,7 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyCost = surveyCost;
         this.surveyLocation = surveyLocation;
         this.scheduleId = null;
+        this.contractId = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
@@ -67,5 +70,24 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyCost = surveyCost;
         this.surveyLocation = surveyLocation;
         this.scheduleId = scheduleId;
+        this.contractId = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                           String step, String state, String actor, List<String> files,
+                           List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                           java.util.UUID scheduleId, java.util.UUID contractId) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = contractId;
     }
 }
