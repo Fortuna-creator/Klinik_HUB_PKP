@@ -106,6 +106,7 @@ class ConsultationServiceTest {
     void rejectConsultation_ShouldUpdateStatus_WhenValidTransition() {
         // Arrange
         UUID consultationId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
         Long consultantId = 1L;
 
         HomeOwner homeOwner = new HomeOwner();
@@ -121,10 +122,17 @@ class ConsultationServiceTest {
         consultation.setHomeOwner(homeOwner);
         consultation.setConsultant(consultant);
         consultation.setStatus(ConsultationStatus.MENUNGGU_KONFIRMASI_KONSULTAN);
+        consultation.setProjectId(projectId);
+
+        com.hub.app.project.model.Project project = new com.hub.app.project.model.Project();
+        project.setProjectId(projectId);
+        project.setStatus(com.hub.app.project.model.ProjectStatus.PENDING);
 
         when(consultationRepository.findByIdAndConsultantId(consultationId, consultantId))
                 .thenReturn(Optional.of(consultation));
+        when(projectRepository.findByProjectId(projectId)).thenReturn(Optional.of(project));
         when(consultationRepository.save(any(Consultation.class))).thenReturn(consultation);
+        when(projectRepository.save(any(com.hub.app.project.model.Project.class))).thenReturn(project);
 
         // Act
         ConsultationResponse response = consultationService.rejectConsultation(consultationId, consultantId);
@@ -133,7 +141,9 @@ class ConsultationServiceTest {
         assertNotNull(response);
         assertEquals(consultationId, response.getId());
         assertEquals(ConsultationStatus.SELESAI, consultation.getStatus());
+        assertEquals(com.hub.app.project.model.ProjectStatus.CANCELLED, project.getStatus());
         verify(consultationRepository).save(consultation);
+        verify(projectRepository).save(project);
     }
 
     @Test

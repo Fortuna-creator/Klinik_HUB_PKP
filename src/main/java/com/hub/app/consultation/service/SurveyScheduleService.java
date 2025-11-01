@@ -206,6 +206,11 @@ public class SurveyScheduleService {
             SurveySchedule saved = surveyScheduleRepository.save(newSchedule);
             log.debug("New survey schedule proposed: ID={}", saved.getId());
 
+            // Update consultation status
+            consultation.setStatus(ConsultationStatus.MENUNGGU_JADWAL_SURVEY);
+            consultationRepository.save(consultation);
+            log.info("Consultation status updated to MENUNGGU_JADWAL_SURVEY");
+
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "SURVEY_RESCHEDULED", "SURVEY", "RESCHEDULED", "CONSULTANT",
