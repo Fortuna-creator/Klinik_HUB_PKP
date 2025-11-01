@@ -57,30 +57,21 @@ Content-Type: application/json
 }
 ```
 
-**Response (201 Created):**
-```json
-{
-  "id": "550e8400-e29b-41d4-a716-446655440000",
-  "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
-  "digitalSignature": false,
-  "status": "DRAFT",
-  "createdAt": "2024-11-01T00:00:00Z",
-  "updatedAt": "2024-11-01T00:00:00Z"
-}
+**Response (200 OK):** Binary DOCX file stream with headers:
+```
+Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+Content-Disposition: attachment; filename="contract-draft.docx"
 ```
 
 #### **Create Contract Draft (Manual Upload)** (Consultant - MENYIAPKAN_KONTRAK)
 ```http
-POST /api/contracts/{consultationId}/draft
+POST /api/contracts/consultations/{consultationId}/draft
 Authorization: Bearer {token}
 Content-Type: application/json
 
 {
   "contractValue": 15000000.00,
-  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
-  "termsConditionsUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/terms.pdf",
-  "scopeOfWorkUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/scope.pdf"
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf"
 }
 ```
 
@@ -103,13 +94,10 @@ Content-Type: application/json
 
 #### **Upload Contract File** (Consultant - DRAFT)
 ```http
-POST /api/files/upload
+POST /api/consultations/{consultationId}/files/contract
 Authorization: Bearer {token}
 Content-Type: multipart/form-data
 
-category: CONSULTATION
-subCategory: CONTRACT
-entityId: 550e8400-e29b-41d4-a716-446655440001
 file: [contract.pdf]
 ```
 
@@ -123,7 +111,7 @@ file: [contract.pdf]
 
 #### **Get Contract Files** (Both - REQUEST_FOR_APPROVAL/APPROVED/SIGNED)
 ```http
-GET /api/files/list?category=CONSULTATION&entityId=550e8400-e29b-41d4-a716-446655440001
+GET /api/consultations/{consultationId}/files/contract
 Authorization: Bearer {token}
 ```
 
@@ -132,10 +120,11 @@ Authorization: Bearer {token}
 {
   "files": [
     {
-      "name": "contract.pdf",
-      "url": "https://minio.example.com/consultation-files/contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&...",
-      "uploadedBy": "consultant@example.com",
-      "uploadedAt": "2024-11-01T14:00:00"
+      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "originalName": "contract.pdf",
+      "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
+      "fileSize": 2048576,
+      "uploadedAt": "2024-11-01T14:00:00Z"
     }
   ]
 }
@@ -143,7 +132,7 @@ Authorization: Bearer {token}
 
 #### **Download Contract File** (Both - REQUEST_FOR_APPROVAL/APPROVED/SIGNED)
 ```http
-GET /api/files/download/{fileId}
+GET /api/consultations/{consultationId}/files/contract/{fileId}/download
 Authorization: Bearer {token}
 ```
 
@@ -151,19 +140,6 @@ Authorization: Bearer {token}
 ```
 Content-Type: application/pdf
 Content-Disposition: attachment; filename="contract.pdf"
-```
-
-**Alternative: Presigned URL (for backward compatibility)**
-```http
-GET /api/files/download-url?path=contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf
-Authorization: Bearer {token}
-```
-
-**Response (200 OK):**
-```json
-{
-  "fileUrl": "https://minio.example.com/consultation-files/contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&..."
-}
 ```
 
 ---
