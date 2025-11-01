@@ -67,12 +67,18 @@ public class ConsultationService {
             throw new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.INVALID_STATUS);
         }
 
+        // Set project status to CANCELLED when consultation is rejected
+        Project project = projectRepository.findByProjectId(consultation.getProjectId())
+                .orElseThrow(() -> new com.hub.app.error.DomainException(com.hub.app.error.ErrorCode.PROJECT_NOT_FOUND));
+        project.setStatus(ProjectStatus.CANCELLED);
+        projectRepository.save(project);
+
         consultation.setStatus(ConsultationStatus.SELESAI); // Consultation rejected
         consultation = consultationRepository.save(consultation);
 
         // Publish event for history tracking
         eventPublisher.publishEvent(new ConsultationEvent(
-            this, consultation, "CONSULTATION_CREATED", "CONSULTATION", "CREATED", "HOMEOWNER"
+            this, consultation, "CONSULTATION_REJECTED", "CONSULTATION", "REJECTED", "CONSULTANT"
         ));
 
         return mapToResponse(consultation);
