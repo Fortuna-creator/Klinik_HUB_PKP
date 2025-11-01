@@ -9,4 +9,5 @@ import java.util.List;
 public class ContractGenerationRequest {
     private BigDecimal contractValue;
     private List<PaymentInstallmentRequest> installments; // Custom installment percentages and due dates
+    private String fileUrl;
 }

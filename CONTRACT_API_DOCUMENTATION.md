@@ -62,7 +62,7 @@ Content-Type: application/json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": false,
   "status": "DRAFT",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -89,7 +89,7 @@ Content-Type: application/json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
   "digitalSignature": false,
   "status": "DRAFT",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -181,7 +181,7 @@ Authorization: Bearer {token}
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": false,
   "status": "REQUEST_FOR_APPROVAL",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -200,7 +200,7 @@ Authorization: Bearer {token}
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": false,
   "status": "APPROVED",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -219,7 +219,7 @@ Authorization: Bearer {token}
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": false,
   "status": "REJECTED",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -238,7 +238,7 @@ Authorization: Bearer {token}
 {
   "id": "550e8400-e29b-41d4-a716-446655440002",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": false,
   "status": "DRAFT",
   "createdAt": "2024-11-01T00:15:00Z",
@@ -261,7 +261,7 @@ Authorization: Bearer {token}
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": true,
   "status": "SIGNED",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -284,7 +284,7 @@ Authorization: Bearer {token}
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "pdfUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft-contract.docx",
   "digitalSignature": false,
   "status": "APPROVED",
   "createdAt": "2024-11-01T00:00:00Z",
