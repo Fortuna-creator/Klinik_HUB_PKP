@@ -1,6 +1,8 @@
 --liquibase formatted sql
 
 --changeset hub:018-contract-schema
+DROP TABLE IF EXISTS contracts;
+
 CREATE TABLE contracts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     consultation_id UUID NOT NULL REFERENCES consultations(id) UNIQUE,
