@@ -45,7 +45,8 @@ public class ConsultationEventListener {
                 notes,
                 event.getSurveyCost(),
                 event.getSurveyLocation(),
-                event.getScheduleId()
+                event.getScheduleId(),
+                event.getContractId()
             );
 
             log.info("=== EVENT PROCESSING COMPLETED SUCCESSFULLY ===");

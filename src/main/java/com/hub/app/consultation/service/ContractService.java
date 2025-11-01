@@ -80,7 +80,7 @@ public class ContractService {
                 this, consultation, "CONTRACT_DRAFT_CREATED", "CONTRACT", "DRAFT_CREATED", "CONSULTANT",
                 Arrays.asList(request.getFileUrl()),
                 Arrays.asList(),
-                request.getContractValue(), null, null
+                request.getContractValue(), null, null, contract.getId()
             ));
             log.info("Contract draft creation event published");
 
@@ -179,7 +179,8 @@ public class ContractService {
             java.util.Arrays.asList(),
             "CONSULTANT",
             "REQUEST_FOR_APPROVAL",
-            "Nilai kontrak: Rp " + contract.getContractValue().toString()
+            "Nilai kontrak: Rp " + contract.getContractValue().toString(),
+            null, null, null, contract.getId()
         );
 
         return mapToResponse(contract);
@@ -212,7 +213,7 @@ public class ContractService {
             this, contract.getConsultation(), "CONTRACT_APPROVED", "CONTRACT", "APPROVED", "HOMEOWNER",
             Arrays.asList(),
             Arrays.asList(),
-            contract.getContractValue(), null, null
+            contract.getContractValue(), null, null, contract.getId()
         ));
 
         return mapToResponse(contract);
@@ -247,7 +248,8 @@ public class ContractService {
             java.util.Arrays.asList(),
             "HOMEOWNER",
             "REJECTED",
-            reason
+            reason,
+            null, null, null, contract.getId()
         );
 
         return mapToResponse(contract);
@@ -305,7 +307,8 @@ public class ContractService {
             java.util.Arrays.asList(),
             "HOMEOWNER",
             "REVISION_REQUESTED",
-            revisionNotes
+            revisionNotes,
+            null, null, null, contract.getId()
         );
 
         return mapToResponse(newContract);
@@ -338,7 +341,8 @@ public class ContractService {
 
         // Publish event
         eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
-            this, contract.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "SYSTEM"
+            this, contract.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "SYSTEM",
+            Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()
         ));
 
         // Create history event
@@ -353,7 +357,8 @@ public class ContractService {
             java.util.Arrays.asList(),
             contract.getConsultation().getHomeOwner().getId().equals(userId) ? "HOMEOWNER" : "CONSULTANT",
             "SIGNED",
-            "Kontrak telah ditandatangani"
+            "Kontrak telah ditandatangani",
+            null, null, null, contract.getId()
         );
 
         // Create history event for consultation start

@@ -45,10 +45,21 @@ public class ConsultationHistoryService {
                                    List<String> attachments, String actor, String status,
                                    String notes, BigDecimal surveyCost, String surveyLocation,
                                    UUID scheduleId) {
+        createHistoryEvent(consultation, step, state, title, subtitle, files, attachments,
+                          actor, status, notes, surveyCost, surveyLocation, scheduleId, null);
+    }
+
+    @Transactional
+    public void createHistoryEvent(Consultation consultation, String step, String state,
+                                   String title, String subtitle, List<String> files,
+                                   List<String> attachments, String actor, String status,
+                                   String notes, BigDecimal surveyCost, String surveyLocation,
+                                   UUID scheduleId, UUID contractId) {
 
         log.info("=== STARTING HISTORY EVENT CREATION ===");
         log.info("Consultation ID: {}, Step: {}, State: {}, Actor: {}", consultation.getId(), step, state, actor);
-        log.info("Title: {}, Survey Cost: {}, Survey Location: {}, Schedule ID: {}", title, surveyCost, surveyLocation, scheduleId);
+        log.info("Title: {}, Survey Cost: {}, Survey Location: {}, Schedule ID: {}, Contract ID: {}",
+                 title, surveyCost, surveyLocation, scheduleId, contractId);
 
         ConsultationHistory history = new ConsultationHistory();
         history.setConsultation(consultation);
@@ -64,6 +75,7 @@ public class ConsultationHistoryService {
         history.setSurveyCost(surveyCost);
         history.setSurveyLocation(surveyLocation);
         history.setScheduleId(scheduleId);
+        history.setContractId(contractId);
         history.setDateTime(LocalDateTime.now());
 
         log.debug("History entity prepared: {}", history);
@@ -97,6 +109,13 @@ public class ConsultationHistoryService {
         log.debug("Retrieving history by step '{}' and state '{}' for consultation ID: {}", step, state, consultationId);
         List<ConsultationHistory> history = historyRepository.findByConsultationIdAndStepAndStateOrderByDateTimeDesc(consultationId, step, state);
         log.debug("Retrieved {} history events for step '{}', state '{}' and consultation ID: {}", history.size(), step, state, consultationId);
+        return history;
+    }
+
+    public List<ConsultationHistory> getContractHistory(UUID contractId) {
+        log.debug("Retrieving contract history for contract ID: {}", contractId);
+        List<ConsultationHistory> history = historyRepository.findByContractIdOrderByDateTimeDesc(contractId);
+        log.debug("Retrieved {} history events for contract ID: {}", history.size(), contractId);
         return history;
     }
 }

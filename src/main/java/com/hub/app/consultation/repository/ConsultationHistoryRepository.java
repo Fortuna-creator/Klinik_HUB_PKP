@@ -22,4 +22,6 @@ public interface ConsultationHistoryRepository extends JpaRepository<Consultatio
         @Param("consultationId") UUID consultationId,
         @Param("step") String step,
         @Param("state") String state);
+
+    List<ConsultationHistory> findByContractIdOrderByDateTimeDesc(UUID contractId);
 }
