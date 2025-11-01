@@ -12,7 +12,7 @@ import java.util.UUID;
 public class ContractResponse {
     private UUID id;
     private UUID consultationId;
-    private String pdfUrl;
+    private String fileUrl;
     private Boolean digitalSignature;
     private ContractStatus status;
     private Instant createdAt;

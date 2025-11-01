@@ -1,35 +1,103 @@
 package com.hub.app.consultation.service;
 
+import com.hub.app.consultation.dto.ContractGenerationRequest;
 import com.hub.app.consultation.dto.ContractResponse;
+import com.hub.app.consultation.dto.PaymentInstallment;
 import com.hub.app.consultation.event.ConsultationEvent;
 import com.hub.app.consultation.model.Contract;
 import com.hub.app.consultation.model.ContractStatus;
 import com.hub.app.consultation.model.Consultation;
+import com.hub.app.consultation.model.ConsultationStatus;
 import com.hub.app.consultation.repository.ContractRepository;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ContractService {
 
     private final ContractRepository contractRepository;
     private final ConsultationRepository consultationRepository;
+    private final ProjectRepository projectRepository;
     private final ConsultationHistoryService historyService;
+    private final ContractTemplateService contractTemplateService;
+    private final PaymentInstallmentCalculator paymentCalculator;
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public ContractResponse createContractDraft(UUID consultationId, Long consultantId,
-                                              BigDecimal contractValue, String fileUrl,
-                                              String termsConditionsUrl, String scopeOfWorkUrl) {
+                                              ContractGenerationRequest request) {
+        log.info("=== STARTING CONTRACT DRAFT CREATION ===");
+        log.info("Consultation ID: {}, Consultant ID: {}", consultationId, consultantId);
 
+        try {
+            Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
+                    .orElseThrow(() -> new RuntimeException("Consultation not found"));
+            log.debug("Consultation found: ID={}, Status={}", consultation.getId(), consultation.getStatus());
+
+            // Check if consultation status is SURVEY_SELESAI
+            if (consultation.getStatus() != ConsultationStatus.SURVEY_SELESAI) {
+                log.error("Invalid consultation status for contract creation: expected={}, actual={}",
+                         ConsultationStatus.SURVEY_SELESAI, consultation.getStatus());
+                throw new RuntimeException("Contract can only be created after survey is completed");
+            }
+
+            // Check if contract already exists
+            if (contractRepository.findByConsultationId(consultationId).isPresent()) {
+                log.error("Contract already exists for consultation ID: {}", consultationId);
+                throw new RuntimeException("Contract already exists for this consultation");
+            }
+
+            Contract contract = new Contract();
+            contract.setConsultation(consultation);
+            contract.setContractValue(request.getContractValue());
+            contract.setFileUrl(request.getFileUrl());
+            contract.setStatus(ContractStatus.DRAFT);
+            contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
+
+            contract = contractRepository.save(contract);
+            log.debug("Contract draft created: ID={}", contract.getId());
+
+            // Update consultation status to MENUNGGU_APPROVAL_KONTRAK
+            consultation.setStatus(ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK);
+            consultationRepository.save(consultation);
+            log.info("Consultation status updated to MENUNGGU_APPROVAL_KONTRAK");
+
+            // Publish event for history tracking
+            eventPublisher.publishEvent(new ConsultationEvent(
+                this, consultation, "CONTRACT_DRAFT_CREATED", "CONTRACT", "DRAFT_CREATED", "CONSULTANT",
+                java.util.Arrays.asList(request.getFileUrl()),
+                java.util.Arrays.asList(),
+                request.getContractValue(), null, null
+            ));
+            log.info("Contract draft creation event published");
+
+            log.info("=== CONTRACT DRAFT CREATION SUCCESSFUL ===");
+            return mapToResponse(contract);
+        } catch (RuntimeException e) {
+            log.error("=== CONTRACT DRAFT CREATION FAILED - RUNTIME EXCEPTION ===");
+            log.error("Consultation ID: {}, Consultant ID: {}, Error: {}", consultationId, consultantId, e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            log.error("=== CONTRACT DRAFT CREATION FAILED - UNEXPECTED ERROR ===");
+            log.error("Consultation ID: {}, Consultant ID: {}, Error: {}", consultationId, consultantId, e.getMessage(), e);
+            throw new RuntimeException("Failed to create contract draft", e);
+        }
+    }
+
+    public byte[] generateContractDraft(UUID consultationId, Long consultantId, ContractGenerationRequest request) {
+        // Validate consultation exists and belongs to consultant
         Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
                 .orElseThrow(() -> new RuntimeException("Consultation not found"));
 
@@ -38,37 +106,31 @@ public class ContractService {
             throw new RuntimeException("Contract can only be created after survey is completed");
         }
 
-        // Check if contract already exists
-        if (contractRepository.findByConsultationId(consultationId).isPresent()) {
-            throw new RuntimeException("Contract already exists for this consultation");
+        // Get project information for location
+        com.hub.app.project.model.Project project = projectRepository.findByProjectId(consultation.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Calculate payment installments with custom percentages from frontend
+        List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
+            request.getContractValue(), request.getInstallments());
+
+        // Generate contract document from template
+        byte[] contractDocument;
+        try {
+            contractDocument = contractTemplateService.generateContractDocument(
+                consultation.getHomeOwner().getName(),
+                consultation.getConsultant().getName(),
+                request.getContractValue(),
+                project.getLocationDetail(),
+                consultation.getHomeOwner().getAddress(),
+                consultation.getConsultant().getAddress(),
+                installments
+            );
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate contract document", e);
         }
 
-        Contract contract = new Contract();
-        contract.setConsultation(consultation);
-        contract.setContractValue(contractValue);
-        contract.setFileUrl(fileUrl);
-        contract.setTermsConditionsUrl(termsConditionsUrl);
-        contract.setScopeOfWorkUrl(scopeOfWorkUrl);
-        contract.setStatus(ContractStatus.DRAFT);
-        contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
-
-        contract = contractRepository.save(contract);
-
-        // Create history event
-        historyService.createHistoryEvent(
-            consultation,
-            "CONTRACT",
-            "DRAFT_CREATED",
-            "Draft kontrak dibuat konsultan",
-            "Kontrak konsultasi desain dengan nilai Rp " + contractValue.toString(),
-            java.util.Arrays.asList(fileUrl),
-            java.util.Arrays.asList(termsConditionsUrl, scopeOfWorkUrl),
-            "CONSULTANT",
-            "DRAFT",
-            "Nilai kontrak: Rp " + contractValue.toString()
-        );
-
-        return mapToResponse(contract);
+        return contractDocument;
     }
 
     @Transactional
@@ -100,7 +162,7 @@ public class ContractService {
             "Kontrak diajukan untuk approval homeowner",
             "Kontrak konsultasi desain diajukan untuk persetujuan homeowner",
             java.util.Arrays.asList(contract.getFileUrl()),
-            java.util.Arrays.asList(contract.getTermsConditionsUrl(), contract.getScopeOfWorkUrl()),
+            java.util.Arrays.asList(),
             "CONSULTANT",
             "REQUEST_FOR_APPROVAL",
             "Nilai kontrak: Rp " + contract.getContractValue().toString()
@@ -215,8 +277,6 @@ public class ContractService {
         newContract.setConsultation(contract.getConsultation());
         newContract.setContractValue(contract.getContractValue());
         newContract.setFileUrl(contract.getFileUrl());
-        newContract.setTermsConditionsUrl(contract.getTermsConditionsUrl());
-        newContract.setScopeOfWorkUrl(contract.getScopeOfWorkUrl());
         newContract.setStatus(ContractStatus.DRAFT);
         newContract.setApprovalDeadline(LocalDateTime.now().plusDays(7));
         newContract.setNotes("Revision requested: " + revisionNotes);
@@ -309,7 +369,7 @@ public class ContractService {
         return ContractResponse.builder()
                 .id(contract.getId())
                 .consultationId(contract.getConsultation().getId())
-                .pdfUrl(contract.getFileUrl())
+                .fileUrl(contract.getFileUrl())
                 .digitalSignature(contract.getSignedAt() != null)
                 .status(contract.getStatus())
                 .createdAt(contract.getCreatedAt() != null ? contract.getCreatedAt().toInstant(java.time.ZoneOffset.UTC) : null)

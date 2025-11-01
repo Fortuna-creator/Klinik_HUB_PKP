@@ -1,16 +1,25 @@
 package com.hub.app.file.controller;
 
 import com.hub.app.auth.service.JwtService;
+import com.hub.app.consultation.repository.ConsultationRepository;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.file.dto.FileDownloadResponse;
 import com.hub.app.file.dto.FileListResponse;
+import com.hub.app.file.model.FileUpload;
 import com.hub.app.file.service.FileUploadService;
+import com.hub.app.storage.MinioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.InputStream;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/files")
@@ -20,6 +29,8 @@ public class FileController {
 
     private final FileUploadService fileUploadService;
     private final JwtService jwtService;
+    private final MinioService minioService;
+    private final ConsultationRepository consultationRepository;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadFile(
@@ -62,8 +73,73 @@ public class FileController {
         }
     }
 
-    @GetMapping("/download")
+    @GetMapping("/download/{fileId}")
     public ResponseEntity<?> downloadFile(
+            @PathVariable UUID fileId,
+            @RequestHeader("Authorization") String authHeader) {
+
+        try {
+            // Validate JWT token and extract user ID
+            String token = authHeader.replace("Bearer ", "");
+            if (!jwtService.validateToken(token)) {
+                return ResponseEntity.status(401).body("Invalid token");
+            }
+
+            // For now, use a simple user ID extraction (you may need to adjust this)
+            // This assumes the JWT contains user ID in some way
+            Long userId = 1L; // TODO: Implement proper user ID extraction from JWT
+
+            // Get file metadata and check access
+            Optional<FileUpload> fileMetadata = fileUploadService.getFileMetadata(fileId);
+            if (fileMetadata.isEmpty()) {
+                return ResponseEntity.status(404).body("File not found");
+            }
+
+            FileUpload fileUpload = fileMetadata.get();
+
+            // Check user access to this file (business logic validation)
+            boolean hasAccess = checkUserAccessToFile(userId, fileUpload);
+            if (!hasAccess) {
+                return ResponseEntity.status(403).body("Access denied");
+            }
+
+            // Stream file from MinIO
+            InputStream inputStream = minioService.downloadFile(fileUpload.getBucketName(), fileUpload.getObjectPath());
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(fileUpload.getMimeType()))
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                           "attachment; filename=\"" + fileUpload.getOriginalName() + "\"")
+                    .body(new InputStreamResource(inputStream));
+
+        } catch (Exception e) {
+            log.error("File download error for fileId: {}", fileId, e);
+            return ResponseEntity.status(500).body("File download failed");
+        }
+    }
+
+    private boolean checkUserAccessToFile(Long userId, FileUpload fileUpload) {
+        try {
+            // For consultation files, check if user is home owner or consultant
+            if ("CONSULTATION".equals(fileUpload.getCategory())) {
+                UUID consultationId = UUID.fromString(fileUpload.getEntityId());
+                var consultation = consultationRepository.findById(consultationId);
+                if (consultation.isPresent()) {
+                    var cons = consultation.get();
+                    return cons.getHomeOwner().getId().equals(userId) ||
+                           cons.getConsultant().getId().equals(userId);
+                }
+            }
+            return false;
+        } catch (Exception e) {
+            log.error("Error checking file access", e);
+            return false;
+        }
+    }
+
+    // Keep the old presigned URL method for backward compatibility
+    @GetMapping("/download-url")
+    public ResponseEntity<?> downloadFileByPath(
             @RequestHeader("Authorization") String authHeader,
             @RequestParam("path") String path) {
 

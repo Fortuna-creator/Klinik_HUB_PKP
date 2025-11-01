@@ -1,5 +1,6 @@
 package com.hub.app.consultation.controller;
 
+import com.hub.app.consultation.dto.ContractGenerationRequest;
 import com.hub.app.consultation.dto.ContractResponse;
 import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.consultation.service.ContractService;
@@ -28,14 +29,10 @@ public class ContractController {
     public ResponseEntity<?> createContractDraft(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
-            @RequestParam java.math.BigDecimal contractValue,
-            @RequestParam String fileUrl,
-            @RequestParam String termsConditionsUrl,
-            @RequestParam String scopeOfWorkUrl) {
+            @RequestBody ContractGenerationRequest request) {
         try {
             Long consultantId = jwtService.extractUserId(authHeader);
-            ContractResponse response = contractService.createContractDraft(consultationId, consultantId,
-                    contractValue, fileUrl, termsConditionsUrl, scopeOfWorkUrl);
+            ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (DomainException e) {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
@@ -136,6 +133,28 @@ public class ContractController {
         }
     }
 
+    @PostMapping("/{consultationId}/generate-draft")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> generateContractDraft(
+            @PathVariable UUID consultationId,
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody ContractGenerationRequest request) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+            byte[] contractDocument = contractService.generateContractDraft(consultationId, consultantId, request);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .header("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+                    .header("Content-Disposition", "attachment; filename=\"contract-draft.docx\"")
+                    .body(contractDocument);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                          ErrorCode.INTERNAL_ERROR.getCode(),
+                                          e.getMessage());
+        }
+    }
+
     @PatchMapping("/{id}/sign")
     @PreAuthorize("hasRole('HOME_OWNER') or hasRole('CONSULTANT')")
     public ResponseEntity<?> signContract(
@@ -150,8 +169,8 @@ public class ContractController {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                        ErrorCode.INTERNAL_ERROR.getCode(),
-                                        e.getMessage());
+                                         ErrorCode.INTERNAL_ERROR.getCode(),
+                                         e.getMessage());
         }
     }
 }
