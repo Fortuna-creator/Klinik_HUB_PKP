@@ -15,7 +15,7 @@ public class ConsultationEvent extends ApplicationEvent {
     private final String step;
     private final String state;
     private final String actor;
-    private final List<String> files;
+    private final List<java.util.UUID> files;
     private final List<String> attachments;
     private final BigDecimal surveyCost;
     private final String surveyLocation;
@@ -39,7 +39,7 @@ public class ConsultationEvent extends ApplicationEvent {
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor, List<String> files,
+                           String step, String state, String actor, List<java.util.UUID> files,
                            List<String> attachments, BigDecimal surveyCost, String surveyLocation) {
         super(source);
         this.consultation = consultation;
@@ -56,7 +56,7 @@ public class ConsultationEvent extends ApplicationEvent {
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor, List<String> files,
+                           String step, String state, String actor, List<java.util.UUID> files,
                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
                            java.util.UUID scheduleId) {
         super(source);
@@ -74,7 +74,7 @@ public class ConsultationEvent extends ApplicationEvent {
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor, List<String> files,
+                           String step, String state, String actor, List<java.util.UUID> files,
                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
                            java.util.UUID scheduleId, java.util.UUID contractId) {
         super(source);

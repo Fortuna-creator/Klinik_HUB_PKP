@@ -29,6 +29,7 @@
     <include file="023-add-schedule-id-to-consultation-history.sql" relativeToChangelogFile="true"/>
     <include file="024-add-file-upload-columns.sql" relativeToChangelogFile="true"/>
     <include file="025-add-contract-id-to-consultation-history.sql" relativeToChangelogFile="true"/>
+    <include file="026-add-file-ids-to-consultation-history.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
 

@@ -243,7 +243,11 @@ public class ProjectService {
                 .state(history.getState())
                 .title(history.getTitle())
                 .subtitle(history.getSubtitle())
-                .files(history.getFiles())
+                .files(history.getFileIds() != null && !history.getFileIds().isEmpty()
+                    ? history.getFileIds().stream()
+                        .map(UUID::toString)  // Convert UUID to string for JSON response
+                        .collect(Collectors.toList())
+                    : history.getFiles())  // Fallback to old field if new field is empty
                 .attachments(history.getAttachments())
                 .metadata(ProjectDetailResponse.ConsultationMetadata.builder()
                         .dateTime(history.getDateTime())

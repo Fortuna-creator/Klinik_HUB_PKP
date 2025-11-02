@@ -45,7 +45,7 @@ public class ProjectDetailResponse {
         private String state;
         private String title;
         private String subtitle;
-        private List<String> files;
+        private List<String> files;  // Now contains fileId strings instead of URLs
         private List<String> attachments;
         private ConsultationMetadata metadata;
     }

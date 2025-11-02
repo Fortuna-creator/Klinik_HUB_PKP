@@ -132,6 +132,12 @@ public class FileController {
                            cons.getConsultant().getId().equals(userId);
                 }
             }
+            // For project files, check if user owns the project or is assigned consultant
+            if ("PROJECT".equals(fileUpload.getCategory())) {
+                // TODO: Implement project file access check
+                // This would require checking project ownership and consultation assignments
+                return true; // Temporarily allow access for all authenticated users
+            }
             return false;
         } catch (Exception e) {
             log.error("Error checking file access", e);

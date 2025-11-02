@@ -22,36 +22,36 @@ public class ConsultationHistoryService {
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                   String title, String subtitle, List<String> files,
+                                   String title, String subtitle, List<UUID> fileIds,
                                    List<String> attachments, String actor, String status,
                                    String notes) {
         log.debug("Creating history event for consultation ID: {}, step: {}, state: {}", consultation.getId(), step, state);
-        createHistoryEvent(consultation, step, state, title, subtitle, files, attachments,
+        createHistoryEvent(consultation, step, state, title, subtitle, fileIds, attachments,
                            actor, status, notes, null, null);
     }
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                   String title, String subtitle, List<String> files,
+                                   String title, String subtitle, List<UUID> fileIds,
                                    List<String> attachments, String actor, String status,
                                    String notes, BigDecimal surveyCost, String surveyLocation) {
-        createHistoryEvent(consultation, step, state, title, subtitle, files, attachments,
+        createHistoryEvent(consultation, step, state, title, subtitle, fileIds, attachments,
                            actor, status, notes, surveyCost, surveyLocation, null);
     }
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                   String title, String subtitle, List<String> files,
+                                   String title, String subtitle, List<UUID> fileIds,
                                    List<String> attachments, String actor, String status,
                                    String notes, BigDecimal surveyCost, String surveyLocation,
                                    UUID scheduleId) {
-        createHistoryEvent(consultation, step, state, title, subtitle, files, attachments,
-                          actor, status, notes, surveyCost, surveyLocation, scheduleId, null);
+        createHistoryEvent(consultation, step, state, title, subtitle, fileIds, attachments,
+                           actor, status, notes, surveyCost, surveyLocation, scheduleId, null);
     }
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                   String title, String subtitle, List<String> files,
+                                   String title, String subtitle, List<UUID> fileIds,
                                    List<String> attachments, String actor, String status,
                                    String notes, BigDecimal surveyCost, String surveyLocation,
                                    UUID scheduleId, UUID contractId) {
@@ -67,7 +67,8 @@ public class ConsultationHistoryService {
         history.setState(state);
         history.setTitle(title);
         history.setSubtitle(subtitle);
-        history.setFiles(files);
+        history.setFiles(null); // Keep old field for backward compatibility
+        history.setFileIds(fileIds);
         history.setAttachments(attachments);
         history.setActor(actor);
         history.setStatus(status);

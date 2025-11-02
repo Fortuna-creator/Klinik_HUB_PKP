@@ -57,7 +57,7 @@ public class FileUploadService {
 
         log.info("File uploaded successfully: {}", savedFile.getFileId());
 
-        return new FileUploadResponse("Upload success", fileUrl);
+        return new FileUploadResponse("Upload success", fileUrl, savedFile.getFileId());
     }
 
     public FileDownloadResponse downloadFile(String path) {
