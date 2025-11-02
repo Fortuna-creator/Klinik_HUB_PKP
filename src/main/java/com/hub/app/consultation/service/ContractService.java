@@ -308,7 +308,7 @@ public class ContractService {
             throw new RuntimeException("Access denied");
         }
 
-        if (contract.getStatus() != ContractStatus.REQUEST_FOR_APPROVAL) {
+        if (contract.getStatus() != ContractStatus.DRAFT) {
             throw new RuntimeException("Invalid contract status for revision request");
         }
 
@@ -323,7 +323,7 @@ public class ContractService {
         newContract = contractRepository.save(newContract);
 
         // Update consultation status back to SURVEY_SELESAI since contract revision is requested
-        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI);
+        contract.getConsultation().setStatus(ConsultationStatus.MENYIAPKAN_KONTRAK);
         consultationRepository.save(contract.getConsultation());
 
         // Publish event for history tracking
