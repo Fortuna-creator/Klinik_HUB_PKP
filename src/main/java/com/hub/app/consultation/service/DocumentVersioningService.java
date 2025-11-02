@@ -46,7 +46,7 @@ public class DocumentVersioningService {
         eventPublisher.publishEvent(new ConsultationEvent(
             this, consultation, "DOCUMENT_" + documentType + "_UPLOADED", "DOCUMENT",
             documentType.toLowerCase() + "_uploaded", "CONSULTANT",
-            java.util.Arrays.asList(fileUrl), java.util.Arrays.asList(), null, null
+            java.util.Arrays.asList(), java.util.Arrays.asList(), null, null  // No fileIds available
         ));
 
         return documentVersion;
@@ -69,7 +69,7 @@ public class DocumentVersioningService {
         eventPublisher.publishEvent(new ConsultationEvent(
             this, documentVersion.getConsultation(), "DOCUMENT_" + documentVersion.getDocumentType() + "_FINAL",
             "DOCUMENT", documentVersion.getDocumentType().toLowerCase() + "_final", "CONSULTANT",
-            java.util.Arrays.asList(documentVersion.getFileUrl()), java.util.Arrays.asList(), null, null
+            java.util.Arrays.asList(), java.util.Arrays.asList(), null, null  // No fileIds available
         ));
 
         return documentVersion;
