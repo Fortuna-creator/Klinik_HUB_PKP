@@ -67,19 +67,35 @@ Content-Disposition: attachment; filename="contract-draft.docx"
 ```http
 POST /api/contracts/consultations/{consultationId}/draft
 Authorization: Bearer {token}
-Content-Type: multipart/form-data
+Content-Type: application/json
 
-contractValue: 15000000.00
-installments: [{"percentage": 30.0, "dueDate": "2024-12-01"}, {"percentage": 70.0, "dueDate": "2024-12-15"}]
-file: [contract.pdf] (optional - if not provided, use fileUrl from request)
+{
+  "contractValue": 15000000.00,
+  "installments": [
+    {
+      "percentage": 30.0,
+      "dueDate": "2024-12-01"
+    },
+    {
+      "percentage": 70.0,
+      "dueDate": "2024-12-15"
+    }
+  ],
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf"
+}
 ```
 
-**Alternative: JSON Request (Backward Compatibility)**
+**Alternative: Multipart Form-Data Request (File Upload)**
 ```http
 POST /api/contracts/consultations/{consultationId}/draft
 Authorization: Bearer {token}
-Content-Type: application/json
+Content-Type: multipart/form-data
 
+file: [contract.pdf] (optional - if not provided, use fileUrl from request body)
+```
+
+**Request Body (JSON):**
+```json
 {
   "contractValue": 15000000.00,
   "installments": [
@@ -657,10 +673,10 @@ const ContractFileViewer = ({ contract }) => {
 ### **Complete Contract Management Process Journey:**
 
 1. **Consultant Creates Contract Draft**
-   - Option 1: `POST /api/contracts/{consultationId}/generate-draft` → Status: `DRAFT`
-   - Option 2: Direct file upload via `POST /api/contracts/consultations/{consultationId}/draft` (multipart/form-data)
-   - Option 3: Manual upload via `POST /api/files/upload` + `POST /api/contracts/consultations/{consultationId}/draft` (JSON)
-   - **File Operation**: Files uploaded to `contracts/{consultationId}/draft/` path
+    - Option 1: `POST /api/contracts/{consultationId}/generate-draft` → Status: `DRAFT`
+    - Option 2: JSON request via `POST /api/contracts/consultations/{consultationId}/draft` with optional file upload (multipart/form-data)
+    - Option 3: Manual upload via `POST /api/files/upload` + `POST /api/contracts/consultations/{consultationId}/draft` (JSON)
+    - **File Operation**: Files uploaded to `contracts/{consultationId}/draft/` path
 
 2. **Consultant Requests Approval**
    - `POST /api/contracts/{contractId}/request-approval` → Status: `REQUEST_FOR_APPROVAL`
@@ -730,7 +746,7 @@ const ContractFileViewer = ({ contract }) => {
 - **Status Check**: Contracts can only be created when consultation status is `SURVEY_SELESAI`
 - **Single Contract**: Only one active contract per consultation
 - **File Upload Options**:
-  - Direct multipart upload in createContractDraft endpoint
+  - JSON request with optional multipart file upload in createContractDraft endpoint
   - Manual file upload via FileController + fileUrl reference
   - Backward compatibility with JSON requests
 - **File Storage**: Contract files stored in `contracts/{consultationId}/draft/` path
