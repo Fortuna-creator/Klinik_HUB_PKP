@@ -41,7 +41,7 @@ class FileControllerTest {
     void uploadFile_Success() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "test content".getBytes());
-        FileUploadResponse expectedResponse = new FileUploadResponse("Upload success", "http://minio-endpoint/hub-documents/test.pdf");
+        FileUploadResponse expectedResponse = new FileUploadResponse("Upload success", "http://minio-endpoint/hub-documents/test.pdf", java.util.UUID.randomUUID());
 
         when(fileUploadService.uploadFile("verification", "ktp", "user123", file)).thenReturn(expectedResponse);
 

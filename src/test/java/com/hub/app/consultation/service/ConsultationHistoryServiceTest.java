@@ -47,7 +47,7 @@ class ConsultationHistoryServiceTest {
         String state = "CREATED";
         String title = "Consultation created";
         String subtitle = "New consultation request";
-        List<String> files = Arrays.asList("file1.pdf");
+        List<UUID> files = Arrays.asList(UUID.randomUUID());
         List<String> attachments = Arrays.asList("attachment1.pdf");
         String actor = "HOMEOWNER";
         String status = "PENDING";
