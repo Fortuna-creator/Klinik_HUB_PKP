@@ -94,7 +94,7 @@ public class ContractService {
             contract.setConsultation(consultation);
             contract.setContractValue(request.getContractValue());
             contract.setFileUrl(fileUrl);
-            contract.setStatus(ContractStatus.DRAFT);
+            contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
             contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
 
             contract = contractRepository.save(contract);
@@ -308,21 +308,16 @@ public class ContractService {
             throw new RuntimeException("Access denied");
         }
 
-        if (contract.getStatus() != ContractStatus.DRAFT) {
+        if (contract.getStatus() != ContractStatus.REQUEST_FOR_APPROVAL) {
             throw new RuntimeException("Invalid contract status for revision request");
         }
 
-        // Create new contract draft with revision notes
-        Contract newContract = new Contract();
-        newContract.setConsultation(contract.getConsultation());
-        newContract.setContractValue(contract.getContractValue());
-        newContract.setFileUrl(contract.getFileUrl());
-        newContract.setStatus(ContractStatus.DRAFT);
-        newContract.setApprovalDeadline(LocalDateTime.now().plusDays(7));
-        newContract.setNotes("Revision requested: " + revisionNotes);
-        newContract = contractRepository.save(newContract);
+        // Update existing contract status to revision requested
+        contract.setStatus(ContractStatus.REVISION_REQUESTED);
+        contract.setNotes("Revision requested: " + revisionNotes);
+        contract = contractRepository.save(contract);
 
-        // Update consultation status back to SURVEY_SELESAI since contract revision is requested
+        // Update consultation status back to MENYIAPKAN_KONTRAK since contract revision is requested
         contract.getConsultation().setStatus(ConsultationStatus.MENYIAPKAN_KONTRAK);
         consultationRepository.save(contract.getConsultation());
 
@@ -334,7 +329,7 @@ public class ContractService {
             null, null, null, contract.getId()
         ));
 
-        return mapToResponse(newContract);
+        return mapToResponse(contract);
     }
 
     @Transactional
