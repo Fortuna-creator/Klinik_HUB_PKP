@@ -326,20 +326,13 @@ public class ContractService {
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI);
         consultationRepository.save(contract.getConsultation());
 
-        // Create history event
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONTRACT",
-            "REVISION_REQUESTED",
-            "Permintaan revisi kontrak",
-            "Homeowner meminta revisi kontrak dengan catatan: " + revisionNotes,
-            java.util.Arrays.asList(),
-            java.util.Arrays.asList(),
-            "HOMEOWNER",
-            "REVISION_REQUESTED",
-            revisionNotes,
+        // Publish event for history tracking
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, contract.getConsultation(), "CONTRACT_REVISION_REQUESTED", "CONTRACT", "REVISION_REQUESTED", "HOMEOWNER",
+            Arrays.asList(),
+            Arrays.asList(),
             null, null, null, contract.getId()
-        );
+        ));
 
         return mapToResponse(newContract);
     }
