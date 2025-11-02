@@ -28,31 +28,18 @@ public class ContractController {
     private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
-    @PostMapping(value = "/consultations/{consultationId}/draft", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping("/consultations/{consultationId}/draft")
     @PreAuthorize("hasRole('CONSULTANT')")
     public ResponseEntity<?> createContractDraft(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
-            @RequestPart("contractValue") String contractValueStr,
-            @RequestPart("installments") String installmentsJson,
+            @RequestBody ContractGenerationRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         log.info("Creating contract draft for consultationId: {}", consultationId);
         try {
             Long consultantId = jwtService.extractUserId(authHeader);
             log.debug("Extracted consultantId: {} from auth header", consultantId);
 
-            ContractGenerationRequest request = new ContractGenerationRequest();
-            request.setContractValue(new java.math.BigDecimal(contractValueStr));
-
-            // Parse installments JSON
-            if (installmentsJson != null && !installmentsJson.trim().isEmpty()) {
-                java.util.List<com.hub.app.consultation.dto.PaymentInstallmentRequest> installments =
-                    new com.fasterxml.jackson.databind.ObjectMapper().readValue(
-                        installmentsJson,
-                        new com.fasterxml.jackson.core.type.TypeReference<java.util.List<com.hub.app.consultation.dto.PaymentInstallmentRequest>>() {}
-                    );
-                request.setInstallments(installments);
-            }
 
             ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request, file);
             log.info("Contract draft created successfully for consultationId: {}", consultationId);
