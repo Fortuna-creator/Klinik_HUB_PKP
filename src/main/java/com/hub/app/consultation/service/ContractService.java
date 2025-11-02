@@ -94,7 +94,7 @@ public class ContractService {
             contract.setConsultation(consultation);
             contract.setContractValue(request.getContractValue());
             contract.setFileUrl(fileUrl);
-            contract.setStatus(ContractStatus.DRAFT);
+            contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
             contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
 
             contract = contractRepository.save(contract);
