@@ -40,6 +40,9 @@ public class ConsultationHistory {
     @Column(name = "files", columnDefinition = "TEXT[]")
     private List<String> files;
 
+    @Column(name = "file_ids", columnDefinition = "UUID[]")
+    private List<UUID> fileIds;
+
     @Column(name = "attachments", columnDefinition = "TEXT[]")
     private List<String> attachments;
 

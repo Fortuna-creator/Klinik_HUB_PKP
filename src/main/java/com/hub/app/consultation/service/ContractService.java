@@ -73,7 +73,8 @@ public class ContractService {
             }
 
             // Handle file upload if provided
-            String fileUrl = request.getFileUrl();
+            String fileUrl = null;
+            com.hub.app.file.dto.FileUploadResponse uploadResponse = null;
             if (file != null && !file.isEmpty()) {
                 // Validate file size (max 2MB)
                 long maxFileSize = 2 * 1024 * 1024; // 2MB in bytes
@@ -84,7 +85,7 @@ public class ContractService {
                 try {
                     // Generate contract ID for file path
                     UUID contractId = UUID.randomUUID();
-                    com.hub.app.file.dto.FileUploadResponse uploadResponse = fileUploadService.uploadFile(
+                    uploadResponse = fileUploadService.uploadFile(
                         "contracts", "draft", contractId.toString(), file);
                     fileUrl = uploadResponse.getFileUrl();
                     log.debug("Contract file uploaded: {}", fileUrl);
@@ -111,7 +112,7 @@ public class ContractService {
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "CONTRACT_REQUEST_FOR_APPROVAL", "CONTRACT", "REQUEST_FOR_APPROVAL", "CONSULTANT",
-                fileUrl != null ? Arrays.asList(fileUrl) : Arrays.asList(),
+                uploadResponse != null ? Arrays.asList(uploadResponse.getFileId()) : Arrays.asList(),  // Use fileId from upload
                 Arrays.asList(),
                 request.getContractValue(), null, null, contract.getId()
             ));
@@ -208,7 +209,7 @@ public class ContractService {
             "REQUEST_FOR_APPROVAL",
             "Kontrak diajukan untuk approval homeowner",
             "Kontrak konsultasi desain diajukan untuk persetujuan homeowner",
-            java.util.Arrays.asList(contract.getFileUrl()),
+            java.util.Arrays.asList(),  // No fileId available in this method
             java.util.Arrays.asList(),
             "CONSULTANT",
             "REQUEST_FOR_APPROVAL",
@@ -244,7 +245,7 @@ public class ContractService {
         // Publish event for history tracking
         eventPublisher.publishEvent(new ConsultationEvent(
             this, contract.getConsultation(), "CONTRACT_APPROVED", "CONTRACT", "APPROVED", "HOMEOWNER",
-            Arrays.asList(),
+            Arrays.asList(),  // No files for approval event
             Arrays.asList(),
             contract.getContractValue(), null, null, contract.getId()
         ));
@@ -277,7 +278,7 @@ public class ContractService {
             "REJECTED",
             "Kontrak ditolak homeowner",
             "Homeowner menolak kontrak dengan alasan: " + reason,
-            java.util.Arrays.asList(),
+            java.util.Arrays.asList(),  // No files for rejection
             java.util.Arrays.asList(),
             "HOMEOWNER",
             "REJECTED",
@@ -327,7 +328,7 @@ public class ContractService {
         // Publish event for history tracking
         eventPublisher.publishEvent(new ConsultationEvent(
             this, contract.getConsultation(), "CONTRACT_REVISION_REQUESTED", "CONTRACT", "REVISION_REQUESTED", "HOMEOWNER",
-            Arrays.asList(),
+            Arrays.asList(),  // No files for revision request
             Arrays.asList(),
             null, null, null, contract.getId()
         ));
@@ -363,7 +364,7 @@ public class ContractService {
         // Publish event
         eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
             this, contract.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "SYSTEM",
-            Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()
+            Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()  // No files for consultation start
         ));
 
         // Create history event
@@ -374,7 +375,7 @@ public class ContractService {
             "Kontrak ditandatangani",
             "Kontrak konsultasi desain telah ditandatangani oleh " +
             (contract.getConsultation().getHomeOwner().getId().equals(userId) ? "homeowner" : "konsultan"),
-            java.util.Arrays.asList(contract.getFileUrl()),
+            java.util.Arrays.asList(),  // No fileId available, contract.getFileUrl() is URL
             java.util.Arrays.asList(),
             contract.getConsultation().getHomeOwner().getId().equals(userId) ? "HOMEOWNER" : "CONSULTANT",
             "SIGNED",
@@ -389,7 +390,7 @@ public class ContractService {
             "STARTED",
             "Konsultasi aktif dimulai",
             "Konsultasi desain telah dimulai setelah kontrak ditandatangani",
-            java.util.Arrays.asList(),
+            java.util.Arrays.asList(),  // No files for consultation start
             java.util.Arrays.asList(),
             "SYSTEM",
             "STARTED",
