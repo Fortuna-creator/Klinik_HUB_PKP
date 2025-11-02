@@ -107,7 +107,7 @@ public class ContractService {
 
             // Publish event for history tracking
             eventPublisher.publishEvent(new ConsultationEvent(
-                this, consultation, "CONTRACT_DRAFT_CREATED", "CONTRACT", "DRAFT_CREATED", "CONSULTANT",
+                this, consultation, "CONTRACT_REQUEST_FOR_APPROVAL", "CONTRACT", "REQUEST_FOR_APPROVAL", "CONSULTANT",
                 fileUrl != null ? Arrays.asList(fileUrl) : Arrays.asList(),
                 Arrays.asList(),
                 request.getContractValue(), null, null, contract.getId()
