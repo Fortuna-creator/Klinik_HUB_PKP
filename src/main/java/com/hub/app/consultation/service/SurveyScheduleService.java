@@ -274,8 +274,8 @@ public class SurveyScheduleService {
 
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "SURVEY_COMPLETED", "SURVEY", "COMPLETED", "CONSULTANT",
-                java.util.Arrays.asList("https://hub-files.survey.photos.1.jpg", "https://hub-files.survey.photos.2.jpg"),
-                java.util.Arrays.asList("https://hub-files.survey.report.pdf"),
+                java.util.Arrays.asList(),  // No fileIds available for survey completion
+                java.util.Arrays.asList(),  // No attachments
                 completedSchedule != null ? completedSchedule.getSurveyCost() : null,
                 completedSchedule != null ? completedSchedule.getSurveyLocation() : null
             ));
