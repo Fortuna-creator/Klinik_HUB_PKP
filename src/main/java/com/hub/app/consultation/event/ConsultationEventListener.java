@@ -81,6 +81,8 @@ public class ConsultationEventListener {
                 return "Kontrak disetujui homeowner";
             case "CONTRACT_REJECTED":
                 return "Kontrak ditolak homeowner";
+            case "CONTRACT_REVISION_REQUESTED":
+                return "Permintaan revisi kontrak";
             case "DOCUMENT_DOCUMENTS_UPLOADED":
                 return "Dokumen DED, BOQ, dan RAB diupload";
             case "DOCUMENT_REVISION_REQUESTED":
@@ -118,6 +120,8 @@ public class ConsultationEventListener {
                 return "Kontrak siap untuk ditandatangani";
             case "CONTRACT_REJECTED":
                 return "Homeowner menolak kontrak dengan alasan tertentu";
+            case "CONTRACT_REVISION_REQUESTED":
+                return "Homeowner meminta revisi kontrak";
             case "DOCUMENT_DOCUMENTS_UPLOADED":
                 return "Konsultan mengupload semua dokumen teknis proyek";
             case "DOCUMENT_REVISION_REQUESTED":
@@ -158,6 +162,9 @@ public class ConsultationEventListener {
                 break;
             case "CONTRACT_REQUEST_FOR_APPROVAL":
                 notes.append("Deadline approval: 7 hari");
+                break;
+            case "CONTRACT_REVISION_REQUESTED":
+                notes.append("Homeowner meminta revisi kontrak");
                 break;
             case "DOCUMENT_DOCUMENTS_UPLOADED":
                 notes.append("DED: Detail Engineering Design, BOQ: Bill of Quantities, RAB: Rencana Anggaran Biaya");
