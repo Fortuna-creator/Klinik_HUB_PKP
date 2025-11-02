@@ -7,6 +7,8 @@ import com.hub.app.consultation.service.ContractService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.user.model.User;
+import com.hub.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -27,9 +29,9 @@ public class ContractController {
     private final ContractService contractService;
     private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
+    private final UserRepository userRepository;
 
     @PostMapping(value = "/consultations/{consultationId}/draft", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('CONSULTANT')")
     public ResponseEntity<?> createContractDraft(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
@@ -37,9 +39,26 @@ public class ContractController {
             @RequestPart(value = "file", required = false) MultipartFile file) {
         log.info("Creating contract draft for consultationId: {}", consultationId);
         try {
-            Long consultantId = jwtService.extractUserId(authHeader);
-            log.debug("Extracted consultantId: {} from auth header", consultantId);
+            // Manual JWT validation for multipart endpoint
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                log.warn("Invalid authorization header for consultationId: {}", consultationId);
+                return apiErrorBuilder.error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Invalid authorization header");
+            }
 
+            String token = authHeader.replace("Bearer ", "");
+            User user = jwtService.validateAndGetUser("Bearer " + token);
+            if (!"CONSULTANT".equals(user.getRole().name())) {
+                log.warn("Access denied for user role: {} for consultationId: {}", user.getRole(), consultationId);
+                return apiErrorBuilder.error(HttpStatus.FORBIDDEN, "FORBIDDEN", "Access denied");
+            }
+
+            if (!"CONSULTANT".equals(user.getRole().name())) {
+                log.warn("Access denied for user role: {} for consultationId: {}", user.getRole(), consultationId);
+                return apiErrorBuilder.error(HttpStatus.FORBIDDEN, "FORBIDDEN", "Access denied");
+            }
+
+            Long consultantId = user.getId();
+            log.debug("Extracted consultantId: {} from auth header", consultantId);
 
             ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request, file);
             log.info("Contract draft created successfully for consultationId: {}", consultationId);
@@ -50,8 +69,8 @@ public class ContractController {
         } catch (Exception e) {
             log.error("Unexpected error while creating contract draft for consultationId: {}", consultationId, e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                          ErrorCode.INTERNAL_ERROR.getCode(),
-                                          e.getMessage());
+                                           ErrorCode.INTERNAL_ERROR.getCode(),
+                                           e.getMessage());
         }
     }
 
