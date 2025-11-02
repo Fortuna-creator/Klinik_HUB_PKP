@@ -1,5 +1,6 @@
 package com.hub.app.consultation.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hub.app.consultation.dto.ContractGenerationRequest;
 import com.hub.app.consultation.dto.ContractResponse;
 import com.hub.app.consultation.service.ConsultationJwtService;
@@ -30,12 +31,13 @@ public class ContractController {
     private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
 
     @PostMapping(value = "/consultations/{consultationId}/draft", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createContractDraft(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
-            @RequestPart("request") ContractGenerationRequest request,
+            @RequestParam("request") String requestJson,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         log.info("Creating contract draft for consultationId: {}", consultationId);
         try {
@@ -59,6 +61,16 @@ public class ContractController {
 
             Long consultantId = user.getId();
             log.debug("Extracted consultantId: {} from auth header", consultantId);
+
+            // Parse JSON request
+            ContractGenerationRequest request;
+            try {
+                request = objectMapper.readValue(requestJson, ContractGenerationRequest.class);
+                log.debug("Parsed request: {}", request);
+            } catch (Exception e) {
+                log.error("Failed to parse request JSON: {}", e.getMessage());
+                return apiErrorBuilder.error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", "Invalid request format");
+            }
 
             ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request, file);
             log.info("Contract draft created successfully for consultationId: {}", consultationId);
