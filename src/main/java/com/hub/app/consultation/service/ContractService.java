@@ -50,21 +50,25 @@ public class ContractService {
                     .orElseThrow(() -> new RuntimeException("Consultation not found"));
             log.debug("Consultation found: ID={}, Status={}", consultation.getId(), consultation.getStatus());
 
-            // Check if consultation status is SURVEY_SELESAI
-            if (consultation.getStatus() != ConsultationStatus.SURVEY_SELESAI) {
+            // Check if consultation status is SURVEY_SELESAI or MENYIAPKAN_KONTRAK (revision)
+            if (consultation.getStatus() != ConsultationStatus.SURVEY_SELESAI && consultation.getStatus() != ConsultationStatus.MENYIAPKAN_KONTRAK) {
                 log.error("Invalid consultation status for contract creation: expected={}, actual={}",
                          ConsultationStatus.SURVEY_SELESAI, consultation.getStatus());
                 throw new RuntimeException("Contract can only be created after survey is completed");
             }
 
+            Contract contract = new Contract();
+
             // Check if contract already exists - allow only if previous contract is rejected or revision requested
             if (contractRepository.findByConsultationId(consultationId).isPresent()) {
                 Contract existingContract = contractRepository.findByConsultationId(consultationId).get();
                 if (existingContract.getStatus() != ContractStatus.REJECTED &&
-                    existingContract.getStatus() != ContractStatus.DRAFT) {
+                    existingContract.getStatus() != ContractStatus.DRAFT && existingContract.getStatus() != ContractStatus.REVISION_REQUESTED) {
                     log.error("Contract already exists for consultation ID: {} with status: {}", consultationId, existingContract.getStatus());
                     throw new RuntimeException("Contract already exists for this consultation");
                 }
+
+                contract = existingContract;
                 log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
             }
 
@@ -90,7 +94,6 @@ public class ContractService {
                 }
             }
 
-            Contract contract = new Contract();
             contract.setConsultation(consultation);
             contract.setContractValue(request.getContractValue());
             contract.setFileUrl(fileUrl);
