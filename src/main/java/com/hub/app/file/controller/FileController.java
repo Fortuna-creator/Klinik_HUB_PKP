@@ -2,6 +2,7 @@ package com.hub.app.file.controller;
 
 import com.hub.app.auth.service.JwtService;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.user.repository.UserRepository;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.file.dto.FileDownloadResponse;
 import com.hub.app.file.dto.FileListResponse;
@@ -31,6 +32,7 @@ public class FileController {
     private final JwtService jwtService;
     private final MinioService minioService;
     private final ConsultationRepository consultationRepository;
+    private final UserRepository userRepository;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadFile(
@@ -85,9 +87,9 @@ public class FileController {
                 return ResponseEntity.status(401).body("Invalid token");
             }
 
-            // For now, use a simple user ID extraction (you may need to adjust this)
-            // This assumes the JWT contains user ID in some way
-            Long userId = 1L; // TODO: Implement proper user ID extraction from JWT
+            String email = jwtService.extractUsername(token);
+            Long userId = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found")).getId();
 
             // Get file metadata and check access
             Optional<FileUpload> fileMetadata = fileUploadService.getFileMetadata(fileId);
