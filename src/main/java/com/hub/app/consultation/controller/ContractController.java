@@ -28,12 +28,12 @@ public class ContractController {
     private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
-    @PostMapping("/consultations/{consultationId}/draft")
+    @PostMapping(value = "/consultations/{consultationId}/draft", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CONSULTANT')")
     public ResponseEntity<?> createContractDraft(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody ContractGenerationRequest request,
+            @RequestPart("request") ContractGenerationRequest request,
             @RequestPart(value = "file", required = false) MultipartFile file) {
         log.info("Creating contract draft for consultationId: {}", consultationId);
         try {
