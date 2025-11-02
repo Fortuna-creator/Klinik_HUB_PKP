@@ -10,9 +10,11 @@ import com.hub.app.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -26,17 +28,33 @@ public class ContractController {
     private final ConsultationJwtService jwtService;
     private final ApiErrorBuilder apiErrorBuilder;
 
-    @PostMapping("/consultations/{consultationId}/draft")
+    @PostMapping(value = "/consultations/{consultationId}/draft", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('CONSULTANT')")
     public ResponseEntity<?> createContractDraft(
             @PathVariable UUID consultationId,
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody ContractGenerationRequest request) {
-        log.info("Creating contract draft for consultationId: {}, request: {}", consultationId, request);
+            @RequestPart("contractValue") String contractValueStr,
+            @RequestPart("installments") String installmentsJson,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+        log.info("Creating contract draft for consultationId: {}", consultationId);
         try {
             Long consultantId = jwtService.extractUserId(authHeader);
             log.debug("Extracted consultantId: {} from auth header", consultantId);
-            ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request);
+
+            ContractGenerationRequest request = new ContractGenerationRequest();
+            request.setContractValue(new java.math.BigDecimal(contractValueStr));
+
+            // Parse installments JSON
+            if (installmentsJson != null && !installmentsJson.trim().isEmpty()) {
+                java.util.List<com.hub.app.consultation.dto.PaymentInstallmentRequest> installments =
+                    new com.fasterxml.jackson.databind.ObjectMapper().readValue(
+                        installmentsJson,
+                        new com.fasterxml.jackson.core.type.TypeReference<java.util.List<com.hub.app.consultation.dto.PaymentInstallmentRequest>>() {}
+                    );
+                request.setInstallments(installments);
+            }
+
+            ContractResponse response = contractService.createContractDraft(consultationId, consultantId, request, file);
             log.info("Contract draft created successfully for consultationId: {}", consultationId);
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (DomainException e) {
@@ -45,8 +63,8 @@ public class ContractController {
         } catch (Exception e) {
             log.error("Unexpected error while creating contract draft for consultationId: {}", consultationId, e);
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                         ErrorCode.INTERNAL_ERROR.getCode(),
-                                         e.getMessage());
+                                          ErrorCode.INTERNAL_ERROR.getCode(),
+                                          e.getMessage());
         }
     }
 

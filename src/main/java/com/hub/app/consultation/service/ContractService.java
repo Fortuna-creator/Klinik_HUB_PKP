@@ -10,12 +10,14 @@ import com.hub.app.consultation.model.Consultation;
 import com.hub.app.consultation.model.ConsultationStatus;
 import com.hub.app.consultation.repository.ContractRepository;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.file.service.FileUploadService;
 import com.hub.app.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,10 +37,11 @@ public class ContractService {
     private final ContractTemplateService contractTemplateService;
     private final PaymentInstallmentCalculator paymentCalculator;
     private final ApplicationEventPublisher eventPublisher;
+    private final FileUploadService fileUploadService;
 
     @Transactional
     public ContractResponse createContractDraft(UUID consultationId, Long consultantId,
-                                              ContractGenerationRequest request) {
+                                               ContractGenerationRequest request, MultipartFile file) {
         log.info("=== STARTING CONTRACT DRAFT CREATION ===");
         log.info("Consultation ID: {}, Consultant ID: {}", consultationId, consultantId);
 
@@ -54,16 +57,43 @@ public class ContractService {
                 throw new RuntimeException("Contract can only be created after survey is completed");
             }
 
-            // Check if contract already exists
+            // Check if contract already exists - allow only if previous contract is rejected or revision requested
             if (contractRepository.findByConsultationId(consultationId).isPresent()) {
-                log.error("Contract already exists for consultation ID: {}", consultationId);
-                throw new RuntimeException("Contract already exists for this consultation");
+                Contract existingContract = contractRepository.findByConsultationId(consultationId).get();
+                if (existingContract.getStatus() != ContractStatus.REJECTED &&
+                    existingContract.getStatus() != ContractStatus.DRAFT) {
+                    log.error("Contract already exists for consultation ID: {} with status: {}", consultationId, existingContract.getStatus());
+                    throw new RuntimeException("Contract already exists for this consultation");
+                }
+                log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
+            }
+
+            // Handle file upload if provided
+            String fileUrl = request.getFileUrl();
+            if (file != null && !file.isEmpty()) {
+                // Validate file size (max 2MB)
+                long maxFileSize = 2 * 1024 * 1024; // 2MB in bytes
+                if (file.getSize() > maxFileSize) {
+                    throw new RuntimeException("File size exceeds maximum limit of 2MB");
+                }
+
+                try {
+                    // Generate contract ID for file path
+                    UUID contractId = UUID.randomUUID();
+                    com.hub.app.file.dto.FileUploadResponse uploadResponse = fileUploadService.uploadFile(
+                        "contracts", "draft", contractId.toString(), file);
+                    fileUrl = uploadResponse.getFileUrl();
+                    log.debug("Contract file uploaded: {}", fileUrl);
+                } catch (Exception e) {
+                    log.error("Failed to upload contract file: {}", e.getMessage());
+                    throw new RuntimeException("Failed to upload contract file: " + e.getMessage());
+                }
             }
 
             Contract contract = new Contract();
             contract.setConsultation(consultation);
             contract.setContractValue(request.getContractValue());
-            contract.setFileUrl(request.getFileUrl());
+            contract.setFileUrl(fileUrl);
             contract.setStatus(ContractStatus.DRAFT);
             contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
 

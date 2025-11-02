@@ -21,10 +21,10 @@ Sistem menggunakan **5 status contract** dengan transisi yang ketat:
 
 ### **File Operations by Contract Stage**
 
-| Stage | File Type | Upload By | Download By | Use Case | Max Size |
-|-------|-----------|-----------|-------------|----------|----------|
-| Contract Draft | PDF, DOC, DOCX | Consultant | Both | `CONSULTATION_CONTRACT` | 10MB |
-| Contract Template | DOCX | System | Both | `CONTRACT_TEMPLATE` | N/A |
+| Stage | File Type | Upload By | Download By | Use Case | Max Size | Path Structure |
+|-------|-----------|-----------|-------------|----------|----------|----------------|
+| Contract Draft | PDF, DOC, DOCX | Consultant | Both | `CONTRACTS` | 10MB | `contracts/{consultationId}/draft/` |
+| Contract Template | DOCX | System | Both | `CONTRACT_TEMPLATE` | N/A | `system/templates/` |
 
 ---
 
@@ -63,7 +63,18 @@ Content-Type: application/vnd.openxmlformats-officedocument.wordprocessingml.doc
 Content-Disposition: attachment; filename="contract-draft.docx"
 ```
 
-#### **Create Contract Draft (Manual Upload)** (Consultant - MENYIAPKAN_KONTRAK)
+#### **Create Contract Draft (Manual Upload/File Upload)** (Consultant - MENYIAPKAN_KONTRAK)
+```http
+POST /api/contracts/consultations/{consultationId}/draft
+Authorization: Bearer {token}
+Content-Type: multipart/form-data
+
+contractValue: 15000000.00
+installments: [{"percentage": 30.0, "dueDate": "2024-12-01"}, {"percentage": 70.0, "dueDate": "2024-12-15"}]
+file: [contract.pdf] (optional - if not provided, use fileUrl from request)
+```
+
+**Alternative: JSON Request (Backward Compatibility)**
 ```http
 POST /api/contracts/consultations/{consultationId}/draft
 Authorization: Bearer {token}
@@ -71,6 +82,16 @@ Content-Type: application/json
 
 {
   "contractValue": 15000000.00,
+  "installments": [
+    {
+      "percentage": 30.0,
+      "dueDate": "2024-12-01"
+    },
+    {
+      "percentage": 70.0,
+      "dueDate": "2024-12-15"
+    }
+  ],
   "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf"
 }
 ```
@@ -80,7 +101,7 @@ Content-Type: application/json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
   "consultationId": "550e8400-e29b-41d4-a716-446655440001",
-  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/contract.pdf",
+  "fileUrl": "contracts/550e8400-e29b-41d4-a716-446655440001/draft/contract.pdf",
   "digitalSignature": false,
   "status": "DRAFT",
   "createdAt": "2024-11-01T00:00:00Z",
@@ -637,8 +658,9 @@ const ContractFileViewer = ({ contract }) => {
 
 1. **Consultant Creates Contract Draft**
    - Option 1: `POST /api/contracts/{consultationId}/generate-draft` → Status: `DRAFT`
-   - Option 2: Manual upload via `POST /api/files/upload` + `POST /api/contracts/consultations/{consultationId}/draft`
-   - **File Operation**: Consultant uploads contract files using FileController
+   - Option 2: Direct file upload via `POST /api/contracts/consultations/{consultationId}/draft` (multipart/form-data)
+   - Option 3: Manual upload via `POST /api/files/upload` + `POST /api/contracts/consultations/{consultationId}/draft` (JSON)
+   - **File Operation**: Files uploaded to `contracts/{consultationId}/draft/` path
 
 2. **Consultant Requests Approval**
    - `POST /api/contracts/{contractId}/request-approval` → Status: `REQUEST_FOR_APPROVAL`
@@ -707,7 +729,11 @@ const ContractFileViewer = ({ contract }) => {
 - **Consultant Only**: Only consultants can create contract drafts
 - **Status Check**: Contracts can only be created when consultation status is `SURVEY_SELESAI`
 - **Single Contract**: Only one active contract per consultation
-- **File Requirements**: Contract files must be uploaded before requesting approval
+- **File Upload Options**:
+  - Direct multipart upload in createContractDraft endpoint
+  - Manual file upload via FileController + fileUrl reference
+  - Backward compatibility with JSON requests
+- **File Storage**: Contract files stored in `contracts/{consultationId}/draft/` path
 
 ### **Approval Workflow Rules**
 - **Home Owner Only**: Only home owners can approve/reject contracts
