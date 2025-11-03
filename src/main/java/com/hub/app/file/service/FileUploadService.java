@@ -135,18 +135,35 @@ public class FileUploadService {
 
             // For contract files, check if user is home owner or consultant of the related consultation
             if ("contracts".equals(fileUpload.getCategory())) {
-                UUID contractId = UUID.fromString(fileUpload.getEntityId());
-                var contract = contractRepository.findById(contractId);
-                if (contract.isPresent()) {
-                    var con = contract.get();
-                    boolean hasAccess = con.getConsultation().getHomeOwner().getId().equals(userId) ||
-                                       con.getConsultation().getConsultant().getId().equals(userId);
-                    log.debug("Contract access check: userId={}, homeOwnerId={}, consultantId={}, hasAccess={}",
-                             userId, con.getConsultation().getHomeOwner().getId(),
-                             con.getConsultation().getConsultant().getId(), hasAccess);
-                    return hasAccess;
-                } else {
-                    log.warn("Contract not found for id: {}", contractId);
+                try {
+                    UUID contractId = UUID.fromString(fileUpload.getEntityId());
+                    log.debug("Checking contract access for contractId: {}, userId: {}", contractId, userId);
+
+                    var contract = contractRepository.findById(contractId);
+                    if (contract.isPresent()) {
+                        var con = contract.get();
+                        Long homeOwnerId = con.getConsultation().getHomeOwner().getId();
+                        Long consultantId = con.getConsultation().getConsultant().getId();
+
+                        boolean hasAccess = homeOwnerId.equals(userId) || consultantId.equals(userId);
+                        log.debug("Contract access check: userId={}, homeOwnerId={}, consultantId={}, hasAccess={}",
+                                 userId, homeOwnerId, consultantId, hasAccess);
+
+                        if (!hasAccess) {
+                            log.warn("Access denied: user {} is neither home owner ({}) nor consultant ({}) for contract {}",
+                                    userId, homeOwnerId, consultantId, contractId);
+                        }
+
+                        return hasAccess;
+                    } else {
+                        log.warn("Contract not found in database: contractId={}, fileId={}, entityId={}",
+                                contractId, fileUpload.getFileId(), fileUpload.getEntityId());
+                        return false;
+                    }
+                } catch (Exception e) {
+                    log.error("Error checking contract access for fileId: {}, entityId: {}, userId: {}",
+                             fileUpload.getFileId(), fileUpload.getEntityId(), userId, e);
+                    return false;
                 }
             }
 
