@@ -101,8 +101,6 @@ public class ContractService {
                 }
             }
 
-            contract.setConsultation(consultation);
-            contract.setContractValue(request.getContractValue());
             contract.setFileUrl(fileUrl);
             contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
             contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
@@ -121,7 +119,7 @@ public class ContractService {
             consultationRepository.save(consultation);
             log.info("Consultation status updated to MENUNGGU_APPROVAL_KONTRAK");
 
-            // Publish event for history tracking
+            // Publish event for history tracking - event listener handles async processing
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, consultation, "CONTRACT_REQUEST_FOR_APPROVAL", "CONTRACT", "REQUEST_FOR_APPROVAL", "CONSULTANT",
                 uploadResponse != null ? Arrays.asList(uploadResponse.getFileId()) : Arrays.asList(),  // Use fileId from upload
