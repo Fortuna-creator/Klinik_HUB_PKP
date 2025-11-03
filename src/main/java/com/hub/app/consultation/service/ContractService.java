@@ -71,9 +71,11 @@ public class ContractService {
             log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
         }
 
-        // Set consultation and contract value before any save operations
+        // Set all required fields before any save operations
         contract.setConsultation(consultation);
         contract.setContractValue(request.getContractValue());
+        contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
+        contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
 
         // Handle file upload if provided
         String fileUrl = null;
@@ -101,8 +103,6 @@ public class ContractService {
         }
 
         contract.setFileUrl(fileUrl);
-        contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
-        contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
 
         // Only save if not already saved for file upload
         if (contract.getId() == null) {
