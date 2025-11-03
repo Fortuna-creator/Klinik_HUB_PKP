@@ -156,7 +156,7 @@ public class FileUploadService {
 
                         return hasAccess;
                     } else {
-                        log.warn("Contract not found in database: contractId={}, fileId={}, entityId={}",
+                        log.warn("Contract not found in database: contractId={}, fileId={}, entityId={}. File upload record exists but contract is missing - possible data inconsistency",
                                 contractId, fileUpload.getFileId(), fileUpload.getEntityId());
                         return false;
                     }
