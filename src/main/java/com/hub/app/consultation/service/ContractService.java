@@ -72,6 +72,9 @@ public class ContractService {
                 log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
             }
 
+            // Set consultation before any save operations
+            contract.setConsultation(consultation);
+
             // Handle file upload if provided
             String fileUrl = null;
             com.hub.app.file.dto.FileUploadResponse uploadResponse = null;
@@ -96,8 +99,6 @@ public class ContractService {
                     throw new RuntimeException("Failed to upload contract file: " + e.getMessage());
                 }
             }
-
-            contract.setConsultation(consultation);
             contract.setContractValue(request.getContractValue());
             contract.setFileUrl(fileUrl);
             contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
