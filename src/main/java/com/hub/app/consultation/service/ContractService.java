@@ -41,104 +41,96 @@ public class ContractService {
 
     @Transactional
     public ContractResponse createContractDraft(UUID consultationId, Long consultantId,
-                                               ContractGenerationRequest request, MultipartFile file) {
+                                                ContractGenerationRequest request, MultipartFile file) {
         log.info("=== STARTING CONTRACT DRAFT CREATION ===");
         log.info("Consultation ID: {}, Consultant ID: {}", consultationId, consultantId);
 
-        try {
-            Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
-                    .orElseThrow(() -> new RuntimeException("Consultation not found"));
-            log.debug("Consultation found: ID={}, Status={}", consultation.getId(), consultation.getStatus());
+        Consultation consultation = consultationRepository.findByIdAndConsultantId(consultationId, consultantId)
+                .orElseThrow(() -> new RuntimeException("Consultation not found"));
+        log.debug("Consultation found: ID={}, Status={}", consultation.getId(), consultation.getStatus());
 
-            // Check if consultation status is SURVEY_SELESAI or MENYIAPKAN_KONTRAK (revision)
-            if (consultation.getStatus() != ConsultationStatus.SURVEY_SELESAI && consultation.getStatus() != ConsultationStatus.MENYIAPKAN_KONTRAK) {
-                log.error("Invalid consultation status for contract creation: expected={}, actual={}",
-                         ConsultationStatus.SURVEY_SELESAI, consultation.getStatus());
-                throw new RuntimeException("Contract can only be created after survey is completed");
-            }
-
-            Contract contract = new Contract();
-
-            // Check if contract already exists - allow only if previous contract is rejected or revision requested
-            if (contractRepository.findByConsultationId(consultationId).isPresent()) {
-                Contract existingContract = contractRepository.findByConsultationId(consultationId).get();
-                if (existingContract.getStatus() != ContractStatus.REJECTED &&
-                    existingContract.getStatus() != ContractStatus.DRAFT && existingContract.getStatus() != ContractStatus.REVISION_REQUESTED) {
-                    log.error("Contract already exists for consultation ID: {} with status: {}", consultationId, existingContract.getStatus());
-                    throw new RuntimeException("Contract already exists for this consultation");
-                }
-
-                contract = existingContract;
-                log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
-            }
-
-            // Set consultation and contract value before any save operations
-            contract.setConsultation(consultation);
-            contract.setContractValue(request.getContractValue());
-
-            // Handle file upload if provided
-            String fileUrl = null;
-            com.hub.app.file.dto.FileUploadResponse uploadResponse = null;
-            if (file != null && !file.isEmpty()) {
-                // Validate file size (max 2MB)
-                long maxFileSize = 2 * 1024 * 1024; // 2MB in bytes
-                if (file.getSize() > maxFileSize) {
-                    throw new RuntimeException("File size exceeds maximum limit of 2MB");
-                }
-
-                try {
-                    // Use contract ID for file path - save contract first to get the ID
-                    contract = contractRepository.save(contract);
-                    log.debug("Contract saved with ID: {} for file upload", contract.getId());
-
-                    uploadResponse = fileUploadService.uploadFile(
-                        "contracts", "draft", contract.getId().toString(), file);
-                    fileUrl = uploadResponse.getFileUrl();
-                    log.debug("Contract file uploaded: {}", fileUrl);
-                } catch (Exception e) {
-                    log.error("Failed to upload contract file: {}", e.getMessage());
-                    throw new RuntimeException("Failed to upload contract file: " + e.getMessage());
-                }
-            }
-
-            contract.setFileUrl(fileUrl);
-            contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
-            contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
-
-            // Only save if not already saved for file upload
-            if (contract.getId() == null) {
-                contract = contractRepository.save(contract);
-                log.debug("Contract draft created: ID={}", contract.getId());
-            } else {
-                contract = contractRepository.save(contract);
-                log.debug("Contract draft updated: ID={}", contract.getId());
-            }
-
-            // Update consultation status to MENUNGGU_APPROVAL_KONTRAK
-            consultation.setStatus(ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK);
-            consultationRepository.save(consultation);
-            log.info("Consultation status updated to MENUNGGU_APPROVAL_KONTRAK");
-
-            // Publish event for history tracking - event listener handles async processing
-            eventPublisher.publishEvent(new ConsultationEvent(
-                this, consultation, "CONTRACT_REQUEST_FOR_APPROVAL", "CONTRACT", "REQUEST_FOR_APPROVAL", "CONSULTANT",
-                uploadResponse != null ? Arrays.asList(uploadResponse.getFileId()) : Arrays.asList(),  // Use fileId from upload
-                Arrays.asList(),
-                request.getContractValue(), null, null, contract.getId()
-            ));
-            log.info("Contract draft creation event published");
-
-            log.info("=== CONTRACT DRAFT CREATION SUCCESSFUL ===");
-            return mapToResponse(contract);
-        } catch (RuntimeException e) {
-            log.error("=== CONTRACT DRAFT CREATION FAILED - RUNTIME EXCEPTION ===");
-            log.error("Consultation ID: {}, Consultant ID: {}, Error: {}", consultationId, consultantId, e.getMessage());
-            throw e;
-        } catch (Exception e) {
-            log.error("=== CONTRACT DRAFT CREATION FAILED - UNEXPECTED ERROR ===");
-            log.error("Consultation ID: {}, Consultant ID: {}, Error: {}", consultationId, consultantId, e.getMessage(), e);
-            throw new RuntimeException("Failed to create contract draft", e);
+        // Check if consultation status is SURVEY_SELESAI or MENYIAPKAN_KONTRAK (revision)
+        if (consultation.getStatus() != ConsultationStatus.SURVEY_SELESAI && consultation.getStatus() != ConsultationStatus.MENYIAPKAN_KONTRAK) {
+            log.error("Invalid consultation status for contract creation: expected={}, actual={}",
+                     ConsultationStatus.SURVEY_SELESAI, consultation.getStatus());
+            throw new RuntimeException("Contract can only be created after survey is completed");
         }
+
+        Contract contract = new Contract();
+
+        // Check if contract already exists - allow only if previous contract is rejected or revision requested
+        if (contractRepository.findByConsultationId(consultationId).isPresent()) {
+            Contract existingContract = contractRepository.findByConsultationId(consultationId).get();
+            if (existingContract.getStatus() != ContractStatus.REJECTED &&
+                existingContract.getStatus() != ContractStatus.DRAFT && existingContract.getStatus() != ContractStatus.REVISION_REQUESTED) {
+                log.error("Contract already exists for consultation ID: {} with status: {}", consultationId, existingContract.getStatus());
+                throw new RuntimeException("Contract already exists for this consultation");
+            }
+
+            contract = existingContract;
+            log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
+        }
+
+        // Set consultation and contract value before any save operations
+        contract.setConsultation(consultation);
+        contract.setContractValue(request.getContractValue());
+
+        // Handle file upload if provided
+        String fileUrl = null;
+        com.hub.app.file.dto.FileUploadResponse uploadResponse = null;
+        if (file != null && !file.isEmpty()) {
+            // Validate file size (max 2MB)
+            long maxFileSize = 2 * 1024 * 1024; // 2MB in bytes
+            if (file.getSize() > maxFileSize) {
+                throw new RuntimeException("File size exceeds maximum limit of 2MB");
+            }
+
+            // Use contract ID for file path - save contract first to get the ID
+            contract = contractRepository.save(contract);
+            log.debug("Contract saved with ID: {} for file upload", contract.getId());
+
+            try {
+                uploadResponse = fileUploadService.uploadFile(
+                    "contracts", "draft", contract.getId().toString(), file);
+                fileUrl = uploadResponse.getFileUrl();
+                log.debug("Contract file uploaded: {}", fileUrl);
+            } catch (Exception e) {
+                log.error("Failed to upload contract file: {}", e.getMessage());
+                throw new RuntimeException("Failed to upload contract file: " + e.getMessage());
+            }
+        }
+
+        contract.setFileUrl(fileUrl);
+        contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
+        contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
+
+        // Only save if not already saved for file upload
+        if (contract.getId() == null) {
+            contract = contractRepository.save(contract);
+            log.debug("Contract draft created: ID={}", contract.getId());
+        } else {
+            contract = contractRepository.save(contract);
+            log.debug("Contract draft updated: ID={}", contract.getId());
+        }
+
+        // Update consultation status to MENUNGGU_APPROVAL_KONTRAK
+        consultation.setStatus(ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK);
+        consultationRepository.save(consultation);
+        log.info("Consultation status updated to MENUNGGU_APPROVAL_KONTRAK");
+
+        log.info("=== CONTRACT DRAFT CREATION SUCCESSFUL ===");
+        ContractResponse response = mapToResponse(contract);
+
+        // Publish event for history tracking only after all database operations succeed
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, consultation, "CONTRACT_REQUEST_FOR_APPROVAL", "CONTRACT", "REQUEST_FOR_APPROVAL", "CONSULTANT",
+            uploadResponse != null ? Arrays.asList(uploadResponse.getFileId()) : Arrays.asList(),  // Use fileId from upload
+            Arrays.asList(),
+            request.getContractValue(), null, null, contract.getId()
+        ));
+        log.info("Contract draft creation event published");
+
+        return response;
     }
 
     public byte[] generateContractDraft(UUID consultationId, Long consultantId, ContractGenerationRequest request) {
