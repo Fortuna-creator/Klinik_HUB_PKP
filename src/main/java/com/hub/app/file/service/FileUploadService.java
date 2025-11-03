@@ -1,5 +1,7 @@
 package com.hub.app.file.service;
 
+import com.hub.app.consultation.repository.ContractRepository;
+import com.hub.app.consultation.repository.ConsultationRepository;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.file.dto.FileDownloadResponse;
 import com.hub.app.file.dto.FileListResponse;
@@ -8,6 +10,7 @@ import com.hub.app.file.repository.FileUploadRepository;
 import com.hub.app.file.util.BucketResolver;
 import com.hub.app.file.util.FileNameGenerator;
 import com.hub.app.storage.MinioService;
+import com.hub.app.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,9 @@ public class FileUploadService {
 
     private final FileUploadRepository fileUploadRepository;
     private final MinioService minioService;
+    private final ConsultationRepository consultationRepository;
+    private final ContractRepository contractRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public FileUploadResponse uploadFile(String category, String subCategory, String entityId, MultipartFile file) {
@@ -104,5 +110,59 @@ public class FileUploadService {
 
     public Optional<FileUpload> getFileMetadata(UUID fileId) {
         return fileUploadRepository.findByFileId(fileId);
+    }
+
+    public boolean checkUserAccessToFile(Long userId, FileUpload fileUpload) {
+        try {
+            log.debug("Checking access for userId: {}, fileId: {}, category: {}, entityId: {}",
+                     userId, fileUpload.getFileId(), fileUpload.getCategory(), fileUpload.getEntityId());
+
+            // For consultation files, check if user is home owner or consultant
+            if ("CONSULTATION".equals(fileUpload.getCategory())) {
+                UUID consultationId = UUID.fromString(fileUpload.getEntityId());
+                var consultation = consultationRepository.findById(consultationId);
+                if (consultation.isPresent()) {
+                    var cons = consultation.get();
+                    boolean hasAccess = cons.getHomeOwner().getId().equals(userId) ||
+                                       cons.getConsultant().getId().equals(userId);
+                    log.debug("Consultation access check: userId={}, homeOwnerId={}, consultantId={}, hasAccess={}",
+                             userId, cons.getHomeOwner().getId(), cons.getConsultant().getId(), hasAccess);
+                    return hasAccess;
+                } else {
+                    log.warn("Consultation not found for id: {}", consultationId);
+                }
+            }
+
+            // For contract files, check if user is home owner or consultant of the related consultation
+            if ("contracts".equals(fileUpload.getCategory())) {
+                UUID contractId = UUID.fromString(fileUpload.getEntityId());
+                var contract = contractRepository.findById(contractId);
+                if (contract.isPresent()) {
+                    var con = contract.get();
+                    boolean hasAccess = con.getConsultation().getHomeOwner().getId().equals(userId) ||
+                                       con.getConsultation().getConsultant().getId().equals(userId);
+                    log.debug("Contract access check: userId={}, homeOwnerId={}, consultantId={}, hasAccess={}",
+                             userId, con.getConsultation().getHomeOwner().getId(),
+                             con.getConsultation().getConsultant().getId(), hasAccess);
+                    return hasAccess;
+                } else {
+                    log.warn("Contract not found for id: {}", contractId);
+                }
+            }
+
+            // For project files, check if user owns the project or is assigned consultant
+            if ("PROJECT".equals(fileUpload.getCategory())) {
+                // TODO: Implement project file access check
+                // This would require checking project ownership and consultation assignments
+                log.warn("Project file access check not implemented yet, allowing access for userId: {}", userId);
+                return true; // Temporarily allow access for all authenticated users
+            }
+
+            log.warn("Unknown file category: {} for fileId: {}", fileUpload.getCategory(), fileUpload.getFileId());
+            return false;
+        } catch (Exception e) {
+            log.error("Error checking file access for userId: {}, fileId: {}", userId, fileUpload.getFileId(), e);
+            return false;
+        }
     }
 }

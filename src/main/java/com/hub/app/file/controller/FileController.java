@@ -1,7 +1,6 @@
 package com.hub.app.file.controller;
 
 import com.hub.app.auth.service.JwtService;
-import com.hub.app.consultation.repository.ConsultationRepository;
 import com.hub.app.user.repository.UserRepository;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.file.dto.FileDownloadResponse;
@@ -31,7 +30,6 @@ public class FileController {
     private final FileUploadService fileUploadService;
     private final JwtService jwtService;
     private final MinioService minioService;
-    private final ConsultationRepository consultationRepository;
     private final UserRepository userRepository;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -84,6 +82,7 @@ public class FileController {
             // Validate JWT token and extract user ID
             String token = authHeader.replace("Bearer ", "");
             if (!jwtService.validateToken(token)) {
+                log.warn("Invalid JWT token for file download request: fileId={}", fileId);
                 return ResponseEntity.status(401).body("Invalid token");
             }
 
@@ -91,22 +90,35 @@ public class FileController {
             Long userId = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found")).getId();
 
+            log.info("File download request: fileId={}, userId={}", fileId, userId);
+
             // Get file metadata and check access
             Optional<FileUpload> fileMetadata = fileUploadService.getFileMetadata(fileId);
             if (fileMetadata.isEmpty()) {
+                log.warn("File not found for download: fileId={}", fileId);
                 return ResponseEntity.status(404).body("File not found");
             }
 
             FileUpload fileUpload = fileMetadata.get();
+            log.debug("File metadata retrieved: fileId={}, category={}, entityId={}, originalName={}",
+                     fileId, fileUpload.getCategory(), fileUpload.getEntityId(), fileUpload.getOriginalName());
 
             // Check user access to this file (business logic validation)
-            boolean hasAccess = checkUserAccessToFile(userId, fileUpload);
+            boolean hasAccess = fileUploadService.checkUserAccessToFile(userId, fileUpload);
             if (!hasAccess) {
+                log.warn("Access denied for file download: fileId={}, userId={}, category={}, entityId={}",
+                        fileId, userId, fileUpload.getCategory(), fileUpload.getEntityId());
                 return ResponseEntity.status(403).body("Access denied");
             }
 
+            log.debug("Access granted, streaming file from MinIO: bucket={}, objectPath={}",
+                     fileUpload.getBucketName(), fileUpload.getObjectPath());
+
             // Stream file from MinIO
             InputStream inputStream = minioService.downloadFile(fileUpload.getBucketName(), fileUpload.getObjectPath());
+
+            log.info("File download successful: fileId={}, userId={}, fileName={}",
+                    fileId, userId, fileUpload.getOriginalName());
 
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType(fileUpload.getMimeType()))
@@ -115,35 +127,11 @@ public class FileController {
                     .body(new InputStreamResource(inputStream));
 
         } catch (Exception e) {
-            log.error("File download error for fileId: {}", fileId, e);
+            log.error("File download error for fileId: {}, userId: {}", fileId, "unknown", e);
             return ResponseEntity.status(500).body("File download failed");
         }
     }
 
-    private boolean checkUserAccessToFile(Long userId, FileUpload fileUpload) {
-        try {
-            // For consultation files, check if user is home owner or consultant
-            if ("CONSULTATION".equals(fileUpload.getCategory())) {
-                UUID consultationId = UUID.fromString(fileUpload.getEntityId());
-                var consultation = consultationRepository.findById(consultationId);
-                if (consultation.isPresent()) {
-                    var cons = consultation.get();
-                    return cons.getHomeOwner().getId().equals(userId) ||
-                           cons.getConsultant().getId().equals(userId);
-                }
-            }
-            // For project files, check if user owns the project or is assigned consultant
-            if ("PROJECT".equals(fileUpload.getCategory())) {
-                // TODO: Implement project file access check
-                // This would require checking project ownership and consultation assignments
-                return true; // Temporarily allow access for all authenticated users
-            }
-            return false;
-        } catch (Exception e) {
-            log.error("Error checking file access", e);
-            return false;
-        }
-    }
 
     // Keep the old presigned URL method for backward compatibility
     @GetMapping("/download-url")
