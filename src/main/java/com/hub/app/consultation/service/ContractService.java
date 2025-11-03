@@ -10,7 +10,12 @@ import com.hub.app.consultation.model.Consultation;
 import com.hub.app.consultation.model.ConsultationStatus;
 import com.hub.app.consultation.repository.ContractRepository;
 import com.hub.app.consultation.repository.ConsultationRepository;
+import com.hub.app.escrow.model.EscrowAccount;
+import com.hub.app.escrow.service.EscrowService;
 import com.hub.app.file.service.FileUploadService;
+import com.hub.app.payment.model.Payment;
+import com.hub.app.payment.model.PaymentStatus;
+import com.hub.app.payment.repository.PaymentRepository;
 import com.hub.app.project.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,10 +43,12 @@ public class ContractService {
     private final PaymentInstallmentCalculator paymentCalculator;
     private final ApplicationEventPublisher eventPublisher;
     private final FileUploadService fileUploadService;
+    private final EscrowService escrowService;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
     public ContractResponse createContractDraft(UUID consultationId, Long consultantId,
-                                                ContractGenerationRequest request, MultipartFile file) {
+                                                 ContractGenerationRequest request, MultipartFile file) {
         log.info("=== STARTING CONTRACT DRAFT CREATION ===");
         log.info("Consultation ID: {}, Consultant ID: {}", consultationId, consultantId);
 
@@ -70,6 +77,11 @@ public class ContractService {
             contract = existingContract;
             log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
         }
+
+        // Calculate payment installments
+        List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
+            request.getContractValue(), request.getInstallments());
+        log.debug("Calculated {} payment installments", installments.size());
 
         // Set all required fields before any save operations
         contract.setConsultation(consultation);
@@ -102,6 +114,7 @@ public class ContractService {
             }
         }
 
+        contract.setInstallments(installments); // Store installments in contract
         contract.setFileUrl(fileUrl);
 
         // Only save if not already saved for file upload
@@ -358,6 +371,9 @@ public class ContractService {
         contract.setSignedAt(LocalDateTime.now());
         contract = contractRepository.save(contract);
 
+        // Create payment installments after contract is signed
+        createPaymentInstallments(contract);
+
         // Update consultation status to AKTIF after contract is signed
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.AKTIF);
         contract.getConsultation().setStartedAt(java.time.Instant.now());
@@ -400,6 +416,47 @@ public class ContractService {
         );
 
         return mapToResponse(contract);
+    }
+
+    /**
+     * Create payment installments after contract is signed
+     */
+    private void createPaymentInstallments(Contract contract) {
+        // Get installments from contract
+        List<PaymentInstallment> installments = contract.getInstallments();
+
+        if (installments == null || installments.isEmpty()) {
+            log.warn("No payment installments found in contract, creating default installments");
+            installments = paymentCalculator.calculateInstallments(contract.getContractValue(), 3);
+        }
+
+        // Create escrow account for this consultation
+        if (!escrowService.escrowExists(contract.getConsultation().getId())) {
+            EscrowAccount escrow = escrowService.createEscrow(contract.getConsultation(), contract.getContractValue());
+            log.info("Created escrow account {} for consultation {}", escrow.getId(), contract.getConsultation().getId());
+        }
+
+        // Create payment records for each installment
+        for (PaymentInstallment installment : installments) {
+            // Create payment record with MENUNGGU status - home owner needs to pay
+            com.hub.app.payment.model.Payment payment = new com.hub.app.payment.model.Payment();
+            payment.setConsultation(contract.getConsultation());
+            payment.setType(com.hub.app.payment.model.PaymentType.KONSULTASI); // Default to konsultasi
+            payment.setTermin(installment.getInstallmentNumber());
+            payment.setAmount(installment.getAmount());
+            payment.setMethod("BANK_TRANSFER"); // Default method
+            payment.setDescription("Pembayaran termin " + installment.getInstallmentNumber() + " konsultasi desain");
+            payment.setStatus(com.hub.app.payment.model.PaymentStatus.MENUNGGU); // Waiting for home owner payment
+            payment.setDueDate(installment.getDueDate().atStartOfDay()); // Convert LocalDate to LocalDateTime
+            payment.setReferenceId(contract.getId().toString()); // Reference to contract
+
+            paymentRepository.save(payment);
+            log.info("Created payment installment {} for contract {}: amount={}, due={}",
+                    installment.getInstallmentNumber(), contract.getId(),
+                    installment.getAmount(), installment.getDueDate());
+        }
+
+        log.info("Created {} payment installments for contract {}", installments.size(), contract.getId());
     }
 
     private ContractResponse mapToResponse(Contract contract) {

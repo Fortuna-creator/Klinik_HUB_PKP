@@ -1,5 +1,6 @@
 package com.hub.app.consultation.model;
 
+import com.hub.app.consultation.dto.PaymentInstallment;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -54,6 +56,11 @@ public class Contract {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    // Payment installments - stored as JSON
+    @Column(name = "payment_installments", columnDefinition = "TEXT")
+    @Convert(converter = StringArrayConverter.class)
+    private List<PaymentInstallment> installments;
 
     @PrePersist
     protected void onCreate() {
