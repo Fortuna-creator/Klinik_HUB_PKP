@@ -83,10 +83,12 @@ public class ContractService {
                 }
 
                 try {
-                    // Generate contract ID for file path
-                    UUID contractId = UUID.randomUUID();
+                    // Use contract ID for file path - save contract first to get the ID
+                    contract = contractRepository.save(contract);
+                    log.debug("Contract saved with ID: {} for file upload", contract.getId());
+
                     uploadResponse = fileUploadService.uploadFile(
-                        "contracts", "draft", contractId.toString(), file);
+                        "contracts", "draft", contract.getId().toString(), file);
                     fileUrl = uploadResponse.getFileUrl();
                     log.debug("Contract file uploaded: {}", fileUrl);
                 } catch (Exception e) {
@@ -101,8 +103,14 @@ public class ContractService {
             contract.setStatus(ContractStatus.REQUEST_FOR_APPROVAL);
             contract.setApprovalDeadline(LocalDateTime.now().plusDays(7)); // 7 days approval period
 
-            contract = contractRepository.save(contract);
-            log.debug("Contract draft created: ID={}", contract.getId());
+            // Only save if not already saved for file upload
+            if (contract.getId() == null) {
+                contract = contractRepository.save(contract);
+                log.debug("Contract draft created: ID={}", contract.getId());
+            } else {
+                contract = contractRepository.save(contract);
+                log.debug("Contract draft updated: ID={}", contract.getId());
+            }
 
             // Update consultation status to MENUNGGU_APPROVAL_KONTRAK
             consultation.setStatus(ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK);
