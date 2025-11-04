@@ -165,6 +165,11 @@
             <artifactId>commons-compress</artifactId>
             <version>1.26.0</version>
         </dependency>
+        <!-- Jackson JSR310 for Java 8 date/time support -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
     </dependencies>
 
     <profiles>
