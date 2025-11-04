@@ -65,7 +65,7 @@ public class Contract {
 
     // Payment installments - stored as JSON
     @Column(name = "payment_installments", columnDefinition = "TEXT")
-    @Convert(converter = StringArrayConverter.class)
+    @Convert(converter = PaymentInstallmentListConverter.class)
     private List<PaymentInstallment> installments;
 
     @PrePersist
