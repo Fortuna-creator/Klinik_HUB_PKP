@@ -31,6 +31,7 @@
     <include file="025-add-contract-id-to-consultation-history.sql" relativeToChangelogFile="true"/>
     <include file="026-add-file-ids-to-consultation-history.sql" relativeToChangelogFile="true"/>
     <include file="028-add-contract-signing-timestamps.sql" relativeToChangelogFile="true"/>
+    <include file="029-add-payment-installments-column.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
 
