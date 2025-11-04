@@ -6,5 +6,7 @@ public enum ContractStatus {
     REVISION_REQUESTED, // Homeowner meminta revisi
     APPROVED,           // Disetujui homeowner
     REJECTED,           // Ditolak homeowner
-    SIGNED              // Sudah ditandatangani
+    HOMEOWNER_SIGNED,   // Homeowner sudah tanda tangan, menunggu konsultan
+    CONSULTANT_SIGNED,  // Konsultan sudah tanda tangan, menunggu homeowner
+    SIGNED              // Kedua pihak sudah ditandatangani
 }

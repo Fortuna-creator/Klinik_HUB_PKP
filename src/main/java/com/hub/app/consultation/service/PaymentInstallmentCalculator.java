@@ -16,12 +16,13 @@ public class PaymentInstallmentCalculator {
     /**
      * Calculate payment installments with custom percentages from frontend
      * @param totalAmount Total contract value
-     * @param installmentRequests List of installment requests with custom percentages and due dates
+     * @param installmentRequests List of installment requests with custom percentages and due dates. If null/empty, creates single payment after signing
      * @return List of PaymentInstallment
      */
     public List<PaymentInstallment> calculateInstallments(BigDecimal totalAmount, List<PaymentInstallmentRequest> installmentRequests) {
         if (installmentRequests == null || installmentRequests.isEmpty()) {
-            throw new IllegalArgumentException("Installment requests cannot be null or empty");
+            // Create single payment installment after contract signing
+            return createSinglePaymentInstallment(totalAmount);
         }
 
         if (installmentRequests.size() > 3) {
@@ -55,6 +56,18 @@ public class PaymentInstallmentCalculator {
             installments.add(new PaymentInstallment(i + 1, amount, request.getDueDate()));
         }
 
+        return installments;
+    }
+
+    /**
+     * Create a single payment installment after contract signing
+     * @param totalAmount Total contract value
+     * @return List containing single PaymentInstallment
+     */
+    private List<PaymentInstallment> createSinglePaymentInstallment(BigDecimal totalAmount) {
+        List<PaymentInstallment> installments = new ArrayList<>();
+        // Payment due immediately after contract signing (same day)
+        installments.add(new PaymentInstallment(1, totalAmount, LocalDate.now()));
         return installments;
     }
 

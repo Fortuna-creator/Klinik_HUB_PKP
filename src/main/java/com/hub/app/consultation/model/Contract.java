@@ -48,6 +48,12 @@ public class Contract {
     @Column(name = "signed_at")
     private LocalDateTime signedAt;
 
+    @Column(name = "homeowner_signed_at")
+    private LocalDateTime homeownerSignedAt;
+
+    @Column(name = "consultant_signed_at")
+    private LocalDateTime consultantSignedAt;
+
     @Column(name = "notes")
     private String notes;
 

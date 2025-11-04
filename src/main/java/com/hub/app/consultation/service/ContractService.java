@@ -78,7 +78,7 @@ public class ContractService {
             log.info("Creating new contract draft for consultation ID: {} (previous contract status: {})", consultationId, existingContract.getStatus());
         }
 
-        // Calculate payment installments
+        // Calculate payment installments (supports single payment if installments is null/empty)
         List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
             request.getContractValue(), request.getInstallments());
         log.debug("Calculated {} payment installments", installments.size());
@@ -168,7 +168,7 @@ public class ContractService {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         log.debug("Project found: {}", project.getProjectId());
 
-        // Calculate payment installments with custom percentages from frontend
+        // Calculate payment installments with custom percentages from frontend (supports single payment if installments is null/empty)
         log.debug("Calculating payment installments with contract value: {}", request.getContractValue());
         List<PaymentInstallment> installments = paymentCalculator.calculateInstallments(
             request.getContractValue(), request.getInstallments());
@@ -217,20 +217,11 @@ public class ContractService {
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK);
         consultationRepository.save(contract.getConsultation());
 
-        // Create history event
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONTRACT",
-            "REQUEST_FOR_APPROVAL",
-            "Kontrak diajukan untuk approval homeowner",
-            "Kontrak konsultasi desain diajukan untuk persetujuan homeowner",
-            java.util.Arrays.asList(),  // No fileId available in this method
-            java.util.Arrays.asList(),
-            "CONSULTANT",
-            "REQUEST_FOR_APPROVAL",
-            "Nilai kontrak: Rp " + contract.getContractValue().toString(),
-            null, null, null, contract.getId()
-        );
+        // Publish event only
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, contract.getConsultation(), "CONTRACT_REQUEST_FOR_APPROVAL", "CONTRACT", "REQUEST_FOR_APPROVAL", "CONSULTANT",
+            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
+        ));
 
         return mapToResponse(contract);
     }
@@ -286,20 +277,11 @@ public class ContractService {
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.SURVEY_SELESAI);
         consultationRepository.save(contract.getConsultation());
 
-        // Create history event
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONTRACT",
-            "REJECTED",
-            "Kontrak ditolak homeowner",
-            "Homeowner menolak kontrak dengan alasan: " + reason,
-            java.util.Arrays.asList(),  // No files for rejection
-            java.util.Arrays.asList(),
-            "HOMEOWNER",
-            "REJECTED",
-            reason,
-            null, null, null, contract.getId()
-        );
+        // Publish event only
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, contract.getConsultation(), "CONTRACT_REJECTED", "CONTRACT", "REJECTED", "HOMEOWNER",
+            Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()
+        ));
 
         return mapToResponse(contract);
     }
@@ -362,58 +344,129 @@ public class ContractService {
             throw new RuntimeException("Access denied");
         }
 
-        // Check if contract is in approved status
-        if (contract.getStatus() != ContractStatus.APPROVED) {
+        // Check if contract is in approved status or partial signing status
+        if (contract.getStatus() != ContractStatus.APPROVED &&
+            contract.getStatus() != ContractStatus.HOMEOWNER_SIGNED &&
+            contract.getStatus() != ContractStatus.CONSULTANT_SIGNED) {
             throw new RuntimeException("Contract must be approved before signing");
         }
 
-        contract.setStatus(ContractStatus.SIGNED);
-        contract.setSignedAt(LocalDateTime.now());
+        boolean isHomeOwner = contract.getConsultation().getHomeOwner().getId().equals(userId);
+        ContractStatus newStatus;
+
+        // Determine new status based on who is signing and current status
+        if (isHomeOwner) {
+            if (contract.getStatus() == ContractStatus.APPROVED) {
+                // Homeowner signing first
+                newStatus = ContractStatus.HOMEOWNER_SIGNED;
+            } else if (contract.getStatus() == ContractStatus.CONSULTANT_SIGNED) {
+                // Consultant already signed, homeowner signing now - contract fully signed
+                newStatus = ContractStatus.SIGNED;
+            } else {
+                throw new RuntimeException("Invalid contract status for homeowner signing");
+            }
+        } else {
+            // Consultant signing
+            if (contract.getStatus() == ContractStatus.APPROVED) {
+                // Consultant signing first
+                newStatus = ContractStatus.CONSULTANT_SIGNED;
+            } else if (contract.getStatus() == ContractStatus.HOMEOWNER_SIGNED) {
+                // Homeowner already signed, consultant signing now - contract fully signed
+                newStatus = ContractStatus.SIGNED;
+            } else {
+                throw new RuntimeException("Invalid contract status for consultant signing");
+            }
+        }
+
+        contract.setStatus(newStatus);
+
+        // Set individual signed timestamps
+        if (isHomeOwner) {
+            contract.setHomeownerSignedAt(LocalDateTime.now());
+        } else {
+            contract.setConsultantSignedAt(LocalDateTime.now());
+        }
+
+        // Set signed timestamp only when contract is fully signed
+        if (newStatus == ContractStatus.SIGNED) {
+            contract.setSignedAt(LocalDateTime.now());
+        }
+
         contract = contractRepository.save(contract);
 
-        // Create payment installments after contract is signed
+        // Create history event for signing
+        String signerType = isHomeOwner ? "HOMEOWNER" : "CONSULTANT";
+        String signerName = isHomeOwner ? "homeowner" : "konsultan";
+        String state = newStatus == ContractStatus.SIGNED ? "SIGNED" :
+                      (isHomeOwner ? "HOMEOWNER_SIGNED" : "CONSULTANT_SIGNED");
+
+        // Publish event only
+        eventPublisher.publishEvent(new ConsultationEvent(
+            this, contract.getConsultation(), "CONTRACT_SIGNED", "CONTRACT", state, signerType,
+            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
+        ));
+
+        // If contract is fully signed, mark consultation as ready for payment request
+        if (newStatus == ContractStatus.SIGNED) {
+            // Update consultation status to MENUNGGU_REQUEST_PAYMENT after contract is signed
+            contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_REQUEST_PAYMENT);
+            consultationRepository.save(contract.getConsultation());
+
+            // Publish event for contract fully signed
+            eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
+                this, contract.getConsultation(), "CONTRACT_FULLY_SIGNED", "CONTRACT", "SIGNED", "SYSTEM",
+                Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()
+            ));
+
+            // Publish event only for contract fully signed
+            eventPublisher.publishEvent(new ConsultationEvent(
+                this, contract.getConsultation(), "CONTRACT_FULLY_SIGNED", "CONTRACT", "FULLY_SIGNED", "SYSTEM",
+                Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
+            ));
+        } else {
+            // Contract partially signed, update consultation status to MENUNGGU_TANDA_TANGAN if not already
+            if (contract.getConsultation().getStatus() != ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK) {
+                contract.getConsultation().setStatus(ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK);
+                consultationRepository.save(contract.getConsultation());
+            }
+        }
+
+        return mapToResponse(contract);
+    }
+
+    @Transactional
+    public ContractResponse requestPayment(UUID contractId, Long consultantId) {
+        Contract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new RuntimeException("Contract not found"));
+
+        // Check access - only consultant can request payment
+        if (!contract.getConsultation().getConsultant().getId().equals(consultantId)) {
+            throw new RuntimeException("Access denied");
+        }
+
+        // Check if contract is fully signed
+        if (contract.getStatus() != ContractStatus.SIGNED) {
+            throw new RuntimeException("Contract must be fully signed before requesting payment");
+        }
+
+        // Check if consultation is in MENUNGGU_REQUEST_PAYMENT status
+        if (contract.getConsultation().getStatus() != ConsultationStatus.MENUNGGU_REQUEST_PAYMENT) {
+            throw new RuntimeException("Invalid consultation status for payment request");
+        }
+
+        // Create payment installments after payment is requested
         createPaymentInstallments(contract);
 
-        // Update consultation status to AKTIF after contract is signed
+        // Update consultation status to AKTIF after payment request
         contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.AKTIF);
         contract.getConsultation().setStartedAt(java.time.Instant.now());
         consultationRepository.save(contract.getConsultation());
 
-        // Publish event
+        // Publish event for payment request and consultation start
         eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
-            this, contract.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "SYSTEM",
-            Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()  // No files for consultation start
+            this, contract.getConsultation(), "PAYMENT_REQUESTED", "PAYMENT", "REQUESTED", "CONSULTANT",
+            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
         ));
-
-        // Create history event
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONTRACT",
-            "SIGNED",
-            "Kontrak ditandatangani",
-            "Kontrak konsultasi desain telah ditandatangani oleh " +
-            (contract.getConsultation().getHomeOwner().getId().equals(userId) ? "homeowner" : "konsultan"),
-            java.util.Arrays.asList(),  // No fileId available, contract.getFileUrl() is URL
-            java.util.Arrays.asList(),
-            contract.getConsultation().getHomeOwner().getId().equals(userId) ? "HOMEOWNER" : "CONSULTANT",
-            "SIGNED",
-            "Kontrak telah ditandatangani",
-            null, null, null, contract.getId()
-        );
-
-        // Create history event for consultation start
-        historyService.createHistoryEvent(
-            contract.getConsultation(),
-            "CONSULTATION",
-            "STARTED",
-            "Konsultasi aktif dimulai",
-            "Konsultasi desain telah dimulai setelah kontrak ditandatangani",
-            java.util.Arrays.asList(),  // No files for consultation start
-            java.util.Arrays.asList(),
-            "SYSTEM",
-            "STARTED",
-            "Konsultasi aktif"
-        );
 
         return mapToResponse(contract);
     }
@@ -426,8 +479,8 @@ public class ContractService {
         List<PaymentInstallment> installments = contract.getInstallments();
 
         if (installments == null || installments.isEmpty()) {
-            log.warn("No payment installments found in contract, creating default installments");
-            installments = paymentCalculator.calculateInstallments(contract.getContractValue(), 3);
+            log.warn("No payment installments found in contract, creating single payment installment");
+            installments = paymentCalculator.calculateInstallments(contract.getContractValue(), null);
         }
 
         // Create escrow account for this consultation
