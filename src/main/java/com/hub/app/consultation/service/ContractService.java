@@ -394,7 +394,20 @@ public class ContractService {
 
         contract = contractRepository.save(contract);
 
-        // Create history event for signing
+        // If contract is fully signed, mark consultation as ready for payment request
+        if (newStatus == ContractStatus.SIGNED) {
+            // Update consultation status to MENUNGGU_REQUEST_PAYMENT after contract is signed
+            contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_REQUEST_PAYMENT);
+            consultationRepository.save(contract.getConsultation());
+        } else {
+            // Contract partially signed, update consultation status to MENUNGGU_TANDA_TANGAN if not already
+            if (contract.getConsultation().getStatus() != ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK) {
+                contract.getConsultation().setStatus(ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK);
+                consultationRepository.save(contract.getConsultation());
+            }
+        }
+
+        // Create history event for signing - publish after all DB operations
         String signerType = isHomeOwner ? "HOMEOWNER" : "CONSULTANT";
         String signerName = isHomeOwner ? "homeowner" : "konsultan";
         String state = newStatus == ContractStatus.SIGNED ? "SIGNED" :
@@ -405,31 +418,6 @@ public class ContractService {
             this, contract.getConsultation(), "CONTRACT_SIGNED", "CONTRACT", state, signerType,
             Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
         ));
-
-        // If contract is fully signed, mark consultation as ready for payment request
-        if (newStatus == ContractStatus.SIGNED) {
-            // Update consultation status to MENUNGGU_REQUEST_PAYMENT after contract is signed
-            contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_REQUEST_PAYMENT);
-            consultationRepository.save(contract.getConsultation());
-
-            // Publish event for contract fully signed
-            eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
-                this, contract.getConsultation(), "CONTRACT_FULLY_SIGNED", "CONTRACT", "SIGNED", "SYSTEM",
-                Arrays.asList(), Arrays.asList(), null, null, null, contract.getId()
-            ));
-
-            // Publish event only for contract fully signed
-            eventPublisher.publishEvent(new ConsultationEvent(
-                this, contract.getConsultation(), "CONTRACT_FULLY_SIGNED", "CONTRACT", "FULLY_SIGNED", "SYSTEM",
-                Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
-            ));
-        } else {
-            // Contract partially signed, update consultation status to MENUNGGU_TANDA_TANGAN if not already
-            if (contract.getConsultation().getStatus() != ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK) {
-                contract.getConsultation().setStatus(ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK);
-                consultationRepository.save(contract.getConsultation());
-            }
-        }
 
         return mapToResponse(contract);
     }
