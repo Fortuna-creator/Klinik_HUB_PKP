@@ -1,8 +1,9 @@
-package com.hub.app.consultation.repository;
+package com.hub.app.payment.repository;
 
-import com.hub.app.consultation.model.Payment;
-import com.hub.app.consultation.model.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.hub.app.payment.model.Payment;
+import com.hub.app.payment.model.PaymentStatus;
 
 import java.util.List;
 import java.util.UUID;

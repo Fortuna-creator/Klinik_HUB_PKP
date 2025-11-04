@@ -217,8 +217,27 @@ public class ContractController {
             return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
         } catch (Exception e) {
             return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
-                                         ErrorCode.INTERNAL_ERROR.getCode(),
-                                         e.getMessage());
+                                          ErrorCode.INTERNAL_ERROR.getCode(),
+                                          e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/request-payment")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> requestPayment(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+
+            ContractResponse response = contractService.requestPayment(id, consultantId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (DomainException e) {
+            return apiErrorBuilder.error(e.getErrorCode().getHttpStatus(), e.getErrorCode().getCode(), e.getErrorCode().getDefaultMessage());
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                          ErrorCode.INTERNAL_ERROR.getCode(),
+                                          e.getMessage());
         }
     }
 }

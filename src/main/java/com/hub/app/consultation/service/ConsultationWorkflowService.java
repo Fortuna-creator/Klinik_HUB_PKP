@@ -121,7 +121,14 @@ public class ConsultationWorkflowService {
             case SURVEY_DIJADWALKAN:
                 return newStatus == ConsultationStatus.SURVEY_SELESAI;
             case SURVEY_SELESAI:
-                return newStatus == ConsultationStatus.AKTIF; // Contract creation and signing now leads to AKTIF
+                return newStatus == ConsultationStatus.MENYIAPKAN_KONTRAK; // After survey, prepare contract
+            case MENYIAPKAN_KONTRAK:
+                return newStatus == ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK;
+            case MENUNGGU_APPROVAL_KONTRAK:
+                return newStatus == ConsultationStatus.KONTRAK_DISETUJUI ||
+                        newStatus == ConsultationStatus.SURVEY_SELESAI; // Back to survey if rejected
+            case KONTRAK_DISETUJUI:
+                return newStatus == ConsultationStatus.AKTIF; // After signing, become active
             case AKTIF:
                 return newStatus == ConsultationStatus.REVISI ||
                         newStatus == ConsultationStatus.FINAL;
@@ -151,6 +158,12 @@ public class ConsultationWorkflowService {
             case SURVEY_DIJADWALKAN:
                 return new ConsultationStatus[]{ConsultationStatus.SURVEY_SELESAI};
             case SURVEY_SELESAI:
+                return new ConsultationStatus[]{ConsultationStatus.MENYIAPKAN_KONTRAK};
+            case MENYIAPKAN_KONTRAK:
+                return new ConsultationStatus[]{ConsultationStatus.MENUNGGU_APPROVAL_KONTRAK};
+            case MENUNGGU_APPROVAL_KONTRAK:
+                return new ConsultationStatus[]{ConsultationStatus.KONTRAK_DISETUJUI, ConsultationStatus.SURVEY_SELESAI};
+            case KONTRAK_DISETUJUI:
                 return new ConsultationStatus[]{ConsultationStatus.AKTIF};
             case AKTIF:
                 return new ConsultationStatus[]{ConsultationStatus.REVISI, ConsultationStatus.FINAL};

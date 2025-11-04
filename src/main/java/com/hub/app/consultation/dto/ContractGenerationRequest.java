@@ -8,6 +8,6 @@ import java.util.List;
 @Data
 public class ContractGenerationRequest {
     private BigDecimal contractValue;
-    private List<PaymentInstallmentRequest> installments; // Custom installment percentages and due dates
+    private List<PaymentInstallmentRequest> installments; // Optional: Custom installment percentages and due dates. If null/empty, single payment after signing
     private String fileUrl;
 }
