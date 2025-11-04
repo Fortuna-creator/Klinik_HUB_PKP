@@ -244,8 +244,8 @@ public class ContractService {
         contract.setApprovedAt(LocalDateTime.now());
         contract = contractRepository.save(contract);
 
-        // Update consultation status
-        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.KONTRAK_DISETUJUI);
+        // Update consultation status to MENUNGGU_TANDA_TANGAN_KONTRAK when contract is approved
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_TANDA_TANGAN_KONTRAK);
         consultationRepository.save(contract.getConsultation());
 
         // Publish event for history tracking
