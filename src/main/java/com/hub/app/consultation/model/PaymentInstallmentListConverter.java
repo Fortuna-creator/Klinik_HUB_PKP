@@ -3,6 +3,7 @@ package com.hub.app.consultation.model;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.hub.app.consultation.dto.PaymentInstallment;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -14,7 +15,7 @@ import java.util.List;
 @Converter
 public class PaymentInstallmentListConverter implements AttributeConverter<List<PaymentInstallment>, String> {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
     @Override
     public String convertToDatabaseColumn(List<PaymentInstallment> attribute) {
