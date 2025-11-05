@@ -66,8 +66,8 @@ public class PaymentInstallmentCalculator {
      */
     private List<PaymentInstallment> createSinglePaymentInstallment(BigDecimal totalAmount) {
         List<PaymentInstallment> installments = new ArrayList<>();
-        // Payment due immediately after contract signing (same day)
-        installments.add(new PaymentInstallment(1, totalAmount, LocalDate.now()));
+        // Payment due 7 days after contract signing
+        installments.add(new PaymentInstallment(1, totalAmount, LocalDate.now().plusDays(7)));
         return installments;
     }
 
