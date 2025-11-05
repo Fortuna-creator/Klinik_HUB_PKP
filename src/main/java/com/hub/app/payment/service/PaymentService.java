@@ -181,8 +181,8 @@ public class PaymentService {
             throw new RuntimeException("Access denied");
         }
 
-        if (payment.getStatus() != PaymentStatus.ESCROW_PENDING) {
-            throw new RuntimeException("Payment is not in pending escrow state");
+        if (payment.getStatus() != PaymentStatus.ESCROW_PENDING && payment.getStatus() != PaymentStatus.MENUNGGU) {
+            throw new RuntimeException("Payment is not in pending state");
         }
 
         // Get escrow account - for consultation payments, use consultation ID
