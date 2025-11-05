@@ -494,7 +494,7 @@ public class ContractService {
             payment.setAmount(installment.getAmount());
             payment.setMethod("BANK_TRANSFER"); // Default method
             payment.setDescription("Pembayaran termin " + installment.getInstallmentNumber() + " konsultasi desain");
-            payment.setStatus(com.hub.app.payment.model.PaymentStatus.MENUNGGU); // Waiting for home owner payment
+            payment.setStatus(com.hub.app.payment.model.PaymentStatus.ESCROW_PENDING); // Waiting for home owner payment
             payment.setDueDate(installment.getDueDate().atStartOfDay()); // Convert LocalDate to LocalDateTime
             payment.setReferenceId(contract.getId().toString()); // Reference to contract
 

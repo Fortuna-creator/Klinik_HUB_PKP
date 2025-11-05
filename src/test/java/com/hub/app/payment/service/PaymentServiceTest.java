@@ -242,7 +242,7 @@ class PaymentServiceTest {
     void approvePayment_ShouldUpdateStatusAndHoldFunds() {
         UUID paymentId = UUID.randomUUID();
         testPayment.setId(paymentId);
-        testPayment.setStatus(PaymentStatus.ESCROW_PENDING);
+        testPayment.setStatus(PaymentStatus.MENUNGGU);
         HomeOwner homeOwner = new HomeOwner();
         homeOwner.setId(1L);
         testConsultation.setHomeOwner(homeOwner);
