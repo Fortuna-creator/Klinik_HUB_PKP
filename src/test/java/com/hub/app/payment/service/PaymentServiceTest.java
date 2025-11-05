@@ -175,6 +175,9 @@ class PaymentServiceTest {
         Consultant consultant = new Consultant();
         consultant.setId(2L);
         testConsultation.setConsultant(consultant);
+        HomeOwner homeOwner = new HomeOwner();
+        homeOwner.setId(1L);
+        testConsultation.setHomeOwner(homeOwner);
 
         when(consultationRepository.findById(consultationId)).thenReturn(Optional.of(testConsultation));
         when(paymentRepository.findByConsultationIdOrderByTerminAsc(consultationId)).thenReturn(payments);
@@ -258,6 +261,22 @@ class PaymentServiceTest {
         verify(paymentRepository).save(captor.capture());
         Payment captured = captor.getValue();
         assertEquals(PaymentStatus.ESCROW_HOLD, captured.getStatus());
+
+        // Verify that consultation event is published for history tracking
+        ArgumentCaptor<ConsultationEvent> eventCaptor = ArgumentCaptor.forClass(ConsultationEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        ConsultationEvent event = eventCaptor.getValue();
+        assertEquals("CONSULTATION", event.getStep());
+        assertEquals("STARTED", event.getState());
+        assertEquals("HOMEOWNER", event.getActor());
+        assertEquals(testConsultation, event.getConsultation());
+
+        // Verify that consultation status is updated to AKTIF
+        ArgumentCaptor<Consultation> consultationCaptor = ArgumentCaptor.forClass(Consultation.class);
+        verify(consultationRepository).save(consultationCaptor.capture());
+        Consultation savedConsultation = consultationCaptor.getValue();
+        assertEquals(ConsultationStatus.AKTIF, savedConsultation.getStatus());
+        assertNotNull(savedConsultation.getStartedAt());
     }
 
     @Test

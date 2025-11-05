@@ -19,6 +19,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
 
 import java.math.BigDecimal;
@@ -171,11 +172,12 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentResponse approvePayment(UUID paymentId, Long homeOwnerId) {
+    public PaymentResponse approvePayment(UUID paymentId, Long userId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
-        if (!payment.getConsultation().getHomeOwner().getId().equals(homeOwnerId)) {
+        // Check access based on payment type
+        if (!hasAccessToApprovePayment(payment, userId)) {
             throw new RuntimeException("Access denied");
         }
 
@@ -183,8 +185,15 @@ public class PaymentService {
             throw new RuntimeException("Payment is not in pending escrow state");
         }
 
-        // Get escrow account
-        EscrowAccount escrow = escrowService.getEscrowByConsultationId(payment.getConsultation().getId());
+        // Get escrow account - for consultation payments, use consultation ID
+        EscrowAccount escrow = null;
+        if (payment.getConsultation() != null) {
+            escrow = escrowService.getEscrowByConsultationId(payment.getConsultation().getId());
+        } else {
+            // For non-consultation payments, we might need different logic
+            // This could be extended based on payment type and referenceId
+            throw new RuntimeException("Escrow account not found for payment type: " + payment.getType());
+        }
 
         // Hold funds in escrow
         escrowService.holdFunds(escrow.getId(), payment.getAmount());
@@ -194,8 +203,35 @@ public class PaymentService {
         payment.setEscrowAccountId(escrow.getId());
         payment = paymentRepository.save(payment);
 
+        // Publish event for consultation history and update consultation status if it's a consultation payment
+        if (payment.getConsultation() != null) {
+            // Update consultation status to AKTIF after payment approval
+            payment.getConsultation().setStatus(ConsultationStatus.AKTIF);
+            payment.getConsultation().setStartedAt(java.time.Instant.now());
+            consultationRepository.save(payment.getConsultation());
+
+            eventPublisher.publishEvent(new ConsultationEvent(
+                this, payment.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "HOMEOWNER",
+                Arrays.asList(), Arrays.asList(), payment.getAmount(), null, null, null
+            ));
+        }
+
         log.info("Payment {} approved and funds held in escrow {}", paymentId, escrow.getId());
         return mapToResponse(payment);
+    }
+
+    /**
+     * Check if user has access to approve the payment based on payment type
+     */
+    private boolean hasAccessToApprovePayment(Payment payment, Long userId) {
+        if (payment.getConsultation() != null) {
+            // For consultation payments, only homeowner can approve
+            return payment.getConsultation().getHomeOwner().getId().equals(userId);
+        }
+
+        // For other payment types, additional logic can be added here
+        // For now, deny access for non-consultation payments
+        return false;
     }
 
     @Transactional

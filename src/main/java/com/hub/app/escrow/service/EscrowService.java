@@ -2,6 +2,7 @@ package com.hub.app.escrow.service;
 
 import com.hub.app.consultation.model.Consultation;
 import com.hub.app.escrow.model.EscrowAccount;
+import com.hub.app.escrow.model.EscrowReferenceType;
 import com.hub.app.escrow.model.EscrowStatus;
 import com.hub.app.escrow.repository.EscrowAccountRepository;
 import com.hub.app.payment.model.TransactionType;
@@ -38,7 +39,10 @@ public class EscrowService {
         EscrowAccount escrow = new EscrowAccount();
         escrow.setConsultation(consultation);
         escrow.setHomeOwnerId(consultation.getHomeOwner().getId());
-        escrow.setConsultantId(consultation.getConsultant().getId());
+        escrow.setRecipientId(consultation.getConsultant().getId());
+        escrow.setReferenceType(EscrowReferenceType.CONSULTATION);
+        escrow.setReferenceId(consultation.getId());
+        escrow.setConsultantId(consultation.getConsultant().getId()); // Keep for backward compatibility
         escrow.setTotalAmount(amount);
         escrow.setHeldAmount(BigDecimal.ZERO);
         escrow.setStatus(EscrowStatus.PENDING);
@@ -107,7 +111,7 @@ public class EscrowService {
         BigDecimal releaseAmount = escrow.getHeldAmount();
 
         // Add to consultant wallet
-        walletService.addBalance(escrow.getConsultantId(), releaseAmount);
+        walletService.addBalance(escrow.getRecipientId() != null ? escrow.getRecipientId() : escrow.getConsultantId(), releaseAmount);
 
         // Update escrow
         escrow.setHeldAmount(BigDecimal.ZERO);
@@ -117,14 +121,14 @@ public class EscrowService {
 
         // Record transaction for consultant
         transactionService.recordTransaction(
-            escrow.getConsultantId(),
+            escrow.getRecipientId() != null ? escrow.getRecipientId() : escrow.getConsultantId(),
             TransactionType.ESCROW_RELEASE,
             releaseAmount,
             "Funds released from escrow: " + escrow.getId(),
             escrow.getId().toString()
         );
 
-        log.info("Released {} from escrow {} to consultant {}", releaseAmount, escrowId, escrow.getConsultantId());
+        log.info("Released {} from escrow {} to recipient {}", releaseAmount, escrowId, escrow.getRecipientId() != null ? escrow.getRecipientId() : escrow.getConsultantId());
         return escrow;
     }
 

@@ -83,6 +83,10 @@ public class ConsultationEventListener {
                 return "Kontrak ditolak homeowner";
             case "CONTRACT_REVISION_REQUESTED":
                 return "Permintaan revisi kontrak";
+            case "PAYMENT_REQUESTED":
+                return "Konsultan meminta pembayaran";
+            case "PAYMENT_APPROVED":
+                return "Homeowner menyetujui pembayaran";
             case "DOCUMENT_DOCUMENTS_UPLOADED":
                 return "Dokumen DED, BOQ, dan RAB diupload";
             case "DOCUMENT_REVISION_REQUESTED":
@@ -122,6 +126,12 @@ public class ConsultationEventListener {
                 return "Homeowner menolak kontrak dengan alasan tertentu";
             case "CONTRACT_REVISION_REQUESTED":
                 return "Homeowner meminta revisi kontrak";
+            case "PAYMENT_REQUESTED":
+                return "Konsultan meminta pembayaran termin pertama";
+            case "PAYMENT_APPROVED":
+                return "Homeowner menyetujui pembayaran";
+            case "CONSULTATION_STARTED":
+                return "Konsultasi dimulai setelah pembayaran disetujui";
             case "DOCUMENT_DOCUMENTS_UPLOADED":
                 return "Konsultan mengupload semua dokumen teknis proyek";
             case "DOCUMENT_REVISION_REQUESTED":
@@ -165,6 +175,15 @@ public class ConsultationEventListener {
                 break;
             case "CONTRACT_REVISION_REQUESTED":
                 notes.append("Homeowner meminta revisi kontrak");
+                break;
+            case "PAYMENT_REQUESTED":
+                notes.append("Konsultan meminta pembayaran termin pertama setelah kontrak ditandatangani");
+                break;
+            case "PAYMENT_APPROVED":
+                notes.append("Homeowner telah menyetujui pembayaran dan dana ditahan di escrow");
+                break;
+            case "CONSULTATION_STARTED":
+                notes.append("Konsultasi resmi dimulai setelah pembayaran disetujui homeowner");
                 break;
             case "DOCUMENT_DOCUMENTS_UPLOADED":
                 notes.append("DED: Detail Engineering Design, BOQ: Bill of Quantities, RAB: Rencana Anggaran Biaya");
