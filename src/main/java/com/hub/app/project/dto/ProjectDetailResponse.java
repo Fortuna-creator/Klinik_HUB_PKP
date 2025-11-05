@@ -38,6 +38,7 @@ public class ProjectDetailResponse {
         private List<RevisionRequest> revisionRequests;
         private List<SurveyScheduleInfo> surveySchedules;
         private SurveyScheduleInfo currentSurveySchedule;
+        private UUID paymentId;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -61,6 +62,7 @@ public class ProjectDetailResponse {
         private String surveyLocation;
         private UUID contractId;
         private UUID scheduleId;
+        private UUID paymentId;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder

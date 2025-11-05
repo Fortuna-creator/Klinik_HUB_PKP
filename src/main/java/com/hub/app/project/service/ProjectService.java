@@ -5,6 +5,9 @@ import com.hub.app.consultation.repository.*;
 import com.hub.app.consultation.service.*;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.payment.model.Payment;
+import com.hub.app.payment.model.PaymentStatus;
+import com.hub.app.payment.repository.PaymentRepository;
 import com.hub.app.permit.model.Permit;
 import com.hub.app.permit.repository.PermitRepository;
 import com.hub.app.project.dto.*;
@@ -41,6 +44,7 @@ public class ProjectService {
     private final ContractRepository contractRepository;
     private final PermitRepository permitRepository;
     private final RevisionRepository revisionRepository;
+    private final PaymentRepository paymentRepository;
 
     @Transactional
     public CreateProjectResponse createProject(CreateProjectRequest request, User user) {
@@ -210,6 +214,14 @@ public class ProjectService {
                 .map(this::mapToDocumentExchange)
                 .collect(Collectors.toList());
 
+        // Get the latest payment ID for this consultation (if any)
+        UUID paymentId = paymentRepository.findByConsultationIdOrderByTerminAsc(consultation.getId())
+                .stream()
+                .filter(p -> p.getStatus() == PaymentStatus.MENUNGGU || p.getStatus() == PaymentStatus.ESCROW_PENDING)
+                .findFirst()
+                .map(Payment::getId)
+                .orElse(null);
+
         return ProjectDetailResponse.ConsultationInfo.builder()
                 .consultationId(consultation.getId())
                 .consultantName(consultation.getConsultant().getName())
@@ -231,6 +243,7 @@ public class ProjectService {
                 .surveySchedules(surveySchedules.stream()
                         .map(this::mapToSurveyScheduleInfo)
                         .collect(Collectors.toList()))
+                .paymentId(paymentId)
                 .build();
     }
 
@@ -238,6 +251,17 @@ public class ProjectService {
         UUID contractId = history.getContractId();
 
         UUID scheduleId = history.getScheduleId();
+
+        // Get payment ID for this consultation step if it's a payment-related step
+        UUID paymentId = null;
+        if ("PAYMENT_REQUESTED".equals(history.getStep()) || "PAYMENT".equals(history.getStep())) {
+            paymentId = paymentRepository.findByConsultationIdOrderByTerminAsc(history.getConsultation().getId())
+                    .stream()
+                    .filter(p -> p.getStatus() == PaymentStatus.MENUNGGU || p.getStatus() == PaymentStatus.ESCROW_PENDING)
+                    .findFirst()
+                    .map(Payment::getId)
+                    .orElse(null);
+        }
 
         return ProjectDetailResponse.ConsultationStep.builder()
                 .step(history.getStep())
@@ -259,6 +283,7 @@ public class ProjectService {
                         .surveyLocation(history.getSurveyLocation())
                         .contractId(contractId)
                         .scheduleId(scheduleId)
+                        .paymentId(paymentId)
                         .build())
                 .build();
     }
