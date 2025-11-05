@@ -32,6 +32,7 @@ public class ProjectDetailResponse {
         private LocalDateTime scheduledAt;
         private String status;
         private String notes;
+        private String consultationType;
         private List<ConsultationStep> consultationHistory;
         private DocumentExchangeInfo documentExchange;
         private List<RevisionRequest> revisionRequests;
