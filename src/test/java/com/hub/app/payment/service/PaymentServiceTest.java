@@ -271,6 +271,7 @@ class PaymentServiceTest {
         assertEquals("STARTED", event.getState());
         assertEquals("HOMEOWNER", event.getActor());
         assertEquals(testConsultation, event.getConsultation());
+        assertEquals(BigDecimal.valueOf(1000), event.getTotalPaymentAmount());
 
         // Verify that consultation status is updated to AKTIF
         ArgumentCaptor<Consultation> consultationCaptor = ArgumentCaptor.forClass(Consultation.class);
