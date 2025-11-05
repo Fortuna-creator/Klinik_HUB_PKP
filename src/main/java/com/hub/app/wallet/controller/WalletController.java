@@ -1,6 +1,7 @@
 package com.hub.app.wallet.controller;
 
 
+import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.ErrorCode;
 import com.hub.app.wallet.dto.TopupRequest;
@@ -22,6 +23,7 @@ public class WalletController {
 
     private final WalletService walletService;
     private final ApiErrorBuilder apiErrorBuilder;
+    private final ConsultationJwtService jwtService;
 
     @GetMapping("/balance")
     @PreAuthorize("hasRole('HOME_OWNER') or hasRole('CONSULTANT')")
@@ -78,16 +80,14 @@ public class WalletController {
         }
     }
 
-    private Long extractUserIdFromToken(String authHeader) {
-        // TODO: Implement JWT extraction - for now return dummy value
-        // This should use your existing JWT service
-        return 1L; // Placeholder
+    protected Long extractUserIdFromToken(String authHeader) {
+        return jwtService.extractUserId(authHeader);
     }
 
     private WalletResponse mapToResponse(UserWallet wallet) {
         return WalletResponse.builder()
                 .id(wallet.getId())
-                .userId(wallet.getUser().getId())
+                .userId(wallet.getUser() != null ? wallet.getUser().getId() : null)
                 .balance(wallet.getBalance())
                 .currency(wallet.getCurrency())
                 .isActive(wallet.getIsActive())
