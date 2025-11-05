@@ -61,15 +61,25 @@ public class ConsultationHistoryService {
 
     @Transactional
     public void createHistoryEvent(Consultation consultation, String step, String state,
-                                   String title, String subtitle, List<UUID> fileIds,
-                                   List<String> attachments, String actor, String status,
-                                   String notes, BigDecimal surveyCost, String surveyLocation,
-                                   UUID scheduleId, UUID contractId, UUID paymentId) {
+                                    String title, String subtitle, List<UUID> fileIds,
+                                    List<String> attachments, String actor, String status,
+                                    String notes, BigDecimal surveyCost, String surveyLocation,
+                                    UUID scheduleId, UUID contractId, UUID paymentId) {
+        createHistoryEvent(consultation, step, state, title, subtitle, fileIds, attachments,
+                          actor, status, notes, surveyCost, surveyLocation, scheduleId, contractId, paymentId, null);
+    }
+
+    @Transactional
+    public void createHistoryEvent(Consultation consultation, String step, String state,
+                                    String title, String subtitle, List<UUID> fileIds,
+                                    List<String> attachments, String actor, String status,
+                                    String notes, BigDecimal surveyCost, String surveyLocation,
+                                    UUID scheduleId, UUID contractId, UUID paymentId, BigDecimal totalPaymentAmount) {
 
         log.info("=== STARTING HISTORY EVENT CREATION ===");
         log.info("Consultation ID: {}, Step: {}, State: {}, Actor: {}", consultation.getId(), step, state, actor);
-        log.info("Title: {}, Survey Cost: {}, Survey Location: {}, Schedule ID: {}, Contract ID: {}, Payment ID: {}",
-                 title, surveyCost, surveyLocation, scheduleId, contractId, paymentId);
+        log.info("Title: {}, Survey Cost: {}, Survey Location: {}, Schedule ID: {}, Contract ID: {}, Payment ID: {}, Total Payment Amount: {}",
+                 title, surveyCost, surveyLocation, scheduleId, contractId, paymentId, totalPaymentAmount);
 
         ConsultationHistory history = new ConsultationHistory();
         history.setConsultation(consultation);
@@ -88,6 +98,7 @@ public class ConsultationHistoryService {
         history.setScheduleId(scheduleId);
         history.setContractId(contractId);
         history.setPaymentId(paymentId);
+        history.setTotalPaymentAmount(totalPaymentAmount);
         history.setDateTime(LocalDateTime.now());
 
         log.debug("History entity prepared: {}", history);

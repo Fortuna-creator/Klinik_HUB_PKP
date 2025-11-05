@@ -203,6 +203,9 @@ public class PaymentService {
         payment.setEscrowAccountId(escrow.getId());
         payment = paymentRepository.save(payment);
 
+        // Use current payment amount as total payment amount (single payment for now)
+        BigDecimal totalPaymentAmount = payment.getAmount();
+
         // Publish event for consultation history and update consultation status if it's a consultation payment
         if (payment.getConsultation() != null) {
             // Update consultation status to AKTIF after payment approval
@@ -212,7 +215,7 @@ public class PaymentService {
 
             eventPublisher.publishEvent(new ConsultationEvent(
                 this, payment.getConsultation(), "CONSULTATION_STARTED", "CONSULTATION", "STARTED", "HOMEOWNER",
-                Arrays.asList(), Arrays.asList(), payment.getAmount(), null, null, null
+                Arrays.asList(), Arrays.asList(), payment.getAmount(), null, null, null, null, totalPaymentAmount
             ));
         }
 

@@ -74,6 +74,9 @@ public class ConsultationHistory {
     @Column(name = "payment_id")
     private UUID paymentId;
 
+    @Column(name = "total_payment_amount")
+    private BigDecimal totalPaymentAmount;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

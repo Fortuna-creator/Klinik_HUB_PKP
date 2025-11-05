@@ -39,6 +39,7 @@ public class ProjectDetailResponse {
         private List<SurveyScheduleInfo> surveySchedules;
         private SurveyScheduleInfo currentSurveySchedule;
         private UUID paymentId;
+        private BigDecimal totalPaymentAmount;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
@@ -63,6 +64,7 @@ public class ProjectDetailResponse {
         private UUID contractId;
         private UUID scheduleId;
         private UUID paymentId;
+        private BigDecimal totalPaymentAmount;
     }
 
     @Data @NoArgsConstructor @AllArgsConstructor @Builder
