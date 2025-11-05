@@ -34,6 +34,7 @@
     <include file="029-add-payment-installments-column.sql" relativeToChangelogFile="true"/>
     <include file="026-escrow-accounts-schema.sql" relativeToChangelogFile="true"/>
     <include file="027-update-payments-schema.sql" relativeToChangelogFile="true"/>
+    <include file="030-update-escrow-accounts-schema.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
 

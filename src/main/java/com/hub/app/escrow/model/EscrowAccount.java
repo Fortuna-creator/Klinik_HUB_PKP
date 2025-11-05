@@ -22,13 +22,26 @@ public class EscrowAccount {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    // Keep consultation relationship for backward compatibility
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "consultation_id", unique = true)
+    @JoinColumn(name = "consultation_id")
     private Consultation consultation;
+
+    // Generic reference fields for different payment types
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reference_type")
+    private EscrowReferenceType referenceType;
+
+    @Column(name = "reference_id")
+    private UUID referenceId;
 
     @Column(name = "home_owner_id")
     private Long homeOwnerId;
 
+    @Column(name = "recipient_id")
+    private Long recipientId;
+
+    // Backward compatibility - keep consultant_id for existing data
     @Column(name = "consultant_id")
     private Long consultantId;
 
