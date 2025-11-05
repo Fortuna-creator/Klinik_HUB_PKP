@@ -25,6 +25,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
@@ -222,13 +223,12 @@ public class ProjectService {
                 .map(Payment::getId)
                 .orElse(null);
 
-        // Calculate total payment amount for this consultation
-        BigDecimal totalPaymentAmount = paymentRepository.findByConsultationIdOrderByTerminAsc(consultation.getId())
-                .stream()
-                .filter(p -> p.getStatus() == PaymentStatus.MENUNGGU || p.getStatus() == PaymentStatus.ESCROW_PENDING ||
-                         p.getStatus() == PaymentStatus.ESCROW_HOLD || p.getStatus() == PaymentStatus.ESCROW_RELEASED)
-                .map(Payment::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Get total payment amount from the latest consultation history entry that has it
+        BigDecimal totalPaymentAmount = history.stream()
+                .filter(h -> h.getTotalPaymentAmount() != null)
+                .findFirst()
+                .map(ConsultationHistory::getTotalPaymentAmount)
+                .orElse(BigDecimal.ZERO);
 
         return ProjectDetailResponse.ConsultationInfo.builder()
                 .consultationId(consultation.getId())
