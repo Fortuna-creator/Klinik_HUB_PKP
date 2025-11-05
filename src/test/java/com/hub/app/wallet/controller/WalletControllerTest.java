@@ -2,7 +2,9 @@ package com.hub.app.wallet.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hub.app.error.ApiErrorBuilder;
+import com.hub.app.error.ApiErrorResponse;
 import com.hub.app.error.ErrorCode;
+import com.hub.app.consultation.service.ConsultationJwtService;
 import com.hub.app.wallet.dto.TopupRequest;
 import com.hub.app.wallet.dto.WalletResponse;
 import com.hub.app.wallet.model.UserWallet;
@@ -15,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -37,10 +40,13 @@ class WalletControllerTest {
     @Mock
     private ApiErrorBuilder apiErrorBuilder;
 
+    @Mock
+    private ConsultationJwtService jwtService;
+
     // Test helper class to override private method
     private static class TestWalletController extends WalletController {
-        public TestWalletController(WalletService walletService, ApiErrorBuilder apiErrorBuilder) {
-            super(walletService, apiErrorBuilder);
+        public TestWalletController(WalletService walletService, ApiErrorBuilder apiErrorBuilder, ConsultationJwtService jwtService) {
+            super(walletService, apiErrorBuilder, jwtService);
         }
 
         @Override
@@ -56,7 +62,7 @@ class WalletControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(new TestWalletController(walletService, apiErrorBuilder)).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(new TestWalletController(walletService, apiErrorBuilder, jwtService)).build();
         objectMapper = new ObjectMapper();
 
         topupRequest = new TopupRequest();
@@ -67,6 +73,8 @@ class WalletControllerTest {
         userWallet.setBalance(BigDecimal.valueOf(1500));
         userWallet.setCurrency("IDR");
         userWallet.setIsActive(true);
+        userWallet.setCreatedAt(java.time.Instant.now());
+        userWallet.setUpdatedAt(java.time.Instant.now());
 
         walletResponse = WalletResponse.builder()
                 .id(1L)
@@ -93,9 +101,10 @@ class WalletControllerTest {
     @Test
     void getBalance_ShouldHandleException() throws Exception {
         when(walletService.getWallet(1L)).thenThrow(new RuntimeException("Test error"));
+        ResponseEntity<ApiErrorResponse> errorResponse = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         when(apiErrorBuilder.error(HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCode.INTERNAL_ERROR.getCode(), "Test error"))
-                .thenReturn(null);
+                .thenReturn(errorResponse);
 
         // Already set up in BeforeEach
 
@@ -111,7 +120,7 @@ class WalletControllerTest {
     void topupBalance_ShouldReturnUpdatedWallet() throws Exception {
         when(walletService.addBalance(1L, BigDecimal.valueOf(1000))).thenReturn(userWallet);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new WalletController(walletService, apiErrorBuilder) {
+        mockMvc = MockMvcBuilders.standaloneSetup(new WalletController(walletService, apiErrorBuilder, jwtService) {
             @Override
             protected Long extractUserIdFromToken(String authHeader) {
                 return 1L;
@@ -131,11 +140,12 @@ class WalletControllerTest {
     @Test
     void topupBalance_ShouldHandleException() throws Exception {
         when(walletService.addBalance(1L, BigDecimal.valueOf(1000))).thenThrow(new RuntimeException("Test error"));
+        ResponseEntity<ApiErrorResponse> errorResponse = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         when(apiErrorBuilder.error(HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCode.INTERNAL_ERROR.getCode(), "Test error"))
-                .thenReturn(null);
+                .thenReturn(errorResponse);
 
-        mockMvc = MockMvcBuilders.standaloneSetup(new WalletController(walletService, apiErrorBuilder) {
+        mockMvc = MockMvcBuilders.standaloneSetup(new WalletController(walletService, apiErrorBuilder, jwtService) {
             @Override
             protected Long extractUserIdFromToken(String authHeader) {
                 return 1L;
@@ -168,9 +178,10 @@ class WalletControllerTest {
     @Test
     void adminTopup_ShouldHandleException() throws Exception {
         when(walletService.addBalance(2L, BigDecimal.valueOf(1000))).thenThrow(new RuntimeException("Test error"));
+        ResponseEntity<ApiErrorResponse> errorResponse = ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         when(apiErrorBuilder.error(HttpStatus.INTERNAL_SERVER_ERROR,
                 ErrorCode.INTERNAL_ERROR.getCode(), "Test error"))
-                .thenReturn(null);
+                .thenReturn(errorResponse);
 
         mockMvc.perform(post("/api/wallet/admin/topup/{userId}", 2L)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -184,7 +195,7 @@ class WalletControllerTest {
     @Test
     void extractUserIdFromToken_ShouldReturnDummyValue() {
         // This test verifies the placeholder implementation
-        WalletController controller = new WalletController(walletService, apiErrorBuilder);
+        WalletController controller = new WalletController(walletService, apiErrorBuilder, jwtService);
         // Since it's a placeholder, we can't really test it meaningfully
         // In a real implementation, this would extract from JWT
     }
