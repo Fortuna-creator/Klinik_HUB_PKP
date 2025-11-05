@@ -132,6 +132,7 @@ class PaymentServiceTest {
         verify(eventPublisher).publishEvent(eventCaptor.capture());
         ConsultationEvent event = eventCaptor.getValue();
         assertEquals("PAYMENT_REQUESTED", event.getEventType());
+        assertNull(event.getPaymentId()); // PaymentService doesn't include paymentId in event
     }
 
     @Test

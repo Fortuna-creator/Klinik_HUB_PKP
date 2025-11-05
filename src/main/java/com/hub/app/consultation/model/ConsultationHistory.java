@@ -71,6 +71,9 @@ public class ConsultationHistory {
     @Column(name = "contract_id")
     private UUID contractId;
 
+    @Column(name = "payment_id")
+    private UUID paymentId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

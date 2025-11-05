@@ -21,9 +21,10 @@ public class ConsultationEvent extends ApplicationEvent {
     private final String surveyLocation;
     private final java.util.UUID scheduleId;
     private final java.util.UUID contractId;
+    private final java.util.UUID paymentId;
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor) {
+                            String step, String state, String actor) {
         super(source);
         this.consultation = consultation;
         this.eventType = eventType;
@@ -36,11 +37,12 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyLocation = null;
         this.scheduleId = null;
         this.contractId = null;
+        this.paymentId = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor, List<java.util.UUID> files,
-                           List<String> attachments, BigDecimal surveyCost, String surveyLocation) {
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation) {
         super(source);
         this.consultation = consultation;
         this.eventType = eventType;
@@ -53,12 +55,13 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyLocation = surveyLocation;
         this.scheduleId = null;
         this.contractId = null;
+        this.paymentId = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor, List<java.util.UUID> files,
-                           List<String> attachments, BigDecimal surveyCost, String surveyLocation,
-                           java.util.UUID scheduleId) {
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId) {
         super(source);
         this.consultation = consultation;
         this.eventType = eventType;
@@ -71,12 +74,13 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyLocation = surveyLocation;
         this.scheduleId = scheduleId;
         this.contractId = null;
+        this.paymentId = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
-                           String step, String state, String actor, List<java.util.UUID> files,
-                           List<String> attachments, BigDecimal surveyCost, String surveyLocation,
-                           java.util.UUID scheduleId, java.util.UUID contractId) {
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId, java.util.UUID contractId) {
         super(source);
         this.consultation = consultation;
         this.eventType = eventType;
@@ -89,5 +93,25 @@ public class ConsultationEvent extends ApplicationEvent {
         this.surveyLocation = surveyLocation;
         this.scheduleId = scheduleId;
         this.contractId = contractId;
+        this.paymentId = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId, java.util.UUID contractId, java.util.UUID paymentId) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = contractId;
+        this.paymentId = paymentId;
     }
 }

@@ -445,15 +445,22 @@ public class ContractService {
         // Create payment installments after payment is requested
         createPaymentInstallments(contract);
 
-        // Update consultation status to AKTIF after payment request
-        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.AKTIF);
-        contract.getConsultation().setStartedAt(java.time.Instant.now());
+        // Update consultation status to MENUNGGU_PEMBAYARAN after payment request
+        contract.getConsultation().setStatus(com.hub.app.consultation.model.ConsultationStatus.MENUNGGU_PEMBAYARAN);
         consultationRepository.save(contract.getConsultation());
 
-        // Publish event for payment request and consultation start
+        // Get the first payment ID to include in the event
+        UUID paymentId = paymentRepository.findByConsultationIdOrderByTerminAsc(contract.getConsultation().getId())
+                .stream()
+                .filter(p -> p.getStatus() == PaymentStatus.MENUNGGU)
+                .findFirst()
+                .map(com.hub.app.payment.model.Payment::getId)
+                .orElse(null);
+
+        // Publish event for payment request with paymentId
         eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
             this, contract.getConsultation(), "PAYMENT_REQUESTED", "PAYMENT", "REQUESTED", "CONSULTANT",
-            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId()
+            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId(), paymentId
         ));
 
         return mapToResponse(contract);
