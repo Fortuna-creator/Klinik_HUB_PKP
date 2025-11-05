@@ -457,10 +457,13 @@ public class ContractService {
                 .map(com.hub.app.payment.model.Payment::getId)
                 .orElse(null);
 
-        // Publish event for payment request with paymentId
+        // Use contract value as total payment amount since all payments are created at this point
+        BigDecimal totalPaymentAmount = contract.getContractValue();
+
+        // Publish event for payment request with paymentId and totalPaymentAmount
         eventPublisher.publishEvent(new com.hub.app.consultation.event.ConsultationEvent(
             this, contract.getConsultation(), "PAYMENT_REQUESTED", "PAYMENT", "REQUESTED", "CONSULTANT",
-            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId(), paymentId
+            Arrays.asList(), Arrays.asList(), contract.getContractValue(), null, null, contract.getId(), paymentId, totalPaymentAmount
         ));
 
         return mapToResponse(contract);

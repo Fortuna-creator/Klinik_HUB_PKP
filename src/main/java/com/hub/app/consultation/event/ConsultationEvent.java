@@ -22,6 +22,7 @@ public class ConsultationEvent extends ApplicationEvent {
     private final java.util.UUID scheduleId;
     private final java.util.UUID contractId;
     private final java.util.UUID paymentId;
+    private final BigDecimal totalPaymentAmount;
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
                             String step, String state, String actor) {
@@ -38,6 +39,7 @@ public class ConsultationEvent extends ApplicationEvent {
         this.scheduleId = null;
         this.contractId = null;
         this.paymentId = null;
+        this.totalPaymentAmount = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
@@ -56,6 +58,7 @@ public class ConsultationEvent extends ApplicationEvent {
         this.scheduleId = null;
         this.contractId = null;
         this.paymentId = null;
+        this.totalPaymentAmount = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
@@ -75,6 +78,7 @@ public class ConsultationEvent extends ApplicationEvent {
         this.scheduleId = scheduleId;
         this.contractId = null;
         this.paymentId = null;
+        this.totalPaymentAmount = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
@@ -94,6 +98,7 @@ public class ConsultationEvent extends ApplicationEvent {
         this.scheduleId = scheduleId;
         this.contractId = contractId;
         this.paymentId = null;
+        this.totalPaymentAmount = null;
     }
 
     public ConsultationEvent(Object source, Consultation consultation, String eventType,
@@ -113,5 +118,27 @@ public class ConsultationEvent extends ApplicationEvent {
         this.scheduleId = scheduleId;
         this.contractId = contractId;
         this.paymentId = paymentId;
+        this.totalPaymentAmount = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId, java.util.UUID contractId, java.util.UUID paymentId,
+                            BigDecimal totalPaymentAmount) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = contractId;
+        this.paymentId = paymentId;
+        this.totalPaymentAmount = totalPaymentAmount;
     }
 }

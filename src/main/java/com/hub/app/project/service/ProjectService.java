@@ -222,6 +222,14 @@ public class ProjectService {
                 .map(Payment::getId)
                 .orElse(null);
 
+        // Calculate total payment amount for this consultation
+        BigDecimal totalPaymentAmount = paymentRepository.findByConsultationIdOrderByTerminAsc(consultation.getId())
+                .stream()
+                .filter(p -> p.getStatus() == PaymentStatus.MENUNGGU || p.getStatus() == PaymentStatus.ESCROW_PENDING ||
+                         p.getStatus() == PaymentStatus.ESCROW_HOLD || p.getStatus() == PaymentStatus.ESCROW_RELEASED)
+                .map(Payment::getAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         return ProjectDetailResponse.ConsultationInfo.builder()
                 .consultationId(consultation.getId())
                 .consultantName(consultation.getConsultant().getName())
@@ -244,6 +252,7 @@ public class ProjectService {
                         .map(this::mapToSurveyScheduleInfo)
                         .collect(Collectors.toList()))
                 .paymentId(paymentId)
+                .totalPaymentAmount(totalPaymentAmount)
                 .build();
     }
 
@@ -284,6 +293,7 @@ public class ProjectService {
                         .contractId(contractId)
                         .scheduleId(scheduleId)
                         .paymentId(paymentId)
+                        .totalPaymentAmount(history.getTotalPaymentAmount())
                         .build())
                 .build();
     }
