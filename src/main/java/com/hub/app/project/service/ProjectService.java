@@ -216,6 +216,7 @@ public class ProjectService {
                 .scheduledAt(currentSchedule != null ? currentSchedule.getProposedDateTime().atZone(ZoneOffset.UTC).toLocalDateTime() : null)
                 .status(consultation.getStatus().name())
                 .notes("Konsultasi desain rumah minimalis dengan fokus efisiensi ruang")
+                .consultationType(consultation.getConsultationType() != null ? consultation.getConsultationType().name() : null)
                 .currentSurveySchedule(currentSchedule != null ? mapToSurveyScheduleInfo(currentSchedule) : null)
                 .consultationHistory(history.stream()
                         .map(h -> mapToConsultationStep(h, surveySchedules))
