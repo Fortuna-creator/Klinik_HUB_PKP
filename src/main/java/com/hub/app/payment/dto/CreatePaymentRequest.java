@@ -11,8 +11,7 @@ import java.math.BigDecimal;
 public class CreatePaymentRequest {
     private PaymentType type; // Optional, defaults to KONSULTASI
 
-    @NotNull
-    private Integer termin;
+    private Integer termin; // Optional for single payments
 
     @NotNull
     private BigDecimal amount;

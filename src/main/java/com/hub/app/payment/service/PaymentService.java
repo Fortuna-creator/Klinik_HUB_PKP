@@ -50,7 +50,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setConsultation(consultation);
         payment.setType(request.getType() != null ? request.getType() : PaymentType.KONSULTASI);
-        payment.setTermin(request.getTermin());
+        payment.setTermin(request.getTermin()); // Can be null for single payments
         payment.setAmount(request.getAmount());
         payment.setMethod(request.getMethod());
         payment.setDescription(getPaymentDescription(payment.getType(), request.getTermin()));
@@ -123,7 +123,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setConsultation(consultation);
         payment.setType(type);
-        payment.setTermin(request.getTermin());
+        payment.setTermin(request.getTermin()); // Can be null for single payments
         payment.setAmount(request.getAmount());
         payment.setMethod(request.getMethod());
         payment.setDescription(getPaymentDescription(type, request.getTermin()));
