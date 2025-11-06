@@ -48,6 +48,16 @@ public enum ErrorCode {
     // Home Owner-specific
     HOME_OWNER_NOT_FOUND("HOME_OWNER_NOT_FOUND", HttpStatus.NOT_FOUND, "Home owner not found"),
 
+    // Offline Balai-specific
+    BALAI_NOT_FOUND("BALAI_NOT_FOUND", HttpStatus.NOT_FOUND, "Balai not found"),
+
+    // Offline Consultation-specific
+    OFFLINE_CONSULTATION_NOT_FOUND("OFFLINE_CONSULTATION_NOT_FOUND", HttpStatus.NOT_FOUND, "Offline consultation not found"),
+    INVALID_CONSULTATION_DATE("INVALID_CONSULTATION_DATE", HttpStatus.BAD_REQUEST, "Cannot book consultation in the past"),
+    INVALID_CONSULTATION_TIME("INVALID_CONSULTATION_TIME", HttpStatus.BAD_REQUEST, "Consultation time must be within business hours (08:00 - 17:00)"),
+    CONSULTATION_ALREADY_BOOKED("CONSULTATION_ALREADY_BOOKED", HttpStatus.CONFLICT, "This time slot is already booked"),
+    INVALID_CONSULTATION_STATUS("INVALID_CONSULTATION_STATUS", HttpStatus.BAD_REQUEST, "Invalid consultation status transition"),
+
     // Workflow-specific
     WORKFLOW_ERROR("WORKFLOW_ERROR", HttpStatus.BAD_REQUEST, "Workflow validation error");
 
