@@ -1,0 +1,576 @@
+{
+  "info": {
+    "name": "Hub Balai Offline Calendar API",
+    "description": "Postman collection untuk testing Balai Offline Calendar & Booking features. Includes endpoints untuk available slots, booked dates calendar, my bookings, daily schedule, dan consultation management.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "hub-backend",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token for authentication (paste token here after login)"
+    },
+    {
+      "key": "balai_id",
+      "value": "7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1",
+      "type": "string",
+      "description": "Sample Balai ID (replace with actual ID)"
+    },
+    {
+      "key": "user_id",
+      "value": "1",
+      "type": "string",
+      "description": "User ID for testing"
+    },
+    {
+      "key": "consultation_id",
+      "value": "",
+      "type": "string",
+      "description": "Consultation ID (will be auto-populated after create)"
+    },
+    {
+      "key": "test_date",
+      "value": "2025-11-20",
+      "type": "string",
+      "description": "Test date for booking (format: YYYY-MM-DD)"
+    },
+    {
+      "key": "test_time",
+      "value": "09:00:00",
+      "type": "string",
+      "description": "Test time for booking (format: HH:mm:ss)"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. Calendar Features",
+      "description": "Endpoints untuk calendar functionality - available slots, booked dates",
+      "item": [
+        {
+          "name": "Get Available Time Slots",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/available-slots?balaiId={{balai_id}}&date={{test_date}}&interval=60",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "available-slots"],
+              "query": [
+                {
+                  "key": "balaiId",
+                  "value": "{{balai_id}}",
+                  "description": "ID Balai (UUID)"
+                },
+                {
+                  "key": "date",
+                  "value": "{{test_date}}",
+                  "description": "Tanggal yang ingin dicek (YYYY-MM-DD)"
+                },
+                {
+                  "key": "interval",
+                  "value": "60",
+                  "description": "Interval slot dalam menit (optional, default: 60)"
+                }
+              ]
+            },
+            "description": "**Purpose:** Cek slot waktu yang masih available untuk booking\n\n**Auth:** Public (tidak perlu login)\n\n**Response:**\n- availableSlots: List waktu yang bisa di-book\n- bookedSlots: List waktu yang sudah terbooked\n- totalAvailableSlots: Jumlah slot tersedia\n- businessHours: Jam operasional balai\n\n**Use Case:** User pilih tanggal di calendar, frontend tampilkan time picker dengan slot available"
+          },
+          "response": [
+            {
+              "name": "Success - Available Slots",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/offline/balai/consultations/available-slots?balaiId={{balai_id}}&date=2025-11-15&interval=60"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"date\": \"2025-11-15\",\n    \"balaiId\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n    \"balaiName\": \"Balai Pelatihan Konstruksi Jakarta\",\n    \"businessHours\": {\n      \"start\": \"08:00:00\",\n      \"end\": \"17:00:00\",\n      \"slotIntervalMinutes\": 60\n    },\n    \"availableSlots\": [\n      \"08:00:00\",\n      \"09:00:00\",\n      \"11:00:00\",\n      \"14:00:00\"\n    ],\n    \"bookedSlots\": [\n      \"10:00:00\",\n      \"12:00:00\",\n      \"13:00:00\"\n    ],\n    \"totalAvailableSlots\": 4,\n    \"totalBookedSlots\": 3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Booked Dates Calendar",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/booked-dates?balaiId={{balai_id}}&month=11&year=2025",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "booked-dates"],
+              "query": [
+                {
+                  "key": "balaiId",
+                  "value": "{{balai_id}}",
+                  "description": "ID Balai (UUID)"
+                },
+                {
+                  "key": "month",
+                  "value": "11",
+                  "description": "Bulan (1-12)"
+                },
+                {
+                  "key": "year",
+                  "value": "2025",
+                  "description": "Tahun"
+                }
+              ]
+            },
+            "description": "**Purpose:** Calendar month view - tampilkan tanggal yang ada booking\n\n**Auth:** Public\n\n**Response:**\n- dates: List tanggal dengan info booking\n- totalDaysWithBookings: Total hari yang ada booking\n- totalFullyBookedDays: Total hari yang fully booked\n- Per date: totalBookings, availableSlots, isFullyBooked, bookingPercentage\n\n**Use Case:** User buka calendar bulan November, frontend highlight tanggal yang ada booking"
+          },
+          "response": [
+            {
+              "name": "Success - Booked Dates",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/offline/balai/consultations/booked-dates?balaiId={{balai_id}}&month=11&year=2025"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"balaiId\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n    \"balaiName\": \"Balai Pelatihan Konstruksi Jakarta\",\n    \"month\": 11,\n    \"year\": 2025,\n    \"dates\": [\n      {\n        \"date\": \"2025-11-15\",\n        \"totalBookings\": 5,\n        \"availableSlots\": 4,\n        \"totalSlots\": 9,\n        \"isFullyBooked\": false,\n        \"bookingPercentage\": 55.56\n      },\n      {\n        \"date\": \"2025-11-16\",\n        \"totalBookings\": 9,\n        \"availableSlots\": 0,\n        \"totalSlots\": 9,\n        \"isFullyBooked\": true,\n        \"bookingPercentage\": 100.0\n      }\n    ],\n    \"totalDaysWithBookings\": 8,\n    \"totalFullyBookedDays\": 2\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. My Bookings",
+      "description": "User consultation history - upcoming & past bookings",
+      "item": [
+        {
+          "name": "Get My Bookings (User History)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/my-bookings?userId={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "my-bookings"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}",
+                  "description": "User ID"
+                }
+              ]
+            },
+            "description": "**Purpose:** User lihat riwayat booking mereka\n\n**Auth:** Required (Bearer Token)\n\n**Response:**\n- upcomingConsultations: Consultations yang akan datang\n- pastConsultations: Riwayat yang sudah lewat\n- statusSummary: Summary by status (pending, confirmed, completed, cancelled)\n\n**Use Case:** Halaman 'My Bookings' dengan 2 section: Upcoming & History\n\n**Note:** Paste JWT token di variable jwt_token sebelum test"
+          },
+          "response": [
+            {
+              "name": "Success - My Bookings",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/offline/balai/consultations/my-bookings?userId=1"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"userId\": 1,\n    \"userName\": \"John Doe\",\n    \"upcomingConsultations\": [\n      {\n        \"id\": \"b6c02e8e-22a9-4d50-babc-dc9baf2f1f2a\",\n        \"user\": {\n          \"id\": 1,\n          \"name\": \"John Doe\"\n        },\n        \"balai\": {\n          \"id\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n          \"name\": \"Balai Pelatihan Konstruksi Jakarta\"\n        },\n        \"consultationDate\": \"2025-11-20\",\n        \"consultationTime\": \"09:00:00\",\n        \"status\": \"confirmed\",\n        \"createdAt\": \"2025-11-10T10:00:00Z\",\n        \"updatedAt\": \"2025-11-10T11:00:00Z\"\n      }\n    ],\n    \"pastConsultations\": [],\n    \"totalUpcoming\": 1,\n    \"totalPast\": 0,\n    \"statusSummary\": {\n      \"pending\": 0,\n      \"confirmed\": 1,\n      \"completed\": 0,\n      \"cancelled\": 0\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Consultations by User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/user/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "user", "{{user_id}}"]
+            },
+            "description": "**Purpose:** Get semua consultations user (simple list)\n\n**Auth:** Required\n\n**Response:** List of OfflineConsultationResponse\n\n**Difference from My Bookings:** Endpoint ini return simple list, sedangkan My Bookings return data yang sudah di-group (upcoming vs past) dengan summary"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Admin Features",
+      "description": "Admin/Balai features - daily schedule & consultation management",
+      "item": [
+        {
+          "name": "Get Daily Schedule",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/daily-schedule?balaiId={{balai_id}}&date={{test_date}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "daily-schedule"],
+              "query": [
+                {
+                  "key": "balaiId",
+                  "value": "{{balai_id}}",
+                  "description": "ID Balai"
+                },
+                {
+                  "key": "date",
+                  "value": "{{test_date}}",
+                  "description": "Tanggal (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "**Purpose:** Admin Balai lihat jadwal harian\n\n**Auth:** Required\n\n**Response:**\n- consultations: List consultation hari ini (sorted by time)\n- totalConsultations: Total booking\n- availableSlots: Slot yang masih tersedia\n\n**Use Case:** Admin dashboard - timeline view jadwal hari ini"
+          },
+          "response": [
+            {
+              "name": "Success - Daily Schedule",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/offline/balai/consultations/daily-schedule?balaiId={{balai_id}}&date=2025-11-15"
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"data\": {\n    \"balaiId\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n    \"balaiName\": \"Balai Pelatihan Konstruksi Jakarta\",\n    \"date\": \"2025-11-15\",\n    \"consultations\": [\n      {\n        \"id\": \"b6c02e8e-22a9-4d50-babc-dc9baf2f1f2a\",\n        \"user\": {\n          \"id\": 1,\n          \"name\": \"John Doe\"\n        },\n        \"balai\": {\n          \"id\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n          \"name\": \"Balai Pelatihan Konstruksi Jakarta\"\n        },\n        \"consultationDate\": \"2025-11-15\",\n        \"consultationTime\": \"08:00:00\",\n        \"status\": \"confirmed\",\n        \"createdAt\": \"2025-11-10T10:00:00Z\",\n        \"updatedAt\": \"2025-11-10T11:00:00Z\"\n      }\n    ],\n    \"totalConsultations\": 1,\n    \"availableSlots\": 8,\n    \"businessHours\": {\n      \"start\": \"08:00:00\",\n      \"end\": \"17:00:00\",\n      \"slotIntervalMinutes\": 60\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Consultations by Balai",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/balai/{{balai_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "balai", "{{balai_id}}"]
+            },
+            "description": "**Purpose:** Admin lihat semua consultations di balai tertentu\n\n**Auth:** Required\n\n**Response:** List of OfflineConsultationResponse\n\n**Use Case:** Admin dashboard - management semua consultations"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Consultation CRUD",
+      "description": "Create, Read, Update, Delete consultations (existing endpoints)",
+      "item": [
+        {
+          "name": "Create Consultation (Book)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// Auto-save consultation ID to variable",
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (jsonData.data && jsonData.data.id) {",
+                  "        pm.collectionVariables.set('consultation_id', jsonData.data.id);",
+                  "        console.log('Consultation ID saved:', jsonData.data.id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{user_id}},\n  \"balaiId\": \"{{balai_id}}\",\n  \"consultationDate\": \"{{test_date}}\",\n  \"consultationTime\": \"{{test_time}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations"]
+            },
+            "description": "**Purpose:** User membuat booking konsultasi\n\n**Auth:** Required\n\n**Validations:**\n- Tanggal harus di masa depan\n- Waktu harus dalam jam kerja (08:00-17:00)\n- User tidak bisa book slot yang sama 2x\n\n**Note:** Consultation ID akan auto-saved ke variable setelah create"
+          },
+          "response": [
+            {
+              "name": "Success - Created",
+              "originalRequest": {
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": 1,\n  \"balaiId\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n  \"consultationDate\": \"2025-11-20\",\n  \"consultationTime\": \"09:00:00\"\n}"
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Consultation created successfully.\",\n  \"data\": {\n    \"id\": \"b6c02e8e-22a9-4d50-babc-dc9baf2f1f2a\",\n    \"user\": {\n      \"id\": 1,\n      \"name\": \"John Doe\"\n    },\n    \"balai\": {\n      \"id\": \"7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1\",\n      \"name\": \"Balai Pelatihan Konstruksi Jakarta\"\n    },\n    \"consultationDate\": \"2025-11-20\",\n    \"consultationTime\": \"09:00:00\",\n    \"status\": \"pending\",\n    \"createdAt\": \"2025-11-12T10:00:00Z\",\n    \"updatedAt\": \"2025-11-12T10:00:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get All Consultations",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations"]
+            },
+            "description": "**Purpose:** Get all consultations (admin view)\n\n**Auth:** Required\n\n**Response:** List of all consultations"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Consultation by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/{{consultation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "{{consultation_id}}"]
+            },
+            "description": "**Purpose:** Get consultation details\n\n**Auth:** Required\n\n**Note:** Use consultation_id from create response"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Consultation Status",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/{{consultation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "{{consultation_id}}"]
+            },
+            "description": "**Purpose:** Update consultation status\n\n**Auth:** Required\n\n**Valid Status Transitions:**\n- pending → confirmed | cancelled\n- confirmed → completed | cancelled\n- completed/cancelled → (terminal, cannot change)\n\n**Test different status:**\n- confirmed\n- completed\n- cancelled"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Consultation",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/offline/balai/consultations/{{consultation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "offline", "balai", "consultations", "{{consultation_id}}"]
+            },
+            "description": "**Purpose:** Delete consultation (cancel booking)\n\n**Auth:** Required\n\n**Note:** Acts as cancellation"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
