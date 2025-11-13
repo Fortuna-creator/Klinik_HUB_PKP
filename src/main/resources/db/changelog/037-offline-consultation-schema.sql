@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS offline_consultations (
     balai_id UUID NOT NULL,
     consultation_date DATE NOT NULL,
     consultation_time TIME NOT NULL,
-    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS offline_consultations (
     CONSTRAINT fk_offline_consultation_balai FOREIGN KEY (balai_id) REFERENCES balai(id) ON DELETE CASCADE,
 
     -- Check constraint for status enum
-    CONSTRAINT chk_offline_consultation_status CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled'))
+    CONSTRAINT chk_offline_consultation_status CHECK (UPPER(status) IN ('PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'))
 );
 
 -- Create indexes for faster lookups
@@ -29,5 +29,5 @@ CREATE INDEX IF NOT EXISTS idx_offline_consultation_status ON offline_consultati
 -- Composite index for duplicate booking check
 CREATE UNIQUE INDEX IF NOT EXISTS idx_offline_consultation_unique_booking
 ON offline_consultations(user_id, balai_id, consultation_date, consultation_time)
-WHERE status != 'cancelled';
+WHERE UPPER(status) != 'CANCELLED';
 
