@@ -1,0 +1,658 @@
+databaseChangeLog:
+  - changeSet:
+      id: seed-portfolios-data
+      author: hub
+      changes:
+        # Portfolio for Dr. Ahmad Santoso (consultant_id: 1001)
+        - insert:
+            tableName: portfolios
+            columns:
+              - column:
+                  name: id
+                  value: 2001
+              - column:
+                  name: consultant_id
+                  value: 1001
+              - column:
+                  name: bio
+                  value: "Experienced architect with 15+ years in residential and commercial design, specializing in sustainable and modern architecture."
+              - column:
+                  name: specialization
+                  value: "Architecture, Interior Design, Sustainable Design"
+              - column:
+                  name: experience
+                  value: "15+ years"
+              - column:
+                  name: education
+                  value: "Bachelor of Architecture, Universitas Indonesia; Master of Architecture, MIT"
+              - column:
+                  name: certifications
+                  value: "Licensed Architect (IAR), LEED Accredited Professional"
+              - column:
+                  name: project_samples
+                  value: "Residential complexes, commercial buildings, sustainable housing projects"
+              - column:
+                  name: linkedin_url
+                  value: "https://linkedin.com/in/ahmad-santoso"
+              - column:
+                  name: website_url
+                  value: "https://ahmadsantosoarchitect.com"
+              - column:
+                  name: status
+                  value: "PUBLISHED"
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        # Portfolio projects for Dr. Ahmad Santoso
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3001
+              - column:
+                  name: portfolio_id
+                  value: 2001
+              - column:
+                  name: project_name
+                  value: "Green Residential Complex"
+              - column:
+                  name: price
+                  value: "50000000.00"
+              - column:
+                  name: detail_description
+                  value: "A sustainable residential complex featuring green roofs, solar panels, and energy-efficient designs for 50 units."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3001
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/ahmad/project1/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3001
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/ahmad/project1/img2.jpg"
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3002
+              - column:
+                  name: portfolio_id
+                  value: 2001
+              - column:
+                  name: project_name
+                  value: "Modern Office Building"
+              - column:
+                  name: price
+                  value: "75000000.00"
+              - column:
+                  name: detail_description
+                  value: "Contemporary office building with open floor plans and smart building technologies."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3002
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/ahmad/project2/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3002
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/ahmad/project2/img2.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3002
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/ahmad/project2/img3.jpg"
+
+        # Portfolio for Siti Nurhaliza (consultant_id: 1002)
+        - insert:
+            tableName: portfolios
+            columns:
+              - column:
+                  name: id
+                  value: 2002
+              - column:
+                  name: consultant_id
+                  value: 1002
+              - column:
+                  name: bio
+                  value: "Interior designer specializing in modern minimalist designs, creating functional and aesthetic spaces."
+              - column:
+                  name: specialization
+                  value: "Interior Design, Space Planning, Minimalist Design"
+              - column:
+                  name: experience
+                  value: "8+ years"
+              - column:
+                  name: education
+                  value: "Bachelor of Interior Design, Institut Teknologi Bandung"
+              - column:
+                  name: certifications
+                  value: "Certified Interior Designer (CID), NCIDQ Certified"
+              - column:
+                  name: project_samples
+                  value: "Residential interiors, office spaces, retail design"
+              - column:
+                  name: linkedin_url
+                  value: "https://linkedin.com/in/siti-nurhaliza"
+              - column:
+                  name: website_url
+                  value: "https://sitidesign.com"
+              - column:
+                  name: status
+                  value: "PUBLISHED"
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        # Portfolio projects for Siti Nurhaliza
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3003
+              - column:
+                  name: portfolio_id
+                  value: 2002
+              - column:
+                  name: project_name
+                  value: "Minimalist Living Room"
+              - column:
+                  name: price
+                  value: "15000000.00"
+              - column:
+                  name: detail_description
+                  value: "Complete interior redesign of a 200sqm living space with minimalist aesthetics and functional layout."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3003
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/siti/project1/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3003
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/siti/project1/img2.jpg"
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3004
+              - column:
+                  name: portfolio_id
+                  value: 2002
+              - column:
+                  name: project_name
+                  value: "Office Space Renovation"
+              - column:
+                  name: price
+                  value: "25000000.00"
+              - column:
+                  name: detail_description
+                  value: "Modern office renovation focusing on productivity and employee well-being."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3004
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/siti/project2/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3004
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/siti/project2/img2.jpg"
+
+        # Portfolio for Budi Prasetyo (consultant_id: 1003)
+        - insert:
+            tableName: portfolios
+            columns:
+              - column:
+                  name: id
+                  value: 2003
+              - column:
+                  name: consultant_id
+                  value: 1003
+              - column:
+                  name: bio
+                  value: "Structural engineer with expertise in earthquake-resistant designs and sustainable construction."
+              - column:
+                  name: specialization
+                  value: "Structural Engineering, Seismic Design, Sustainable Construction"
+              - column:
+                  name: experience
+                  value: "12+ years"
+              - column:
+                  name: education
+                  value: "Bachelor of Civil Engineering, Universitas Gadjah Mada; Master of Structural Engineering, Stanford"
+              - column:
+                  name: certifications
+                  value: "Professional Engineer (PE), LEED Accredited Professional"
+              - column:
+                  name: project_samples
+                  value: "High-rise buildings, bridges, earthquake-resistant structures"
+              - column:
+                  name: linkedin_url
+                  value: "https://linkedin.com/in/budi-prasetyo"
+              - column:
+                  name: website_url
+                  value: "https://budistructural.com"
+              - column:
+                  name: status
+                  value: "PUBLISHED"
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        # Portfolio projects for Budi Prasetyo
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3005
+              - column:
+                  name: portfolio_id
+                  value: 2003
+              - column:
+                  name: project_name
+                  value: "Seismic-Resistant Apartment"
+              - column:
+                  name: price
+                  value: "80000000.00"
+              - column:
+                  name: detail_description
+                  value: "Structural design for a 15-story apartment building with advanced seismic resistance features."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3005
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/budi/project1/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3005
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/budi/project1/img2.jpg"
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3006
+              - column:
+                  name: portfolio_id
+                  value: 2003
+              - column:
+                  name: project_name
+                  value: "Bridge Construction"
+              - column:
+                  name: price
+                  value: "120000000.00"
+              - column:
+                  name: detail_description
+                  value: "Structural engineering for a 500m suspension bridge with innovative materials."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3006
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/budi/project2/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3006
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/budi/project2/img2.jpg"
+
+        # Portfolio for Maya Sari (consultant_id: 1004)
+        - insert:
+            tableName: portfolios
+            columns:
+              - column:
+                  name: id
+                  value: 2004
+              - column:
+                  name: consultant_id
+                  value: 1004
+              - column:
+                  name: bio
+                  value: "Landscape architect creating sustainable outdoor spaces that harmonize with nature."
+              - column:
+                  name: specialization
+                  value: "Landscape Architecture, Sustainable Design, Urban Planning"
+              - column:
+                  name: experience
+                  value: "10+ years"
+              - column:
+                  name: education
+                  value: "Bachelor of Landscape Architecture, Universitas Brawijaya"
+              - column:
+                  name: certifications
+                  value: "Certified Landscape Architect (CLA), Sustainable Sites Initiative"
+              - column:
+                  name: project_samples
+                  value: "Public parks, residential gardens, urban green spaces"
+              - column:
+                  name: linkedin_url
+                  value: "https://linkedin.com/in/maya-sari"
+              - column:
+                  name: website_url
+                  value: "https://mayalandscape.com"
+              - column:
+                  name: status
+                  value: "PUBLISHED"
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        # Portfolio projects for Maya Sari
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3007
+              - column:
+                  name: portfolio_id
+                  value: 2004
+              - column:
+                  name: project_name
+                  value: "Urban Park Design"
+              - column:
+                  name: price
+                  value: "30000000.00"
+              - column:
+                  name: detail_description
+                  value: "Design and planning of a 5-hectare urban park with native plants and recreational facilities."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3007
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/maya/project1/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3007
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/maya/project1/img2.jpg"
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3008
+              - column:
+                  name: portfolio_id
+                  value: 2004
+              - column:
+                  name: project_name
+                  value: "Residential Garden"
+              - column:
+                  name: price
+                  value: "10000000.00"
+              - column:
+                  name: detail_description
+                  value: "Sustainable garden design for a family home with water conservation features."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3008
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/maya/project2/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3008
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/maya/project2/img2.jpg"
+
+        # Portfolio for Rizki Ramadhan (consultant_id: 1005)
+        - insert:
+            tableName: portfolios
+            columns:
+              - column:
+                  name: id
+                  value: 2005
+              - column:
+                  name: consultant_id
+                  value: 1005
+              - column:
+                  name: bio
+                  value: "Architecture student with fresh perspectives and modern design ideas, passionate about innovative solutions."
+              - column:
+                  name: specialization
+                  value: "Modern Architecture, 3D Visualization, Innovative Design"
+              - column:
+                  name: experience
+                  value: "2+ years (student projects)"
+              - column:
+                  name: education
+                  value: "Bachelor of Architecture, Universitas Diponegoro (ongoing)"
+              - column:
+                  name: certifications
+                  value: "AutoCAD Certified, SketchUp Pro"
+              - column:
+                  name: project_samples
+                  value: "Student design projects, 3D visualizations, conceptual designs"
+              - column:
+                  name: linkedin_url
+                  value: "https://linkedin.com/in/rizki-ramadhan"
+              - column:
+                  name: website_url
+                  value: "https://rizkiportfolio.com"
+              - column:
+                  name: status
+                  value: "PUBLISHED"
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        # Portfolio projects for Rizki Ramadhan
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3009
+              - column:
+                  name: portfolio_id
+                  value: 2005
+              - column:
+                  name: project_name
+                  value: "Modern Student Housing"
+              - column:
+                  name: price
+                  value: "20000000.00"
+              - column:
+                  name: detail_description
+                  value: "Conceptual design for affordable student housing with shared facilities and modern aesthetics."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3009
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/rizki/project1/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3009
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/rizki/project1/img2.jpg"
+        - insert:
+            tableName: portfolio_projects
+            columns:
+              - column:
+                  name: id
+                  value: 3010
+              - column:
+                  name: portfolio_id
+                  value: 2005
+              - column:
+                  name: project_name
+                  value: "Community Center Design"
+              - column:
+                  name: price
+                  value: "15000000.00"
+              - column:
+                  name: detail_description
+                  value: "3D visualization and design for a local community center with multipurpose spaces."
+              - column:
+                  name: created_at
+                  value: "2025-10-25T09:30:00.000Z"
+              - column:
+                  name: updated_at
+                  value: "2025-10-25T09:30:00.000Z"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3010
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/rizki/project2/img1.jpg"
+        - insert:
+            tableName: portfolio_project_images
+            columns:
+              - column:
+                  name: portfolio_project_id
+                  value: 3010
+              - column:
+                  name: image_url
+                  value: "https://example.com/portfolio/rizki/project2/img2.jpg"

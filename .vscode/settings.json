@@ -1,0 +1,5 @@
+{
+  "java.jdt.ls.vmargs": "-javaagent:/home/dwi/projects/pkp/hub-backend/target/dependency/lombok-1.18.40.jar -Xbootclasspath/a:/home/dwi/projects/pkp/hub-backend/target/dependency/lombok-1.18.40.jar -noverify",
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "java.compile.nullAnalysis.mode": "disabled"
+}

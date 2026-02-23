@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+
+    <include file="001-initial-schema.sql" relativeToChangelogFile="true"/>
+    <include file="002-update-schema.sql" relativeToChangelogFile="true"/>
+    <include file="003-portfolio-schema.sql" relativeToChangelogFile="true"/>
+    <include file="004-project-schema.sql" relativeToChangelogFile="true"/>
+    <include file="005-user-location-schema.sql" relativeToChangelogFile="true"/>
+    <include file="006-consultants-table.sql" relativeToChangelogFile="true"/>
+    <include file="007-homeowners-table.sql" relativeToChangelogFile="true"/>
+    <include file="008-consultant-enhancements.sql" relativeToChangelogFile="true"/>
+    <include file="009-add-column-users.sql" relativeToChangelogFile="true"/>
+    <include file="010-portfolio-projects-schema.sql" relativeToChangelogFile="true"/>
+    <include file="011-portfolio-consultant-relationship.sql" relativeToChangelogFile="true"/>
+    <include file="012-consultation-schema.sql" relativeToChangelogFile="true"/>
+    <include file="012-survey-schedules-schema.sql" relativeToChangelogFile="true"/>
+    <include file="013-chat-messages-schema.sql" relativeToChangelogFile="true"/>
+    <include file="014-file-uploads-schema.sql" relativeToChangelogFile="true"/>
+    <include file="017-consultation-history-schema.sql" relativeToChangelogFile="true"/>
+    <include file="018-contract-schema.sql" relativeToChangelogFile="true"/>
+    <include file="019-document-versions-schema.sql" relativeToChangelogFile="true"/>
+    <include file="020-update-survey-schedule-schema.sql" relativeToChangelogFile="true"/>
+    <include file="021-permits-schema.sql" relativeToChangelogFile="true"/>
+    <include file="022-consultation-column.sql" relativeToChangelogFile="true"/>
+    <include file="023-add-schedule-id-to-consultation-history.sql" relativeToChangelogFile="true"/>
+    <include file="024-add-file-upload-columns.sql" relativeToChangelogFile="true"/>
+    <include file="025-add-contract-id-to-consultation-history.sql" relativeToChangelogFile="true"/>
+    <include file="025-user-wallets-schema.sql" relativeToChangelogFile="true"/>
+    <include file="026-add-file-ids-to-consultation-history.sql" relativeToChangelogFile="true"/>
+    <include file="028-add-contract-signing-timestamps.sql" relativeToChangelogFile="true"/>
+    <include file="029-add-payment-installments-column.sql" relativeToChangelogFile="true"/>
+    <include file="026-escrow-accounts-schema.sql" relativeToChangelogFile="true"/>
+    <include file="027-update-payments-schema.sql" relativeToChangelogFile="true"/>
+    <include file="030-update-escrow-accounts-schema.sql" relativeToChangelogFile="true"/>
+    <include file="031-add-payment-id-to-consultation-history.sql" relativeToChangelogFile="true"/>
+    <include file="032-add-missing-payment-columns.sql" relativeToChangelogFile="true"/>
+    <include file="033-add-missing-project-type-column.sql" relativeToChangelogFile="true"/>
+    <include file="034-add-payment-type-column.sql" relativeToChangelogFile="true"/>
+    <include file="035-add-total-payment-amount-to-consultation-history.sql" relativeToChangelogFile="true"/>
+    <include file="036-balai-offline-schema.sql" relativeToChangelogFile="true"/>
+    <include file="037-offline-consultation-schema.sql" relativeToChangelogFile="true"/>
+    <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
+    <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

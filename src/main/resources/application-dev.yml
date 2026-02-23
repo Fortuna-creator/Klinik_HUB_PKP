@@ -1,0 +1,89 @@
+spring:
+  application:
+    name: hub-backend
+
+  # DataSource akan diambil dari Consul KV
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://postgres_container:5432/hubdb_dev}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:postgres123}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      javax.persistence.schema-generation.database.action: none
+    show-sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  config:
+    import: "optional:consul:"
+
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    consul:
+      host: ${CONSUL_HOST:consul}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        enabled: true
+      config:
+        format: yaml
+        enabled: true
+        default-context: hub-backend
+        watch:
+          enabled: true
+        fail-fast: true
+        retry:
+          enabled: true
+          initial-interval: 1000
+          max-interval: 2000
+          multiplier: 1.1
+          max-attempts: 6
+      refresh:
+        enabled: true
+
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:idayirikzir@gmail.com}
+    password: ${MAIL_PASSWORD:gxhzfrzeabmsavcg}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+minio:
+  endpoint: ${MINIO_ENDPOINT:http://minio:9000}
+  access-key: ${MINIO_ACCESS_KEY:admin}
+  secret-key: ${MINIO_SECRET_KEY:admin12345}
+
+jwt:
+  secret: ${JWT_SECRET:supersecretjwtkey}
+  expiration-ms: 36000000000000
+
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh
+  endpoint:
+    refresh:
+      enabled: true
+
+logging:
+  level:
+    com.hub.backend: DEBUG
+    com.hub.app: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.cloud.consul: DEBUG
+    org.springframework.core.env: DEBUG

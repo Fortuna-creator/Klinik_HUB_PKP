@@ -1,0 +1,45 @@
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %m%n%ex"
+  level:
+    com.hub.app: INFO
+    org.springframework.security: DEBUG
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:hubdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      javax.persistence.schema-generation.database.action: none
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:idayirikzir@gmail.com}
+    password: ${MAIL_PASSWORD:gxhzfrzeabmsavcg}
+    properties:
+      smtp:
+        auth: true
+        starttls:
+          enable: true
+minio:
+   endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+   access-key: ${MINIO_ACCESS_KEY:minioadmin}
+   secret-key: ${MINIO_SECRET_KEY:minioadmin}
+   bucket: ${MINIO_BUCKET:hub-documents}
+
+jwt:
+  secret: change-me
+  expiration-ms: 3600000
+
+server:
+  port: 8080
+
+simbg:
+  base-url: https://api.simbg.go.id
+  auth:
+    token: ${SIMBG_TOKEN:}

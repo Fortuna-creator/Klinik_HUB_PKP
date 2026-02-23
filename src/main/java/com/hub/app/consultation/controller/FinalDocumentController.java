@@ -1,0 +1,79 @@
+package com.hub.app.consultation.controller;
+
+import com.hub.app.consultation.dto.FinalDocumentResponse;
+import com.hub.app.consultation.service.ConsultationJwtService;
+import com.hub.app.consultation.service.FinalDocumentService;
+import com.hub.app.error.ApiErrorBuilder;
+import com.hub.app.error.ErrorCode;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/final-documents")
+@RequiredArgsConstructor
+public class FinalDocumentController {
+
+    private final FinalDocumentService finalDocumentService;
+    private final ConsultationJwtService jwtService;
+    private final ApiErrorBuilder apiErrorBuilder;
+
+    @PostMapping
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> uploadFinalDocument(
+            @RequestParam UUID consultationId,
+            @RequestParam String fileDedUrl,
+            @RequestParam String fileRabUrl,
+            @RequestParam String fileSpektekUrl,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+
+            FinalDocumentResponse response = finalDocumentService.uploadFinalDocument(
+                    consultationId, fileDedUrl, fileRabUrl, fileSpektekUrl, consultantId);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/download")
+    @PreAuthorize("hasRole('HOME_OWNER')")
+    public ResponseEntity<?> downloadFinalDocument(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long homeOwnerId = jwtService.extractUserId(authHeader);
+
+            // This would return presigned URLs for download
+            return ResponseEntity.status(HttpStatus.OK).body("Download URLs would be generated here");
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/archive")
+    @PreAuthorize("hasRole('CONSULTANT')")
+    public ResponseEntity<?> archiveFinalDocument(
+            @PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Long consultantId = jwtService.extractUserId(authHeader);
+
+            FinalDocumentResponse response = finalDocumentService.archiveFinalDocument(id, consultantId);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (Exception e) {
+            return apiErrorBuilder.error(ErrorCode.INTERNAL_ERROR.getHttpStatus(),
+                                        ErrorCode.INTERNAL_ERROR.getCode(),
+                                        e.getMessage());
+        }
+    }
+}

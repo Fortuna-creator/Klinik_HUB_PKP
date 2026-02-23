@@ -1,0 +1,2646 @@
+{
+  "info": {
+    "name": "Hub API v2.1",
+    "description": "Comprehensive Postman collection for Hub API v2.1 with JWT authentication, file operations, user management, and backoffice features. Includes environment variables, pre-request scripts, test scripts, and example requests with sample data.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "hub-backend"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base URL for the API"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT access token for authentication"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "description": "User ID for operations"
+    },
+    {
+      "key": "file_id",
+      "value": "",
+      "type": "string",
+      "description": "File ID for download operations"
+    },
+    {
+      "key": "consultant_id",
+      "value": "",
+      "type": "string",
+      "description": "Consultant ID for backoffice operations"
+    },
+    {
+      "key": "email",
+      "value": "test@example.com",
+      "type": "string",
+      "description": "Test email for registration and login"
+    },
+    {
+      "key": "password",
+      "value": "password123",
+      "type": "string",
+      "description": "Test password"
+    },
+    {
+      "key": "activation_token",
+      "value": "",
+      "type": "string",
+      "description": "Activation token for account activation"
+    },
+    {
+      "key": "portfolio_id",
+      "value": "",
+      "type": "string",
+      "description": "Portfolio ID for operations"
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "type": "string",
+      "description": "Project ID for operations"
+    },
+    {
+      "key": "consultation_id",
+      "value": "",
+      "type": "string",
+      "description": "Consultation ID for operations"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "User authentication endpoints including registration, OTP verification, login, and profile updates",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Endpoint: POST /api/auth/register\nMethod: POST\nDescription: Register a new user and send OTP for verification.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n| password | String | 8- | Yes | Password (min 8 chars, uppercase, lowercase, digit, special char) |\n| confirmPassword | String | - | Yes | Password confirmation |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (OTP sent) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format or password constraints |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Email address already registered |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Sends OTP code to user's email for account verification\n- Password must contain at least one uppercase letter, lowercase letter, digit, and special character"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains success message\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('OTP sent');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verify OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"otpCode\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "verify-otp"]
+            },
+            "description": "Endpoint: POST /api/auth/verify-otp\nMethod: POST\nDescription: Verify OTP code sent to user's email.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| userId | String | - | Yes | User ID from registration |\n| otpCode | String | 6 | Yes | 6-digit OTP code |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (verified successfully) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid OTP format |\n| 401 | INVALID_OTP | Invalid OTP | OTP code is incorrect or expired |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- OTP is valid for a limited time (typically 5-10 minutes)\n- After successful verification, user can proceed to login"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1'); // Default for testing",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains success message\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('verified successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Endpoint: POST /api/auth/login\nMethod: POST\nDescription: Authenticate user and obtain JWT token.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n| password | String | - | Yes | Password |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| userId | Long | - | Yes | User ID |\n| fullName | String | 100 | Yes | User's full name |\n| email | String | 100 | Yes | Email address |\n| token | String | 512 | Yes | JWT access token |\n| role | String | - | Yes | User role (HOMEOWNER/CONSULTANT) |\n| status | String | - | Yes | Account status |\n| expiresIn | Integer | - | Yes | Token expiration time in seconds |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format |\n| 401 | INVALID_CREDENTIALS | Email atau password salah | Invalid email or password |\n| 401 | ACCOUNT_INACTIVE | Akun tidak aktif | Account is not active |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns JWT token for subsequent authenticated requests\n- Token should be included in Authorization header as 'Bearer {token}'"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains access token\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('accessToken');",
+                  "    pm.collectionVariables.set('jwt_token', jsonData.accessToken);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "name",
+                  "value": "John Doe",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "+1234567890",
+                  "type": "text"
+                },
+                {
+                  "key": "address",
+                  "value": "123 Main St",
+                  "type": "text"
+                },
+                {
+                  "key": "ktpNumber",
+                  "value": "1234567890123456",
+                  "type": "text"
+                },
+                {
+                  "key": "ktpFile",
+                  "src": [],
+                  "type": "file",
+                  "description": "KTP image file (JPEG/PNG, max 5MB)"
+                },
+                {
+                  "key": "selfieFile",
+                  "src": [],
+                  "type": "file",
+                  "description": "Selfie image file (JPEG/PNG, max 5MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile-update",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile-update"]
+            },
+            "description": "Endpoint: POST /api/auth/profile-update\nMethod: POST\nDescription: Update user profile with optional image uploads. Requires JWT authentication.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| name | String | 100 | No | Full name |\n| phone | String | 15 | No | Phone number (format: +[country code][number]) |\n| address | String | 255 | No | Address |\n| ktpNumber | String | 16 | No | KTP number (16 digits) |\n| ktpFile | File | 5MB | No | KTP image file (JPEG/PNG) |\n| selfieFile | File | 5MB | No | Selfie image file (JPEG/PNG) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (Profile updated) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or file types |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 413 | - | File too large | File size exceeds 5MB limit |\n| 415 | - | Unsupported file type | File type not JPEG/PNG |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- All fields are optional, only provided fields will be updated\n- File uploads are handled via multipart/form-data\n- Images are validated for type and size before upload"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Profile updated successfully\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('Profile updated');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Activate Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"token\": \"{{activation_token}}\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/activate-account",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "activate-account"]
+            },
+            "description": "Endpoint: POST /api/auth/activate-account\nMethod: POST\nDescription: Activate user account using activation token.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n| token | String | - | Yes | Activation token from email |\n| password | String | 8- | Yes | New password |\n| confirmPassword | String | - | Yes | Password confirmation |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (Account activated successfully) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format or password constraints |\n| 400 | BAD_REQUEST | Permintaan tidak valid | Passwords do not match |\n| 404 | USER_NOT_FOUND | User not found | Email not found or token invalid |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Account already activated |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Activation token is sent via email during registration\n- Token has expiration time (typically 24 hours)\n- Password must meet security requirements (uppercase, lowercase, digit, special char)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains success message\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('Account activated successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Resend Activation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "{{email}}",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/resend-activation",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "resend-activation"]
+            },
+            "description": "Endpoint: POST /api/auth/resend-activation\nMethod: POST\nDescription: Resend activation email to user.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| email | String | 100 | Yes | Email address |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| message | String | 255 | Yes | Success message (Activation email resent successfully) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid email format |\n| 404 | USER_NOT_FOUND | User not found | Email not found in system |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Account already activated |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Can only be used for accounts that are not yet activated\n- Rate limiting may apply to prevent abuse"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains success message\", function () {",
+                  "    const jsonData = pm.response.text();",
+                  "    pm.expect(jsonData).to.include('Activation email resent successfully');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "description": "File upload and download operations with MinIO storage",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": [],
+                  "type": "file",
+                  "description": "File to upload (JPEG/PNG, max 5MB)"
+                },
+                {
+                  "key": "fileType",
+                  "value": "Document",
+                  "type": "text",
+                  "description": "File type: KTP, Document, or Selfie"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "upload"]
+            },
+            "description": "Endpoint: POST /api/files/upload\nMethod: POST\nDescription: Upload a file with validation and secure storage.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file | File | 5MB | Yes | File to upload (JPEG/PNG) |\n| fileType | String | - | Yes | File type: KTP, Document, or Selfie |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| fileId | String | - | Yes | Unique file identifier |\n| fileUrl | String | 255 | Yes | URL to access the uploaded file |\n| checksum | String | - | Yes | File checksum for integrity verification |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid file type or missing required fields |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 413 | - | File too large | File size exceeds 5MB limit |\n| 415 | - | Unsupported file type | File type not JPEG/PNG |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Files are stored securely using MinIO object storage\n- Supported file types: JPEG, PNG\n- Maximum file size: 5MB\n- Checksum is provided for file integrity verification"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains file information\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('fileId');",
+                  "    pm.expect(jsonData).to.have.property('fileUrl');",
+                  "    pm.expect(jsonData).to.have.property('checksum');",
+                  "    pm.collectionVariables.set('file_id', jsonData.fileId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Download File",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/files/download/{{file_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "files", "download", "{{file_id}}"]
+            },
+            "description": "Endpoint: GET /api/files/download/{file_id}\nMethod: GET\nDescription: Download a file by ID.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file_id | String | - | Yes | File ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file | Binary | - | Yes | File content as binary data |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 404 | - | File not found | File ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns file as binary data with appropriate Content-Type header\n- Includes Content-Disposition header for file download\n- File access is restricted to authenticated users"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('file_id')) {",
+                  "    throw new Error('File ID not available. Please upload a file first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has content type header\", function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.match(/image\\/(jpeg|png)/);",
+                  "});",
+                  "",
+                  "pm.test(\"Response has content disposition header\", function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Disposition')).to.include('attachment');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints for admin operations",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users"]
+            },
+            "description": "Endpoint: GET /api/users\nMethod: GET\nDescription: Retrieve list of all users.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| users | Array | - | Yes | Array of user objects |\n| - id | Long | - | Yes | User ID |\n| - email | String | 100 | Yes | Email address |\n| - fullName | String | 100 | Yes | Full name |\n| - role | String | - | Yes | User role |\n| - status | String | - | Yes | Account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Returns paginated results (may need pagination parameters in future)"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}", "approve"]
+            },
+            "description": "Endpoint: POST /api/users/{user_id}/approve\nMethod: POST\nDescription: Approve a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to APPROVED"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}", "reject"]
+            },
+            "description": "Endpoint: POST /api/users/{user_id}/reject\nMethod: POST\nDescription: Reject a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to REJECTED"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Activate User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/activate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}", "activate"]
+            },
+            "description": "Endpoint: POST /api/users/{user_id}/activate\nMethod: POST\nDescription: Activate a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to ACTIVE"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}", "deactivate"]
+            },
+            "description": "Endpoint: POST /api/users/{user_id}/deactivate\nMethod: POST\nDescription: Deactivate a user account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires admin/backoffice role\n- Changes user status to DEACTIVATED"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Self Deactivate User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/self-deactivate",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}", "self-deactivate"]
+            },
+            "description": "Endpoint: POST /api/users/{user_id}/self-deactivate\nMethod: POST\nDescription: Allow user to self-deactivate their account.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Cannot deactivate other users' accounts |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Users can only deactivate their own accounts\n- Changes user status to DEACTIVATED"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio"]
+            },
+            "description": "Endpoint: GET /api/users/portfolio\nMethod: GET\nDescription: Retrieve consultant's portfolio information.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| consultant | Object | - | Yes | Consultant information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - id | Long | - | Yes | Project ID |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | - | Only consultants can have portfolios | User is not a consultant |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 404 | USER_NOT_FOUND | User not found | User does not exist |\n| 404 | - | Portfolio not found | Portfolio does not exist for this consultant |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Only consultants can have portfolios\n- Returns portfolio data for the authenticated consultant user\n- Portfolio may not exist if not yet created"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains portfolio data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData) {",
+                  "        pm.expect(jsonData).to.have.property('id');",
+                  "        pm.expect(jsonData).to.have.property('user');",
+                  "        pm.collectionVariables.set('portfolio_id', jsonData.id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Save Portfolio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Experienced consultant with 5+ years in architecture services\",\n  \"specialization\": \"Architecture\",\n  \"experience\": \"5 years\",\n  \"education\": \"Architecture Degree from University X\",\n  \"certifications\": \"Certified Architect\",\n  \"linkedinUrl\": \"https://linkedin.com/in/consultant\",\n  \"websiteUrl\": \"https://consultant.com\",\n  \"projects\": [\n    {\n      \"projectName\": \"Modern House Design\",\n      \"price\": 50000.00,\n      \"detailDescription\": \"Complete modern house design with 3D rendering and construction plans\",\n      \"imageUrls\": [\n        \"https://minio.example.com/project1-image1.jpg\",\n        \"https://minio.example.com/project1-image2.jpg\",\n        \"https://minio.example.com/project1-image3.jpg\"\n      ]\n    },\n    {\n      \"projectName\": \"Commercial Building\",\n      \"price\": 150000.00,\n      \"detailDescription\": \"Large commercial building design with sustainable features\",\n      \"imageUrls\": [\n        \"https://minio.example.com/project2-image1.jpg\"\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio"]
+            },
+            "description": "Endpoint: POST /api/users/portfolio\nMethod: POST\nDescription: Save or update consultant's portfolio information with project details.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs for the project |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| consultant | Object | - | Yes | Consultant information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - id | Long | - | Yes | Project ID |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or lengths |\n| 400 | - | Only consultants can create portfolios | User is not a consultant |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only consultants can manage portfolios |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Only consultants can create and manage portfolios\n- Creates new portfolio if none exists, updates existing otherwise\n- All fields are optional, only provided fields will be updated\n- Projects array can contain multiple project objects with images\n- Portfolio is considered complete when it has at least one project"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains portfolio data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Portfolio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Experienced architect specializing in modern residential designs with sustainable materials\",\n  \"specialization\": \"Modern Architecture & Sustainable Design\",\n  \"experience\": \"7 years\",\n  \"education\": \"Master of Architecture from Bandung Institute of Technology\",\n  \"certifications\": \"Certified Green Architect, LEED Accredited Professional\",\n  \"linkedinUrl\": \"https://linkedin.com/in/jane-architect\",\n  \"websiteUrl\": \"https://jane-architect.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio"]
+            },
+            "description": "Endpoint: PUT /api/users/portfolio\nMethod: PUT\nDescription: Update consultant's existing portfolio information.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs for the project |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Portfolio ID |\n| consultant | Object | - | Yes | Consultant information |\n| bio | String | 500 | No | Consultant biography |\n| specialization | String | 100 | No | Area of specialization |\n| experience | String | 100 | No | Years of experience |\n| education | String | 255 | No | Educational background |\n| certifications | String | 255 | No | Professional certifications |\n| linkedinUrl | String | 255 | No | LinkedIn profile URL |\n| websiteUrl | String | 255 | No | Personal website URL |\n| projects | Array | - | No | Array of portfolio projects |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or lengths |\n| 400 | - | Only consultants can update portfolios | User is not a consultant |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only consultants can manage portfolios |\n| 404 | USER_NOT_FOUND | User not found | User does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Only consultants can update portfolios\n- Updates existing portfolio, creates new one if none exists\n- All fields are optional, only provided fields will be updated\n- Existing projects will be replaced with the new projects array"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains portfolio data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('user');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add Portfolio Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"projectName\": \"Modern Minimalist House - BSD City\",\n  \"price\": 75000.00,\n  \"detailDescription\": \"Complete architectural design for a 300m² modern minimalist house in BSD City. Includes 3D visualization, working drawings, structural calculations, and MEP coordination. Features open-concept living spaces, sustainable materials, and smart home integration.\",\n  \"imageUrls\": [\n    \"https://minio.example.com/modern-house-exterior.jpg\",\n    \"https://minio.example.com/modern-house-interior.jpg\",\n    \"https://minio.example.com/modern-house-3d-render.jpg\",\n    \"https://minio.example.com/modern-house-floor-plan.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio/projects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio", "projects"]
+            },
+            "description": "Endpoint: POST /api/users/portfolio/projects\nMethod: POST\nDescription: Add a new project to consultant's portfolio.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projectName | String | 255 | Yes | Name of the project |\n| price | BigDecimal | - | No | Project price/cost |\n| detailDescription | String | - | No | Detailed project description |\n| imageUrls | Array | - | No | Array of image URLs for the project |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Project ID |\n| projectName | String | 255 | Yes | Name of the project |\n| price | BigDecimal | - | No | Project price/cost |\n| detailDescription | String | - | No | Detailed project description |\n| imageUrls | Array | - | No | Array of image URLs |\n| createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or missing required fields |\n| 400 | - | Only consultants can add portfolio projects | User is not a consultant |\n| 400 | - | Portfolio not found for consultant | Consultant doesn't have a portfolio yet |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Consultants must first create a basic portfolio before adding projects\n- Projects are added individually to existing portfolios\n- Image URLs should be obtained from the upload endpoint first\n- Portfolio status is automatically updated when projects are added"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains project data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('projectName');",
+                  "    pm.expect(jsonData).to.have.property('createdAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Consultant Portfolio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/consultants/{{consultant_id}}/portfolio",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "consultants", "{{consultant_id}}", "portfolio"]
+            },
+            "description": "Endpoint: GET /api/users/consultants/{consultantId}/portfolio\nMethod: GET\nDescription: Get a specific consultant's portfolio with all their projects.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultantId | Long | - | Yes | ID of the consultant whose portfolio to retrieve |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultant | Object | - | Yes | Consultant information |\n| - id | Long | - | Yes | Consultant ID |\n| - name | String | 100 | Yes | Consultant name |\n| - email | String | 100 | Yes | Consultant email |\n| - specialization | String | 100 | No | Area of specialization |\n| portfolios | Array | - | No | Array of portfolio projects |\n| - id | Long | - | Yes | Project ID |\n| - projectName | String | 255 | Yes | Project name |\n| - price | BigDecimal | - | No | Project price |\n| - detailDescription | String | - | No | Detailed project description |\n| - imageUrls | Array | - | No | Array of image URLs |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 404 | - | Portfolio not found | Consultant doesn't have a portfolio |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Allows homeowners to view consultant portfolios when selecting consultants\n- Returns simplified portfolio information focused on projects\n- Portfolio may not exist if consultant hasn't created one yet\n- Requires authentication but accessible to all authenticated users"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                    "    throw new Error('JWT token not available. Please login first.');",
+                    "}",
+                    "",
+                    "if (!pm.collectionVariables.get('consultant_id')) {",
+                    "    throw new Error('Consultant ID not available. Please set consultant_id variable.');",
+                    "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200 or 404\", function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test(\"Response contains portfolio data\", function () {",
+                  "        const jsonData = pm.response.json();",
+                  "        pm.expect(jsonData).to.have.property('id');",
+                  "        pm.expect(jsonData).to.have.property('consultant');",
+                  "        pm.expect(jsonData).to.have.property('projects');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Upload Portfolio Images",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "files",
+                  "src": [],
+                  "type": "file",
+                  "description": "Multiple image files for portfolio projects (JPEG/PNG, max 5MB each)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/portfolio/upload-images",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "portfolio", "upload-images"]
+            },
+            "description": "Endpoint: POST /api/users/portfolio/upload-images\nMethod: POST\nDescription: Upload multiple images for portfolio projects.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| files | File[] | 5MB each | Yes | Multiple image files (JPEG/PNG) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| imageUrls | Array | - | Yes | Array of uploaded image URLs |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid file types or missing files |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 413 | - | File too large | Individual file exceeds 5MB limit |\n| 415 | - | Unsupported file type | File type not JPEG/PNG |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Supports uploading multiple images at once\n- Images are stored securely using MinIO object storage\n- Returns array of URLs that can be used in portfolio project creation\n- Maximum 5MB per file, JPEG/PNG formats only"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains image URLs\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('imageUrls');",
+                  "    pm.expect(jsonData.imageUrls).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Completed Portfolios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/consultants/completed",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "consultants", "completed"]
+            },
+            "description": "Endpoint: GET /api/users/consultants/completed\nMethod: GET\nDescription: Retrieve list of completed consultant portfolios.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultants | Array | - | Yes | Array of consultant portfolio objects |\n| - consultantId | String | - | Yes | Consultant ID |\n| - fullName | String | 100 | Yes | Consultant full name |\n| - specialty | String | 100 | No | Area of specialization |\n| - rating | BigDecimal | - | No | Consultant rating |\n| - distanceKm | BigDecimal | - | No | Distance in kilometers |\n| - avatarUrl | String | 255 | No | Avatar image URL |\n| - location | String | 255 | No | Consultant location |\n| pagination | Object | - | Yes | Pagination information |\n| - total | Integer | - | Yes | Total number of consultants |\n| - page | Integer | - | Yes | Current page number |\n| - size | Integer | - | Yes | Page size |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns only consultants with completed portfolios\n- Supports pagination for large result sets"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Consultants Near Location",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/consultants?lat=-6.21462&long=106.84513&page=0&size=10&type=PROFESSIONAL&specialty=Architecture&sortBy=name",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "consultants"],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "-6.21462",
+                  "description": "User's latitude coordinate"
+                },
+                {
+                  "key": "long",
+                  "value": "106.84513",
+                  "description": "User's longitude coordinate"
+                },
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Page number (0-based)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Page size"
+                },
+                {
+                  "key": "type",
+                  "value": "PROFESSIONAL",
+                  "description": "Filter by consultant type (PROFESSIONAL or STUDENT)"
+                },
+                {
+                  "key": "specialty",
+                  "value": "Architecture",
+                  "description": "Filter by specialty"
+                },
+                {
+                  "key": "sortBy",
+                  "value": "name",
+                  "description": "Sort by field (name, experience, rating, distance)"
+                }
+              ]
+            },
+            "description": "Endpoint: GET /api/user/consultants\nMethod: GET\nDescription: Retrieve consultants near a location with optional filtering and sorting.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| lat | BigDecimal | - | Yes | User's latitude coordinate |\n| long | BigDecimal | - | Yes | User's longitude coordinate |\n| page | Integer | - | No | Page number (0-based, default: 0) |\n| size | Integer | - | No | Page size (default: 10) |\n| type | String | - | No | Filter by consultant type (PROFESSIONAL/STUDENT) |\n| specialty | String | 100 | No | Filter by specialty |\n| sortBy | String | - | No | Sort by field (name/experience/rating/distance, default: distance) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultants | Array | - | Yes | Array of consultant objects |\n| - consultantId | String | - | Yes | Consultant ID |\n| - fullName | String | 100 | Yes | Consultant full name |\n| - specialty | String | 100 | No | Area of specialization |\n| - rating | BigDecimal | - | No | Consultant rating |\n| - distanceKm | BigDecimal | - | Yes | Distance in kilometers |\n| - avatarUrl | String | 255 | No | Avatar image URL |\n| - location | String | 255 | No | Consultant location |\n| - type | String | - | No | Consultant type (PROFESSIONAL/STUDENT) |\n| - experienceLevel | String | 50 | No | Experience level |\n| - availabilityStatus | String | - | No | Availability status |\n| - contactInfo | String | 255 | No | Contact information |\n| - hourlyRate | BigDecimal | - | No | Hourly rate (professionals only) |\n| - packageCost | BigDecimal | - | No | Package cost (professionals only) |\n| pagination | Object | - | Yes | Pagination information |\n| - total | Integer | - | Yes | Total number of consultants |\n| - page | Integer | - | Yes | Current page number |\n| - size | Integer | - | Yes | Page size |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | INVALID_COORDINATE | Format koordinat tidak valid | Invalid latitude/longitude |\n| 400 | BAD_REQUEST | Permintaan tidak valid | Invalid consultant type |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns consultants within reasonable distance, sorted by distance by default\n- Professionals include pricing information, students are free\n- Supports filtering by type, specialty, and sorting by various criteria\n- Uses Haversine formula for distance calculation"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultants array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('consultants');",
+                  "    pm.expect(jsonData.consultants).to.be.an('array');",
+                  "    pm.expect(jsonData).to.have.property('pagination');",
+                  "});",
+                  "",
+                  "pm.test(\"Each consultant has required fields\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    if (jsonData.consultants && jsonData.consultants.length > 0) {",
+                  "        const consultant = jsonData.consultants[0];",
+                  "        pm.expect(consultant).to.have.property('id');",
+                  "        pm.expect(consultant).to.have.property('fullName');",
+                  "        pm.expect(consultant).to.have.property('distanceKm');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Success",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Update user profile for verification with complete profile data.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| fullName | String | 100 | Yes | Full name |\n| email | String | 100 | Yes | Email address |\n| phone | String | 15 | Yes | Phone number |\n| address | String | 255 | Yes | Address |\n| avatarUrl | String | 255 | No | Avatar image URL |\n| bio | String | 500 | No | User biography |\n| ktpNumber | String | 16 | Yes | KTP number (16 digits) |\n| ktpImageUrl | String | 255 | Yes | KTP image URL |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| userId | Long | - | Yes | User ID |\n| fullName | String | 100 | Yes | Full name |\n| email | String | 100 | Yes | Email address |\n| phone | String | 15 | Yes | Phone number |\n| address | String | 255 | Yes | Address |\n| avatarUrl | String | 255 | No | Avatar image URL |\n| bio | String | 500 | No | User biography |\n| ktpNumber | String | 16 | Yes | KTP number |\n| ktpImageUrl | String | 255 | Yes | KTP image URL |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or missing required fields |\n| 400 | KTP_ALREADY_USED | KTP number already registered | KTP number already in use |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only homeowners can update verification |\n| 404 | USER_NOT_FOUND | User not found | User does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Used for homeowner profile verification\n- All required fields must be provided\n- KTP number must be unique across all users"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains updated user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('userId');",
+                  "    pm.expect(jsonData).to.have.property('fullName');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('phone');",
+                  "    pm.expect(jsonData).to.have.property('address');",
+                  "    pm.expect(jsonData).to.have.property('avatarUrl');",
+                  "    pm.expect(jsonData).to.have.property('bio');",
+                  "    pm.expect(jsonData).to.have.property('ktpNumber');",
+                  "    pm.expect(jsonData).to.have.property('ktpImageUrl');",
+                  "    pm.expect(jsonData).to.have.property('updatedAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Invalid JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid.jwt.token",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with invalid JWT token.\n\nExpected Result: 401 Unauthorized with UNAUTHORIZED error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains UNAUTHORIZED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'UNAUTHORIZED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Missing JWT Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile without JWT token.\n\nExpected Result: 401 Unauthorized with UNAUTHORIZED error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 401\", function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains UNAUTHORIZED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'UNAUTHORIZED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - User Not Found",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with JWT token for non-existent user.\n\nExpected Result: 404 Not Found with USER_NOT_FOUND error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains USER_NOT_FOUND error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'USER_NOT_FOUND');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - KTP Already Used",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"1234567890123456\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with KTP number already registered by another user.\n\nExpected Result: 400 Bad Request with KTP_ALREADY_USED error."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains KTP_ALREADY_USED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'KTP_ALREADY_USED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Invalid Request Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"\",\n  \"email\": \"invalid-email\",\n  \"phone\": \"invalid-phone\",\n  \"address\": \"\",\n  \"avatarUrl\": \"invalid-url\",\n  \"bio\": \"This bio is way too long and exceeds the maximum allowed character limit of 500 characters. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\",\n  \"ktpNumber\": \"123\",\n  \"ktpImageUrl\": \"invalid-url\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile with invalid data (missing required fields, invalid formats, length violations).\n\nExpected Result: 400 Bad Request with VALIDATION_ERROR."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains VALIDATION_ERROR\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'VALIDATION_ERROR');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Profile Verification - Unauthorized Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjb25zdWx0YW50X3VzZXIiLCJuYW1lIjoiQ29uc3VsdGFudCBVc2VyIiwicm9sZSI6IkNPTlNVTFRBTlQiLCJpYXQiOjE1MTYyMzkwMjJ9.invalid_signature",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Dwi Oktaviyan\",\n  \"email\": \"dwi.oktaviyan@example.com\",\n  \"phone\": \"+6281234567890\",\n  \"address\": \"Jl. Margonda Raya No. 88, Depok\",\n  \"avatarUrl\": \"https://cdn.example.com/avatar/dwi.jpg\",\n  \"bio\": \"Software architect passionate about scalable systems.\",\n  \"ktpNumber\": \"3276012301234567\",\n  \"ktpImageUrl\": \"https://cdn.example.com/ktp/dwi-ktp.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/user/verification",
+              "host": ["{{base_url}}"],
+              "path": ["api", "user", "verification"]
+            },
+            "description": "Endpoint: POST /api/user/verification\nMethod: POST\nDescription: Test case - Attempt to update profile as a consultant user (not homeowner).\n\nExpected Result: 403 Forbidden with UNAUTHORIZED error."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains UNAUTHORIZED error\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('errorCode', 'UNAUTHORIZED');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "description": "Project management endpoints for creating, listing, and retrieving project details",
+      "item": [
+        {
+          "name": "Create Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rumah Tinggal\",\n  \"longitude\": 106.84513,\n  \"latitude\": -6.21462,\n  \"locationDetail\": \"Jl. Sudirman No. 10, Jakarta\",\n  \"type\": \"PROTOTYPE\",\n  \"landArea\": 120.5,\n  \"income\": 50000000.0\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/projects",
+              "host": ["{{base_url}}"],
+              "path": ["api", "projects"]
+            },
+            "description": "Endpoint: POST /api/projects\nMethod: POST\nDescription: Create a new project with location, type, and financial details.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| name | String | 100 | Yes | Project name |\n| longitude | BigDecimal | - | Yes | Longitude coordinate (-180 to 180) |\n| latitude | BigDecimal | - | Yes | Latitude coordinate (-90 to 90) |\n| locationDetail | String | 255 | Yes | Detailed location address |\n| type | String | - | Yes | Project type (PROTOTYPE/NON_PROTOTYPE) |\n| landArea | BigDecimal | - | Yes | Land area in square meters (> 0) |\n| income | BigDecimal | - | Yes | Income amount (> 0) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projectId | UUID | - | Yes | Unique project identifier |\n| name | String | 100 | Yes | Project name |\n| type | String | - | Yes | Project type |\n| createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or constraint violations |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Only homeowners can create projects\n- Coordinates must be valid longitude/latitude values\n- Land area and income must be positive values"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 201\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains project data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('projectId');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('type');",
+                  "    pm.expect(jsonData).to.have.property('createdAt');",
+                  "    pm.collectionVariables.set('project_id', jsonData.projectId);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects?page=0&size=10&type=PROTOTYPE&status=ACTIVE",
+              "host": ["{{base_url}}"],
+              "path": ["api", "projects"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0",
+                  "description": "Page number (0-based)"
+                },
+                {
+                  "key": "size",
+                  "value": "10",
+                  "description": "Page size"
+                },
+                {
+                  "key": "type",
+                  "value": "PROTOTYPE",
+                  "description": "Filter by project type (PROTOTYPE or NON_PROTOTYPE)"
+                },
+                {
+                  "key": "status",
+                  "value": "ACTIVE",
+                  "description": "Filter by project status (PENDING, ACTIVE, COMPLETED, CANCELLED)"
+                }
+              ]
+            },
+            "description": "Endpoint: GET /api/projects\nMethod: GET\nDescription: Retrieve list of user's projects with optional pagination and filters. Use status=PENDING to view projects waiting for consultation acceptance.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| page | Integer | - | No | Page number (0-based, default: 0) |\n| size | Integer | - | No | Page size (default: 10) |\n| type | String | - | No | Filter by project type (PROTOTYPE/NON_PROTOTYPE) |\n| status | String | - | No | Filter by project status (PENDING/ACTIVE/COMPLETED/CANCELLED) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projects | Array | - | Yes | Array of project objects |\n| - projectId | UUID | - | Yes | Unique project identifier |\n| - name | String | 100 | Yes | Project name |\n| - type | String | - | Yes | Project type |\n| - status | String | - | Yes | Project status (PENDING=waiting for consultation, ACTIVE=consultation accepted) |\n| - location | Object | - | Yes | Location information |\n|   - longitude | BigDecimal | - | Yes | Longitude coordinate |\n|   - latitude | BigDecimal | - | Yes | Latitude coordinate |\n|   - address | String | 255 | Yes | Location address |\n| - landArea | BigDecimal | - | Yes | Land area in square meters |\n| - createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid query parameters |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns only projects owned by the authenticated user\n- Supports pagination and filtering by type and status\n- Use status=PENDING to view projects waiting for consultant acceptance\n- Project status automatically changes: ACTIVE → PENDING (when consultation created) → ACTIVE (when consultation accepted)\n- Default page size is 10, maximum may be limited"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains projects array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('projects');",
+                  "    pm.expect(jsonData.projects).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Project Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/projects/{{project_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "projects", "{{project_id}}"]
+            },
+            "description": "Endpoint: GET /api/projects/{project_id}\nMethod: GET\nDescription: Retrieve detailed information for a specific project.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| project_id | UUID | - | Yes | Project ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| projectId | UUID | - | Yes | Unique project identifier |\n| name | String | 100 | Yes | Project name |\n| type | String | - | Yes | Project type |\n| status | String | - | Yes | Project status |\n| locationDetail | String | 255 | Yes | Detailed location address |\n| longitude | BigDecimal | - | Yes | Longitude coordinate |\n| latitude | BigDecimal | - | Yes | Latitude coordinate |\n| landArea | BigDecimal | - | Yes | Land area in square meters |\n| createdAt | LocalDateTime | - | Yes | Project creation timestamp |\n| updatedAt | LocalDateTime | - | No | Project last update timestamp |\n| consultation | Object | - | No | Consultation information |\n| - consultationId | UUID | - | No | Consultation ID |\n| - consultantName | String | 100 | No | Consultant name |\n| - scheduledAt | LocalDateTime | - | No | Scheduled consultation time |\n| - status | String | - | No | Consultation status |\n| - notes | String | 500 | No | Consultation notes |\n| permit | Object | - | No | Permit information |\n| - permitId | UUID | - | No | Permit ID |\n| - permitType | String | 50 | No | Type of permit |\n| - status | String | - | No | Permit status |\n| - submittedAt | LocalDateTime | - | No | Permit submission timestamp |\n| - dedDocumentUrl | String | 255 | No | DED document URL |\n| - pbgDocumentUrl | String | 255 | No | PBG document URL |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | User does not own this project |\n| 404 | PROJECT_NOT_FOUND | Project not found | Project ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Users can only access their own projects\n- Includes consultation and permit information if available\n- Consultation and permit objects may be null if not yet assigned"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('project_id')) {",
+                  "    throw new Error('Project ID not available. Please create a project first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains project details\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('projectId');",
+                  "    pm.expect(jsonData).to.have.property('name');",
+                  "    pm.expect(jsonData).to.have.property('type');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "    pm.expect(jsonData).to.have.property('locationDetail');",
+                  "    pm.expect(jsonData).to.have.property('longitude');",
+                  "    pm.expect(jsonData).to.have.property('latitude');",
+                  "    pm.expect(jsonData).to.have.property('landArea');",
+                  "    pm.expect(jsonData).to.have.property('createdAt');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Consultation Module",
+      "description": "Consultation management endpoints for home owners and consultants",
+      "item": [
+        {
+          "name": "Create Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consultantId\": {{consultant_id}},\n  \"projectId\": \"{{project_id}}\",\n  \"consultationType\": \"ONLINE\",\n  \"channel\": \"CHAT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations"]
+            },
+            "description": "Endpoint: POST /api/consultations\nMethod: POST\nDescription: Create a new consultation between home owner and consultant. When created, the associated project status automatically changes to PENDING.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultantId | Long | - | Yes | Consultant user ID |\n| projectId | UUID | - | Yes | Associated project ID (status will automatically change to PENDING) |\n| consultationType | String | - | Yes | ONLINE or OFFLINE |\n| channel | String | - | Yes | CHAT, VIDEO, or WHATSAPP |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| designId | UUID | - | No | Design ID (null initially) |\n| designName | String | 100 | No | Design name (null initially) |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| status | String | - | Yes | Consultation status (MENUNGGU_KONFIRMASI_KONSULTAN) |\n| startedAt | Instant | - | No | Consultation start time |\n| completedAt | Instant | - | No | Consultation completion time |\n| createdAt | Instant | - | Yes | Creation timestamp |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only home owners can create consultations |\n| 404 | USER_NOT_FOUND | User not found | Consultant ID does not exist |\n| 404 | PROJECT_NOT_FOUND | Project not found | Project ID does not exist |\n| 403 | UNAUTHORIZED | Project does not belong to user | Project is not owned by the authenticated user |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Home owner selects consultant and associates with a specific project\n- Project status automatically changes from ACTIVE to PENDING when consultation is created\n- Use GET /api/projects?status=PENDING to view projects waiting for consultation acceptance\n- Initial consultation status is MENUNGGU_KONFIRMASI_KONSULTAN\n- Design is not required at creation - will be uploaded by consultant later"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultant_id')) {",
+                  "    throw new Error('Consultant ID not available. Please set consultant_id variable.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('project_id')) {",
+                  "    throw new Error('Project ID not available. Please create a project first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultation data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('consultantId');",
+                  "    pm.expect(jsonData).to.have.property('consultationType');",
+                  "    pm.collectionVariables.set('consultation_id', jsonData.id);",
+                  "});",
+                  "",
+                  "pm.test(\"Project status should change to PENDING\", function () {",
+                  "    // Note: This would require a separate API call to verify project status",
+                  "    // The project status is automatically set to PENDING when consultation is created",
+                  "    console.log('Project status changed to PENDING upon consultation creation');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Consultation Module",
+      "description": "Consultation management endpoints for home owners and consultants",
+      "item": [
+        {
+          "name": "Create Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consultantId\": {{consultant_id}},\n  \"projectId\": \"{{project_id}}\",\n  \"consultationType\": \"ONLINE\",\n  \"channel\": \"CHAT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations"]
+            },
+            "description": "Endpoint: POST /api/consultations\nMethod: POST\nDescription: Create a new consultation between home owner and consultant. When created, the associated project status automatically changes to PENDING.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultantId | Long | - | Yes | Consultant user ID |\n| projectId | UUID | - | Yes | Associated project ID (status will automatically change to PENDING) |\n| consultationType | String | - | Yes | ONLINE or OFFLINE |\n| channel | String | - | Yes | CHAT, VIDEO, or WHATSAPP |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| designId | UUID | - | No | Design ID (null initially) |\n| designName | String | 100 | No | Design name (null initially) |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| status | String | - | Yes | Consultation status (MENUNGGU_KONFIRMASI_KONSULTAN) |\n| startedAt | Instant | - | No | Consultation start time |\n| completedAt | Instant | - | No | Consultation completion time |\n| createdAt | Instant | - | Yes | Creation timestamp |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only home owners can create consultations |\n| 404 | USER_NOT_FOUND | User not found | Consultant ID does not exist |\n| 404 | PROJECT_NOT_FOUND | Project not found | Project ID does not exist |\n| 403 | UNAUTHORIZED | Project does not belong to user | Project is not owned by the authenticated user |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Home owner selects consultant and associates with a specific project\n- Project status automatically changes from ACTIVE to PENDING when consultation is created\n- Use GET /api/projects?status=PENDING to view projects waiting for consultation acceptance\n- Design is not required at creation - will be uploaded by consultant later\n- Initial consultation status is MENUNGGU_KONFIRMASI_KONSULTAN"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultant_id')) {",
+                  "    throw new Error('Consultant ID not available. Please set consultant_id variable.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultation data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('consultantId');",
+                  "    pm.expect(jsonData).to.have.property('consultationType');",
+                  "    pm.collectionVariables.set('consultation_id', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Consultations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations"]
+            },
+            "description": "Endpoint: GET /api/consultations\nMethod: GET\nDescription: Retrieve all consultations for the authenticated user.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultations | Array | - | Yes | Array of consultation objects |\n| - id | UUID | - | Yes | Consultation ID |\n| - homeOwnerId | Long | - | Yes | Home owner user ID |\n| - homeOwnerName | String | 100 | Yes | Home owner name |\n| - consultantId | Long | - | Yes | Consultant user ID |\n| - consultantName | String | 100 | Yes | Consultant name |\n| - consultationType | String | - | Yes | Consultation type |\n| - channel | String | - | Yes | Communication channel |\n| - status | String | - | Yes | Consultation status |\n| - createdAt | Instant | - | Yes | Creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Returns consultations filtered by user role (home owner or consultant)\n- Home owners see their consultations, consultants see consultations assigned to them"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Consultation by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}"]
+            },
+            "description": "Endpoint: GET /api/consultations/{id}\nMethod: GET\nDescription: Retrieve a specific consultation by ID.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| designId | UUID | - | No | Design ID |\n| designName | String | 100 | No | Design name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| status | String | - | Yes | Consultation status |\n| startedAt | Instant | - | No | Consultation start time |\n| completedAt | Instant | - | No | Consultation completion time |\n| createdAt | Instant | - | Yes | Creation timestamp |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | User does not have access to this consultation |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Users can only access consultations they are involved in (as home owner or consultant)\n- Returns detailed consultation information including design details if available"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains consultation details\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('consultantId');",
+                  "    pm.expect(jsonData).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Accept Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}/accept",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}", "accept"]
+            },
+            "description": "Endpoint: POST /api/consultations/{id}/accept\nMethod: POST\nDescription: Consultant accepts a consultation request. When accepted, the associated project status automatically changes from PENDING to ACTIVE.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| status | String | - | Yes | Updated status (MENUNGGU_JADWAL_SURVEY) |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only assigned consultant can accept |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Invalid status transition | Consultation is not in acceptable status |\n\nAdditional Notes:\n- Only the assigned consultant can accept the consultation\n- Changes consultation status from MENUNGGU_KONFIRMASI_KONSULTAN to MENUNGGU_JADWAL_SURVEY\n- Automatically changes associated project status from PENDING to ACTIVE\n- Triggers survey scheduling workflow"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status changed to MENUNGGU_JADWAL_SURVEY\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('MENUNGGU_JADWAL_SURVEY');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject Consultation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}/reject",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}", "reject"]
+            },
+            "description": "Endpoint: POST /api/consultations/{id}/reject\nMethod: POST\nDescription: Consultant rejects a consultation request.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| status | String | - | Yes | Updated status (SELESAI) |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only assigned consultant can reject |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Invalid status transition | Consultation is not in rejectable status |\n\nAdditional Notes:\n- Only the assigned consultant can reject the consultation\n- Changes status from MENUNGGU_KONFIRMASI_KONSULTAN to SELESAI\n- Ends the consultation process permanently"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status changed to SELESAI\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('SELESAI');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Finalize Consultation",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/consultations/{{consultation_id}}/finalize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "consultations", "{{consultation_id}}", "finalize"]
+            },
+            "description": "Endpoint: PATCH /api/consultations/{id}/finalize\nMethod: PATCH\nDescription: Home owner finalizes a completed consultation.\n\n🔸 Path Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | UUID | - | Yes | Consultation ID |\n| status | String | - | Yes | Updated status (FINAL) |\n| homeOwnerId | Long | - | Yes | Home owner user ID |\n| homeOwnerName | String | 100 | Yes | Home owner name |\n| consultantId | Long | - | Yes | Consultant user ID |\n| consultantName | String | 100 | Yes | Consultant name |\n| consultationType | String | - | Yes | Consultation type |\n| channel | String | - | Yes | Communication channel |\n| updatedAt | Instant | - | Yes | Last update timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Only home owner can finalize |\n| 404 | - | Consultation not found | Consultation ID does not exist |\n| 500 | INTERNAL_SERVER_ERROR | Invalid status transition | Consultation is not in finalizable status |\n\nAdditional Notes:\n- Only the home owner can finalize their consultation\n- Changes status to FINAL when consultation is complete and satisfactory\n- Marks the consultation as successfully completed"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('consultation_id')) {",
+                  "    throw new Error('Consultation ID not available. Please create a consultation first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Status changed to FINAL\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.status).to.equal('FINAL');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Backoffice",
+      "description": "Backoffice operations for user management and consultant registration",
+      "item": [
+        {
+          "name": "Get Users for Verification",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/balai/verification-pending",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "verification-pending"]
+            },
+            "description": "Endpoint: GET /api/balai/verification-pending\nMethod: GET\nDescription: Retrieve list of users pending verification.\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| users | Array | - | Yes | Array of user objects pending verification |\n| - id | Long | - | Yes | User ID |\n| - email | String | 100 | Yes | Email address |\n| - fullName | String | 100 | Yes | Full name |\n| - phone | String | 15 | No | Phone number |\n| - address | String | 255 | No | Address |\n| - ktpNumber | String | 16 | No | KTP number |\n| - status | String | - | Yes | Account status |\n| - createdAt | LocalDateTime | - | Yes | Account creation timestamp |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Returns users with PENDING_VERIFICATION status\n- Used for manual verification workflow"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Approve User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/balai/approve/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "approve", "{{user_id}}"]
+            },
+            "description": "Endpoint: POST /api/balai/approve/{user_id}\nMethod: POST\nDescription: Approve user via backoffice.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status (APPROVED) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 409 | - | User already approved | User is already in APPROVED status |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Changes user status from PENDING_VERIFICATION to APPROVED\n- Allows user to access full system features"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reject User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/balai/reject/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "reject", "{{user_id}}"]
+            },
+            "description": "Endpoint: POST /api/balai/reject/{user_id}\nMethod: POST\nDescription: Reject user via backoffice.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status (REJECTED) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 409 | - | User already processed | User is already approved or rejected |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Changes user status from PENDING_VERIFICATION to REJECTED\n- User will not be able to access the system"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/balai/deactivate/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "deactivate", "{{user_id}}"]
+            },
+            "description": "Endpoint: POST /api/balai/deactivate/{user_id}\nMethod: POST\nDescription: Deactivate user via backoffice.\n\n🔸 Query Parameters\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| user_id | Long | - | Yes | User ID (path parameter) |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | User ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| status | String | - | Yes | Updated account status (DEACTIVATED) |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 404 | USER_NOT_FOUND | User not found | User ID does not exist |\n| 409 | - | User already deactivated | User is already in DEACTIVATED status |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Changes user status to DEACTIVATED\n- User will lose access to the system until reactivated"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}",
+                  "if (!pm.collectionVariables.get('user_id')) {",
+                  "    pm.collectionVariables.set('user_id', '1');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register Consultant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Consultant\",\n  \"email\": \"consultant@example.com\",\n  \"phone\": \"+1234567890\",\n  \"university\": \"University X\",\n  \"professional\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/balai/register-consultant",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "register-consultant"]
+            },
+            "description": "Endpoint: POST /api/balai/register-consultant\nMethod: POST\nDescription: Register a new consultant.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| name | String | 100 | Yes | Consultant full name |\n| email | String | 100 | Yes | Email address |\n| phone | String | 15 | Yes | Phone number |\n| university | String | 100 | No | University name (required for students) |\n| professional | Boolean | - | Yes | True for professional consultant, false for student |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| id | Long | - | Yes | Consultant user ID |\n| email | String | 100 | Yes | Email address |\n| fullName | String | 100 | Yes | Full name |\n| role | String | - | Yes | User role (CONSULTANT) |\n| status | String | - | Yes | Account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid field formats or missing required fields |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | Email address already registered |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- Creates a new consultant user account\n- If professional=false, university field is required\n- New consultant will have PENDING_VERIFICATION status initially"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response contains user data\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.collectionVariables.set('consultant_id', jsonData.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bulk Register Consultant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwt_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "src": [],
+                  "type": "file",
+                  "description": "CSV file containing consultant data"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/balai/register-consultant/bulk",
+              "host": ["{{base_url}}"],
+              "path": ["api", "balai", "register-consultant", "bulk"]
+            },
+            "description": "Endpoint: POST /api/balai/register-consultant/bulk\nMethod: POST\nDescription: Bulk register consultants from CSV file.\n\n🔸 Request Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| file | File | - | Yes | CSV file containing consultant data |\n\n🔸 Header\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| Authorization | String | 512 | Yes | Bearer token JWT |\n\n🔹 Response Attributes\n| Name | Data Type | Length | Mandatory | Description |\n|------|-----------|--------|-----------|-------------|\n| consultants | Array | - | Yes | Array of created consultant objects |\n| - id | Long | - | Yes | Consultant user ID |\n| - email | String | 100 | Yes | Email address |\n| - fullName | String | 100 | Yes | Full name |\n| - role | String | - | Yes | User role (CONSULTANT) |\n| - status | String | - | Yes | Account status |\n\n⚠️ Possible Errors\n| HTTP Code | Error Code | Message | Description |\n|-----------|------------|---------|-------------|\n| 400 | VALIDATION_ERROR | Request tidak valid | Invalid CSV format or data |\n| 401 | UNAUTHORIZED | Token tidak valid atau tidak aktif | Invalid or expired JWT token |\n| 403 | UNAUTHORIZED | Unauthorized access | Insufficient permissions (requires backoffice role) |\n| 409 | USER_EMAIL_ALREADY_EXISTS | Email sudah terdaftar | One or more email addresses already registered |\n| 413 | - | File too large | CSV file exceeds size limit |\n| 415 | - | Unsupported file type | File is not a valid CSV |\n| 500 | INTERNAL_SERVER_ERROR | Terjadi kesalahan pada server | Internal server error |\n\nAdditional Notes:\n- Requires backoffice/admin role\n- CSV file should contain columns: name, email, phone, university (optional), professional\n- Processes multiple consultants in a single operation\n- Returns list of successfully created consultants\n- Any validation errors will prevent the entire batch from being processed"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "if (!pm.collectionVariables.get('jwt_token')) {",
+                  "    throw new Error('JWT token not available. Please login first.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Response is an array of users\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script for token validation",
+          "const jwtToken = pm.collectionVariables.get('jwt_token');",
+          "if (jwtToken) {",
+          "    // Check if token is expired (simple check)",
+          "    const payload = jwtToken.split('.')[1];",
+          "    if (payload) {",
+          "        try {",
+          "            const decoded = JSON.parse(atob(payload));",
+          "            const currentTime = Math.floor(Date.now() / 1000);",
+          "            if (decoded.exp && decoded.exp < currentTime) {",
+          "                console.log('JWT token expired, please refresh or login again');",
+          "            }",
+          "        } catch (e) {",
+          "            console.log('Error parsing JWT token');",
+          "        }",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+}

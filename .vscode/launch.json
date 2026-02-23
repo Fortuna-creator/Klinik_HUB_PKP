@@ -1,0 +1,25 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Debug (Launch) - HubApplication",
+            "request": "launch",
+            "mainClass": "com.hub.app.HubApplication",
+            "projectName": "hub-backend",
+            "args": "",
+            "env": {
+                "SPRING_PROFILES_ACTIVE": "dev"
+            },
+            "console": "internalConsole"
+        },
+        {
+            "type": "java",
+            "name": "Debug (Attach) - Remote",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "timeout": 30000
+        }
+    ]
+}

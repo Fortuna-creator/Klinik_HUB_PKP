@@ -1,0 +1,144 @@
+package com.hub.app.consultation.event;
+
+import com.hub.app.consultation.model.Consultation;
+import lombok.Getter;
+import org.springframework.context.ApplicationEvent;
+
+import java.math.BigDecimal;
+import java.util.List;
+
+@Getter
+public class ConsultationEvent extends ApplicationEvent {
+
+    private final Consultation consultation;
+    private final String eventType;
+    private final String step;
+    private final String state;
+    private final String actor;
+    private final List<java.util.UUID> files;
+    private final List<String> attachments;
+    private final BigDecimal surveyCost;
+    private final String surveyLocation;
+    private final java.util.UUID scheduleId;
+    private final java.util.UUID contractId;
+    private final java.util.UUID paymentId;
+    private final BigDecimal totalPaymentAmount;
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = null;
+        this.attachments = null;
+        this.surveyCost = null;
+        this.surveyLocation = null;
+        this.scheduleId = null;
+        this.contractId = null;
+        this.paymentId = null;
+        this.totalPaymentAmount = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = null;
+        this.contractId = null;
+        this.paymentId = null;
+        this.totalPaymentAmount = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = null;
+        this.paymentId = null;
+        this.totalPaymentAmount = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId, java.util.UUID contractId) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = contractId;
+        this.paymentId = null;
+        this.totalPaymentAmount = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId, java.util.UUID contractId, java.util.UUID paymentId) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = contractId;
+        this.paymentId = paymentId;
+        this.totalPaymentAmount = null;
+    }
+
+    public ConsultationEvent(Object source, Consultation consultation, String eventType,
+                            String step, String state, String actor, List<java.util.UUID> files,
+                            List<String> attachments, BigDecimal surveyCost, String surveyLocation,
+                            java.util.UUID scheduleId, java.util.UUID contractId, java.util.UUID paymentId,
+                            BigDecimal totalPaymentAmount) {
+        super(source);
+        this.consultation = consultation;
+        this.eventType = eventType;
+        this.step = step;
+        this.state = state;
+        this.actor = actor;
+        this.files = files;
+        this.attachments = attachments;
+        this.surveyCost = surveyCost;
+        this.surveyLocation = surveyLocation;
+        this.scheduleId = scheduleId;
+        this.contractId = contractId;
+        this.paymentId = paymentId;
+        this.totalPaymentAmount = totalPaymentAmount;
+    }
+}

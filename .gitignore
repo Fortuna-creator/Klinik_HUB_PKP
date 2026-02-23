@@ -1,0 +1,43 @@
+# Compiled Java class files
+*.class
+
+# Compiled Java class files in subdirectories (recursive)
+**/*.class
+
+# Specific build directories (common in Maven/Gradle projects)
+target/classes/**/*.class
+build/classes/**/*.class
+out/production/**/*.class
+out/test/**/*.class
+
+# Alternative build directory patterns (if using different tools)
+bin/**/*.class
+classes/**/*.class
+
+# JAR files
+*.jar
+**/*.jar
+target/**/*.jar
+build/**/*.jar
+out/**/*.jar
+bin/**/*.jar
+
+# Maven build directory
+target/
+
+# Local configuration files
+application-local.yml
+application-local.properties
+
+# Logs
+logs/
+*.log
+
+# IDE files
+.idea/
+*.iml
+.vscode/settings.json
+
+# OS generated files
+.DS_Store
+Thumbnails.db
