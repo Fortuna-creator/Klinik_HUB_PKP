@@ -58,6 +58,16 @@ public enum ErrorCode {
     CONSULTATION_ALREADY_BOOKED("CONSULTATION_ALREADY_BOOKED", HttpStatus.CONFLICT, "This time slot is already booked"),
     INVALID_CONSULTATION_STATUS("INVALID_CONSULTATION_STATUS", HttpStatus.BAD_REQUEST, "Invalid consultation status transition"),
 
+    // Offline Consultation Scheduling module (offlineconsultation)
+    OC_CONSULTATION_NOT_FOUND("CONSULTATION_NOT_FOUND", HttpStatus.NOT_FOUND, "Consultation not found"),
+    OC_INVALID_STATE_TRANSITION("INVALID_STATE_TRANSITION", HttpStatus.CONFLICT, "Invalid consultation state transition"),
+    OC_DUPLICATE_REQUEST("DUPLICATE_REQUEST", HttpStatus.CONFLICT, "This request was already processed"),
+    OC_REQUEST_DUPLICATE("REQUEST_DUPLICATE", HttpStatus.CONFLICT, "Same request already being processed"),
+    OC_SLOT_UNAVAILABLE("SLOT_UNAVAILABLE", HttpStatus.CONFLICT, "Time slot is fully booked"),
+    OC_INVALID_VERIFICATION_CODE("INVALID_VERIFICATION_CODE", HttpStatus.BAD_REQUEST, "Verification code is incorrect"),
+    OC_IDEMPOTENCY_KEY_MISSING("IDEMPOTENCY_KEY_MISSING", HttpStatus.BAD_REQUEST, "Idempotency-Key header is required"),
+    OC_IDEMPOTENCY_KEY_MISMATCH("IDEMPOTENCY_KEY_MISMATCH", HttpStatus.BAD_REQUEST, "Idempotency-Key header must match request body"),
+
     // Workflow-specific
     WORKFLOW_ERROR("WORKFLOW_ERROR", HttpStatus.BAD_REQUEST, "Workflow validation error");
 

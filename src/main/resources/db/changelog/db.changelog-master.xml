@@ -43,6 +43,7 @@
     <include file="035-add-total-payment-amount-to-consultation-history.sql" relativeToChangelogFile="true"/>
     <include file="036-balai-offline-schema.sql" relativeToChangelogFile="true"/>
     <include file="037-offline-consultation-schema.sql" relativeToChangelogFile="true"/>
+    <include file="038-oc-schema.sql" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
     <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
 
