@@ -482,6 +482,23 @@ public class OfflineConsultationService {
     }
 
     // =====================================================================
+    // PUBLIC HELPERS (used by controllers)
+    // =====================================================================
+
+    /**
+     * Resolves a user's numeric ID from their email address.
+     * Used by controllers to pass the user ID to the idempotency service.
+     *
+     * @param email the user's email (from JWT principal)
+     * @return the user's Long ID
+     */
+    public Long resolveUserId(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new DomainException(ErrorCode.USER_NOT_FOUND))
+                .getId();
+    }
+
+    // =====================================================================
     // PRIVATE HELPERS
     // =====================================================================
 
