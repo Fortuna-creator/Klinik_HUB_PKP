@@ -4,8 +4,10 @@ import com.hub.app.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -29,10 +32,32 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
+                        // ── Public endpoints (no auth) ──────────────────────
                         .requestMatchers("/api/auth/**", "/health", "/actuator/**").permitAll()
-                        .requestMatchers("/api/balai/**").hasRole("BALAI")
                         .requestMatchers("/api/offline/balai/**").permitAll()
+
+                        // Balai list is public per contract
+                        .requestMatchers(HttpMethod.GET, "/api/balai/list").permitAll()
+
+                        // ── Warga (citizen / HOMEOWNER) endpoints ───────────
+                        .requestMatchers(HttpMethod.POST, "/api/consultations/book").hasRole("HOMEOWNER")
+                        .requestMatchers(HttpMethod.GET, "/api/consultations/me").hasRole("HOMEOWNER")
+                        .requestMatchers(HttpMethod.POST, "/api/consultations/*/verify").hasRole("HOMEOWNER")
                         .requestMatchers("/api/users/consultants/completed").hasRole("HOMEOWNER")
+
+                        // ── Balai-only dashboard endpoints ──────────────────
+                        .requestMatchers("/api/dashboard/**").hasRole("BALAI")
+                        .requestMatchers(HttpMethod.PUT, "/api/consultations/*/confirm").hasRole("BALAI")
+                        .requestMatchers(HttpMethod.PUT, "/api/consultations/*/reject").hasRole("BALAI")
+                        .requestMatchers(HttpMethod.PUT, "/api/consultations/*/complete").hasRole("BALAI")
+
+                        // Available-slots requires any authenticated user
+                        .requestMatchers(HttpMethod.GET, "/api/balai/*/available-slots").authenticated()
+
+                        // Remaining balai admin endpoints require BALAI role
+                        .requestMatchers("/api/balai/**").hasRole("BALAI")
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
