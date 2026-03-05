@@ -75,11 +75,17 @@ public class OtpService {
         }
 
         User user = userOptional.get();
-        return otpRepo.findTopByUserIdAndUsedFalseOrderByExpiresAtDesc(user.getId())
-                .map(t -> {
-                    sendEmail(user.getEmail(), t.getCode());
-                    return true;
-                }).orElse(false);
+
+        // Invalidate any existing unused OTP so the old code can no longer be used
+        otpRepo.findTopByUserIdAndUsedFalseOrderByExpiresAtDesc(user.getId())
+                .ifPresent(t -> {
+                    t.setUsed(true);
+                    otpRepo.save(t);
+                });
+
+        // Generate and send a brand-new OTP (subject to the existing rate limit)
+        generateAndSendOtp(user);
+        return true;
     }
 
     public boolean verifyOtp(Long userId, String code) {

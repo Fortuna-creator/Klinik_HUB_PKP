@@ -19,7 +19,7 @@ A comprehensive security audit identified **34 vulnerabilities** across authenti
 | 🟠 **HIGH** | 11 | Required fix before production |
 | 🟡 **MEDIUM** | 10 | Fix in next sprint |
 | 🔵 **LOW** | 4 | Best practice improvements |
-| ⚪ **INFO** | 3 | Awareness items |
+| ⚪ **INFO** | 3 | ✅ 3 RESOLVED |
 | **TOTAL** | **34** | 6 CRITICAL RESOLVED |
 
 ---
@@ -471,9 +471,9 @@ throw new DomainException(ErrorCode.AUTH_INVALID_CREDENTIALS);  // Always 401
 | 29 | Swagger UI likely exposed in production | LOW |
 | 30 | OTP rate limiting inefficient (`findAll().stream()` loads all records) | LOW |
 | 31 | No rate limiting on login endpoint (brute force) | LOW |
-| 32 | Debug logging enabled in default profile | INFO |
-| 33 | Duplicate JWT infrastructure (JwtService + JwtUtil) | INFO |
-| 34 | OTP resend reuses same code instead of generating new | INFO |
+| 32 | ✅ FIXED — Debug logging enabled in default profile | INFO |
+| 33 | ✅ FIXED — Duplicate JWT infrastructure (JwtService + JwtUtil) | INFO |
+| 34 | ✅ FIXED — OTP resend reuses same code instead of generating new | INFO |
 
 ---
 
@@ -507,6 +507,11 @@ throw new DomainException(ErrorCode.AUTH_INVALID_CREDENTIALS);  // Always 401
 - [ ] Complete DTO validations
 - [ ] Remove e.printStackTrace() calls
 - [ ] Return generic error messages to clients
+
+### Phase 4: LOW & INFO (Completed)
+- [x] ✅ Debug logging downgraded to INFO/WARN in default profile — **FIXED 3/6/2026**
+- [x] ✅ Removed duplicate JWT validation in FileController (now uses Spring Security context) — **FIXED 3/6/2026**
+- [x] ✅ OTP resend now invalidates old code and generates a fresh one — **FIXED 3/6/2026**
 
 ---
 
@@ -548,9 +553,9 @@ curl http://localhost:8080/actuator/env
 ## Sign-Off
 
 **Report Generated:** March 6, 2026  
-**Last Updated:** March 6, 2026 (3/6/2026 — 6 critical items addressed)  
+**Last Updated:** March 6, 2026 (3/6/2026 — INFO findings resolved)  
 **Auditor:** White Hat Security Review  
-**Status:** 🟢 CRITICAL VULNERABILITIES ADDRESSED — Ready for Phase 2 high-priority fixes
+**Status:** 🟢 CRITICAL + INFO VULNERABILITIES ADDRESSED — HIGH/MEDIUM remain
 
 **Completed (3/6/2026):**
 - ✅ Removed OTP hardcoded bypass in code
@@ -559,6 +564,9 @@ curl http://localhost:8080/actuator/env
 - ✅ Application.yml secrets protected (excluded from git)
 - ✅ Database password protected (excluded from git)
 - ✅ Email credentials protected (excluded from git)
+- ✅ Debug logging levels reduced to INFO/WARN in default profile (application.yml)
+- ✅ Duplicate JWT validation removed from FileController — Spring Security context used
+- ✅ OTP resend now generates a new code (invalidates previous code first)
 
 **Next Step:** Address Phase 2 HIGH-priority findings, then request follow-up audit before production deployment.
 

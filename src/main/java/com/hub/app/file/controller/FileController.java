@@ -1,6 +1,5 @@
 package com.hub.app.file.controller;
 
-import com.hub.app.auth.service.JwtService;
 import com.hub.app.user.repository.UserRepository;
 import com.hub.app.file.dto.FileUploadResponse;
 import com.hub.app.file.dto.FileDownloadResponse;
@@ -14,6 +13,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,24 +28,18 @@ import java.util.UUID;
 public class FileController {
 
     private final FileUploadService fileUploadService;
-    private final JwtService jwtService;
     private final MinioService minioService;
     private final UserRepository userRepository;
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadFile(
-            @RequestHeader("Authorization") String authHeader,
             @RequestPart("category") String category,
             @RequestPart(value = "subCategory", required = false) String subCategory,
             @RequestPart("entityId") String entityId,
             @RequestPart("file") MultipartFile file) {
 
         try {
-            // Validate JWT token
-            String token = authHeader.replace("Bearer ", "");
-            if (!jwtService.validateToken(token)) {
-                return ResponseEntity.status(401).body("Invalid token");
-            }
+            // Authentication is already validated by JwtAuthenticationFilter / Spring Security
 
             // Validate required parameters
             if (category == null || category.trim().isEmpty()) {
@@ -76,17 +70,11 @@ public class FileController {
     @GetMapping("/download/{fileId}")
     public ResponseEntity<?> downloadFile(
             @PathVariable UUID fileId,
-            @RequestHeader("Authorization") String authHeader) {
+            Authentication authentication) {
 
         try {
-            // Validate JWT token and extract user ID
-            String token = authHeader.replace("Bearer ", "");
-            if (!jwtService.validateToken(token)) {
-                log.warn("Invalid JWT token for file download request: fileId={}", fileId);
-                return ResponseEntity.status(401).body("Invalid token");
-            }
-
-            String email = jwtService.extractUsername(token);
+            // Authentication is already validated by JwtAuthenticationFilter / Spring Security
+            String email = authentication.getName();
             Long userId = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found")).getId();
 
@@ -136,15 +124,10 @@ public class FileController {
     // Keep the old presigned URL method for backward compatibility
     @GetMapping("/download-url")
     public ResponseEntity<?> downloadFileByPath(
-            @RequestHeader("Authorization") String authHeader,
             @RequestParam("path") String path) {
 
         try {
-            // Validate JWT token
-            String token = authHeader.replace("Bearer ", "");
-            if (!jwtService.validateToken(token)) {
-                return ResponseEntity.status(401).body("Invalid token");
-            }
+            // Authentication is already validated by JwtAuthenticationFilter / Spring Security
 
             // Generate presigned URL for download
             FileDownloadResponse response = fileUploadService.downloadFile(path);
@@ -159,16 +142,11 @@ public class FileController {
 
     @GetMapping("/list")
     public ResponseEntity<?> listFiles(
-            @RequestHeader("Authorization") String authHeader,
             @RequestParam("category") String category,
             @RequestParam("entityId") String entityId) {
 
         try {
-            // Validate JWT token
-            String token = authHeader.replace("Bearer ", "");
-            if (!jwtService.validateToken(token)) {
-                return ResponseEntity.status(401).body("Invalid token");
-            }
+            // Authentication is already validated by JwtAuthenticationFilter / Spring Security
 
             // List files
             FileListResponse response = fileUploadService.listFiles(category, entityId);
