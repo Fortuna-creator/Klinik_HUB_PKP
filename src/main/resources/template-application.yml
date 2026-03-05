@@ -1,0 +1,72 @@
+# ============================================================================
+# LOCAL DEVELOPMENT CONFIGURATION TEMPLATE
+# ============================================================================
+# 
+# INSTRUCTIONS FOR SETUP:
+# 1. Copy this file to application.yml (do NOT commit application.yml to git)
+# 2. Update the values below with your local environment settings
+# 3. The .gitignore already excludes application.yml from version control
+#
+# WARNING: application.yml contains sensitive credentials (passwords, tokens)
+#          Do NOT commit it to the repository!
+# ============================================================================
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%5p) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} : %m%n%ex"
+  level:
+    com.hub.app: INFO
+    org.springframework.security: DEBUG
+
+spring:
+  datasource:
+    # H2 in-memory for local testing. For PostgreSQL, use:
+    # url: jdbc:postgresql://localhost:5432/hub-backend
+    # driverClassName: org.postgresql.Driver
+    # username: postgres
+    # password: postgres123
+    url: jdbc:h2:mem:hubdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      javax.persistence.schema-generation.database.action: none
+  
+  mail:
+    # Gmail SMTP configuration (requires app password, not regular account password)
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:idayirikzir@gmail.com}
+    password: ${MAIL_PASSWORD:gxhzfrzeabmsavcg}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+minio:
+  # MinIO S3-compatible object storage
+  endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+  access-key: ${MINIO_ACCESS_KEY:minioadmin}
+  secret-key: ${MINIO_SECRET_KEY:minioadmin}
+  bucket: ${MINIO_BUCKET:hub-documents}
+
+jwt:
+  # JWT configuration
+  secret: change-me  # TODO: Generate a secure random string (min 32 characters)
+  expiration-ms: 3600000  # 1 hour in milliseconds
+
+server:
+  port: 8080
+
+simbg:
+  # Indonesian Government SimBG API integration
+  base-url: https://api.simbg.go.id
+  auth:
+    token: ${SIMBG_TOKEN:}  # Leave empty if not needed for local testing
