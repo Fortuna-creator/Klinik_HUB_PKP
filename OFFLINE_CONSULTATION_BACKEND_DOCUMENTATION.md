@@ -1,10 +1,28 @@
 # Offline Consultation Scheduling — Backend Documentation
 
 **Module:** `com.hub.app.offlineconsultation`  
-**Framework:** Spring Boot 3.5.6 / Java 21  
-**Database:** PostgreSQL with Liquibase migrations  
+**Framework:** Spring Boot 3.x / Java 21  
+**Database:** MySQL 8.0+ with Liquibase migrations  
+**Authentication:** HttpOnly Cookie-based JWT  
 **Status:** Fully Implemented  
-**Date:** February 25, 2026
+**Date:** March 6, 2026
+
+---
+
+## 🔐 Security & Authentication
+
+### HttpOnly Cookie Authentication
+- **Token Storage**: JWT tokens stored in secure HttpOnly cookies (XSS protected)
+- **Cookie Attributes**: Secure, HttpOnly, SameSite=Strict, Path=/api
+- **Token Lifetime**: 7 days (604800 seconds)
+- **No Authorization Header**: Use cookies instead of Bearer tokens
+- **CORS Support**: `credentials: 'include'` required in frontend fetch calls
+
+### OTP Rate Limiting (Post-Authentication)
+- **Generation Limit**: 3 OTP codes per hour per email
+- **Verification Limit**: 3 failed attempts triggers 15-minute lockout
+- **Lockout Response**: HTTP 429 with `retryAfterSeconds` field
+- **Storage**: DB table `otp_attempts` tracks failed attempts per user
 
 ---
 

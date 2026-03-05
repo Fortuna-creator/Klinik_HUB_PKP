@@ -1,6 +1,5 @@
 package com.hub.app.offlineconsultation.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +7,10 @@ import lombok.NoArgsConstructor;
 
 /**
  * PUT /api/consultations/{consultationId}/complete
+ * 
+ * Marks a consultation as complete. The system automatically generates
+ * a random session key that is given to the Warga to verify/end the session.
+ * Balai cannot provide or see this code (security feature).
  */
 @Data
 @NoArgsConstructor
@@ -16,7 +19,7 @@ import lombok.NoArgsConstructor;
 public class CompleteConsultationRequest {
 
     private String idempotencyKey;     // must match Idempotency-Key header
-
-    @NotBlank(message = "verificationId is required")
-    private String verificationId;     // the verification code given to the user
+    
+    // No verificationId field - system generates random code automatically
 }
+

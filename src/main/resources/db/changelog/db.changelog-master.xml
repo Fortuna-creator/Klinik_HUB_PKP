@@ -44,7 +44,9 @@
     <include file="036-balai-offline-schema.sql" relativeToChangelogFile="true"/>
     <include file="037-offline-consultation-schema.sql" relativeToChangelogFile="true"/>
     <include file="038-oc-schema.sql" relativeToChangelogFile="true"/>
-    <include file="db.changelog-20251018-seed-consultants.yaml" relativeToChangelogFile="true"/>
-    <include file="db.changelog-20251025-seed-portfolios.yaml" relativeToChangelogFile="true"/>
+    <include file="039-seed-balai-data.sql" relativeToChangelogFile="true"/>
+    <include file="040-seed-test-users.sql" relativeToChangelogFile="true"/>
+    <include file="041-user-balai-relationship.sql" relativeToChangelogFile="true"/>
+    <include file="042-otp-attempts-rate-limiting.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

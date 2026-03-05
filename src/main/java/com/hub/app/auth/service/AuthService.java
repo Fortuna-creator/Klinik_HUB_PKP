@@ -1,10 +1,13 @@
 package com.hub.app.auth.service;
 
+import com.hub.app.auth.dto.InitialRegisterRequest;
 import com.hub.app.auth.dto.LoginResponse;
+import com.hub.app.auth.repository.OtpRepository;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import com.hub.app.user.model.HomeOwner;
 import com.hub.app.user.model.VerificationStatus;
+import jakarta.persistence.EntityManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,19 +31,48 @@ public class AuthService {
     private final UserRepository userRepository;
     private final HomeOwnerRepository homeOwnerRepository;
     private final OtpService otpService;
+    private final OtpRepository otpRepository;
     private final PasswordEncoder encoder;
     private final JwtService jwtService;
+    private final EntityManager entityManager;
  
     @Transactional
-    public HomeOwner register(String email, String password) {
-        if (userRepository.existsByEmail(email)) {
-            throw new DomainException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
+    public HomeOwner register(InitialRegisterRequest req) {
+        // Check if email already exists
+        Optional<User> existingUser = userRepository.findByEmail(req.getEmail());
+        
+        // If email exists and user is UNVERIFIED, allow re-registration
+        // by deleting the old unverified account (fresh start with new OTP)
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            if (user.getStatus() == VerificationStatus.UNVERIFIED) {
+                // Delete OTP tokens first (foreign key dependency)
+                otpRepository.deleteByUserId(user.getId());
+                // Then delete the old unverified account to allow fresh registration
+                userRepository.delete(user);
+                // Flush to ensure the delete is committed before creating new user
+                entityManager.flush();
+            } else {
+                // If verified or verified by other means, block the registration
+                throw new DomainException(ErrorCode.USER_EMAIL_ALREADY_EXISTS);
+            }
         }
 
         HomeOwner homeOwner = new HomeOwner();
-        homeOwner.setEmail(email);
-        homeOwner.setPassword(encoder.encode(password));
-        homeOwner.setRole(Role.HOMEOWNER);
+        homeOwner.setName(req.getFullName());
+        homeOwner.setEmail(req.getEmail());
+        homeOwner.setPassword(encoder.encode(req.getPassword()));
+        homeOwner.setPhone(req.getPhone());
+        homeOwner.setAddress(req.getAddress());
+        homeOwner.setKtpNumber(req.getNik());
+        
+        // Determine role from the request
+        if ("Balai".equalsIgnoreCase(req.getRole())) {
+            homeOwner.setRole(Role.BALAI);
+        } else {
+            homeOwner.setRole(Role.HOMEOWNER);
+        }
+        
         homeOwner.setStatus(VerificationStatus.UNVERIFIED);
         homeOwner.setActivityStatus(UserActivityStatus.INACTIVE);
 
@@ -64,8 +96,9 @@ public class AuthService {
         boolean valid = otpService.verifyOtp(user.getId(), req.getOtpCode());
 
 
-        if (valid || Objects.equals(req.getOtpCode(), "1234")) {
+        if (valid) {
             user.setActivityStatus(UserActivityStatus.ACTIVE);
+            user.setStatus(VerificationStatus.VERIFIED);
             userRepository.save(user);
         } else {
             throw new DomainException(ErrorCode.AUTH_INVALID_OTP);
@@ -99,6 +132,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .status(user.getStatus().name())
                 .activityStatus(user.getActivityStatus().name())
+                .balaiId(user.getBalaiId())
                 .expiresIn(System.currentTimeMillis() + expires)
                 .build();
     }

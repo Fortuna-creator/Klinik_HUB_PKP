@@ -25,6 +25,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 /**
@@ -176,6 +177,51 @@ public class OfflineConsultationService {
     }
 
     // =====================================================================
+    // 2.5 GET BOOKING CONFIRMATIONS (Warga Inbox)
+    // =====================================================================
+
+    /**
+     * Returns a paginated list of the authenticated Warga's confirmed consultations
+     * (status: terkonfirmasi or selesai) for the inbox page.
+     * Includes the session key when the consultation is confirmed.
+     *
+     * @param userEmail    authenticated user's email
+     * @param statusFilter "all", "terkonfirmasi", or "selesai"
+     * @param page         0-indexed page number
+     * @param size         page size
+     * @return list of booking confirmations
+     */
+    @Transactional(readOnly = true)
+    public List<BookingConfirmationResponse> getBookingConfirmations(
+            String userEmail, String statusFilter, int page, int size) {
+
+        User user = userRepo.findByEmail(userEmail)
+                .orElseThrow(() -> new DomainException(ErrorCode.USER_NOT_FOUND));
+
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        Page<OfflineConsultationEntity> resultPage = consultationRepo.findByUserId(user.getId(), pageable);
+
+        // Filter for confirmed statuses only
+        var filtered = resultPage.getContent().stream()
+                .filter(c -> isConfirmedStatus(c.getStatus()))
+                .filter(c -> statusFilter == null || "all".equalsIgnoreCase(statusFilter) || 
+                             statusFilter.equals(c.getStatus().getValue()))
+                .map(this::toBookingConfirmationResponse)
+                .toList();
+
+        return filtered;
+    }
+
+    /**
+     * Check if consultation status is one of the confirmed statuses
+     */
+    private boolean isConfirmedStatus(ConsultationStatus status) {
+        return status == ConsultationStatus.TERKONFIRMASI || 
+               status == ConsultationStatus.SELESAI ||
+               status == ConsultationStatus.SEDANG_BERJALAN;
+    }
+
+    // =====================================================================
     // 3. VERIFY CONSULTATION (Warga)
     // =====================================================================
 
@@ -249,8 +295,13 @@ public class OfflineConsultationService {
      * @return list of consultation details
      */
     @Transactional(readOnly = true)
-    public List<ConsultationDetailResponse> getDashboardConsultations(
+    public List<DashboardConsultationResponse> getDashboardConsultations(
             String balaiId, String dateStr, String statusFilter, int page, int size) {
+
+        // Validate balaiId is not empty before parsing
+        if (balaiId == null || balaiId.isBlank()) {
+            throw new DomainException(ErrorCode.BAD_REQUEST, "balaiId parameter is required");
+        }
 
         UUID balaiUuid = parseUuid(balaiId, "balaiId");
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
@@ -280,7 +331,7 @@ public class OfflineConsultationService {
         }
 
         return resultPage.getContent().stream()
-                .map(this::toDetailResponse)
+                .map(this::toDashboardResponse)
                 .toList();
     }
 
@@ -302,6 +353,25 @@ public class OfflineConsultationService {
      * @param request        optional notes from the Balai
      * @return action response with updated consultation
      */
+    /**
+     * Balai confirms/approves a pending consultation request.
+     *
+     * <h4>Flow:</h4>
+     * <ol>
+     *   <li>Find consultation in {@code menunggu_konfirmasi} status.</li>
+     *   <li>Transition to {@code terkonfirmasi}.</li>
+     *   <li>Generate random session key for Warga verification.</li>
+     *   <li>Store notes provided by Balai.</li>
+     * </ol>
+     *
+     * <p><b>Security Note:</b> The session key is generated at confirmation time,
+     * before the Warga can use it to verify/end the consultation later. This ensures
+     * Warga has the code as soon as the appointment is confirmed.</p>
+     *
+     * @param consultationId the consultation's UUID
+     * @param request        contains notes and idempotency key
+     * @return action response with updated consultation
+     */
     @Transactional
     public ConsultationActionResponse confirmConsultation(
             UUID consultationId, ConfirmConsultationRequest request) {
@@ -313,14 +383,19 @@ public class OfflineConsultationService {
 
         entity.setStatus(ConsultationStatus.TERKONFIRMASI);
         entity.setNotes(request.getNotes());
+        
+        // Generate random session key for Warga to verify/end consultation
+        String generatedSessionKey = generateRandomSessionKey();
+        entity.setConsultationId(generatedSessionKey);
 
         OfflineConsultationEntity saved = consultationRepo.save(entity);
-        log.info("Consultation confirmed: id={}", consultationId);
+        log.info("Consultation confirmed: id={}, generatedSessionKey={}",
+                consultationId, generatedSessionKey);
 
         return ConsultationActionResponse.builder()
                 .id(saved.getId().toString())
                 .status(ConsultationStatus.TERKONFIRMASI.getValue())
-                .message("Consultation confirmed successfully")
+                .message("Consultation confirmed successfully. Session key generated for Warga verification.")
                 .consultation(toDetailResponse(saved))
                 .build();
     }
@@ -373,17 +448,15 @@ public class OfflineConsultationService {
     // =====================================================================
 
     /**
-     * Balai marks a consultation as completed and assigns a verification code.
+     * Balai marks a consultation as completed.
      *
      * <h4>Flow:</h4>
      * <ol>
      *   <li>The consultation must currently be in {@code terkonfirmasi} or
      *       {@code sedang_berjalan} status.</li>
-     *   <li>The Balai provides a {@code verificationId} (a code they give to the
-     *       citizen in person).</li>
-     *   <li>This code is stored as {@code consultationId} on the entity — the Warga
-     *       can later use it via the verify endpoint.</li>
-     *   <li>Status transitions to {@code selesai}.</li>
+     *   <li>If still terkonfirmasi, auto-advance to sedang_berjalan.</li>
+     *   <li>Transition to {@code selesai}.</li>
+     *   <li>Session key already exists (was generated at confirmation time).</li>
      * </ol>
      *
      * <p><b>Note:</b> Per the contract's state machine, the official path is
@@ -394,7 +467,7 @@ public class OfflineConsultationService {
      * {@code sedang_berjalan}.</p>
      *
      * @param consultationId the consultation's UUID
-     * @param request        contains the verification code
+     * @param request        request details
      * @return action response with updated consultation
      */
     @Transactional
@@ -412,18 +485,33 @@ public class OfflineConsultationService {
         validateTransition(entity, ConsultationStatus.SELESAI);
 
         entity.setStatus(ConsultationStatus.SELESAI);
-        entity.setConsultationId(request.getVerificationId());
+        // Session key already exists from confirmation - no need to generate again
 
         OfflineConsultationEntity saved = consultationRepo.save(entity);
-        log.info("Consultation completed: id={}, verificationId={}",
-                consultationId, request.getVerificationId());
+        log.info("Consultation completed: id={}, existingSessionKey={}",
+                consultationId, entity.getConsultationId());
 
         return ConsultationActionResponse.builder()
                 .id(saved.getId().toString())
                 .status(ConsultationStatus.SELESAI.getValue())
-                .message("Consultation completed successfully")
+                .message("Consultation completed successfully.")
                 .consultation(toDetailResponse(saved))
                 .build();
+    }
+
+    /**
+     * Generate a random alphanumeric session key for Warga verification.
+     * Format: 8 uppercase letters and digits (A-Z, 0-9)
+     * Example: "ABC123XZ"
+     */
+    private String generateRandomSessionKey() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     // =====================================================================
@@ -594,6 +682,40 @@ public class OfflineConsultationService {
     }
 
     /**
+     * Convert to DashboardConsultationResponse (excludes consultationId/sessionKey)
+     * Used for Balai dashboard — prevents Balai from seeing Warga session keys
+     */
+    private DashboardConsultationResponse toDashboardResponse(OfflineConsultationEntity entity) {
+        User user = entity.getUser();
+        BalaiEntity balai = entity.getBalai();
+
+        UserSummaryDto userDto = UserSummaryDto.builder()
+                .id(String.valueOf(user.getId()))
+                .name(user.getName())
+                .phone(user.getPhone())
+                .email(user.getEmail())
+                .avatar(user.getAvatarUrl())
+                .build();
+
+        return DashboardConsultationResponse.builder()
+                .id(entity.getId().toString())
+                .user(userDto)
+                .balaiLocation(balai.getLocation() != null ? balai.getLocation() : balai.getName())
+                .balaiId(balai.getId().toString())
+                .date(entity.getConsultationDate().toString())
+                .timeSlot(entity.getTimeSlot())
+                .status(entity.getStatus().getValue())
+                // NOTE: consultationId (session key) intentionally omitted — Balai cannot see this
+                .topic(entity.getTopic())
+                .description(entity.getDescription())
+                .cancellationReason(entity.getCancellationReason())
+                .notes(entity.getNotes())
+                .createdAt(entity.getCreatedAt() != null ? entity.getCreatedAt().toString() : null)
+                .updatedAt(entity.getUpdatedAt() != null ? entity.getUpdatedAt().toString() : null)
+                .build();
+    }
+
+    /**
      * Converts a {@link BalaiEntity} into the {@link BalaiListItemResponse} DTO
      * for the GET /api/balai/list endpoint.
      */
@@ -614,6 +736,34 @@ public class OfflineConsultationService {
                 .email(balai.getEmail())
                 .address(balai.getAddress())
                 .workingHours(workingHours)
+                .build();
+    }
+
+    /**
+     * Converts an {@link OfflineConsultationEntity} into the 
+     * {@link BookingConfirmationResponse} DTO for the inbox endpoint.
+     * Only includes confirmed consultations with session key visibility.
+     */
+    private BookingConfirmationResponse toBookingConfirmationResponse(OfflineConsultationEntity entity) {
+        BalaiEntity balai = entity.getBalai();
+        
+        // Session key is visible only when consultation is terkonfirmasi or selesai
+        boolean isSessionKeyVisible = 
+                ConsultationStatus.TERKONFIRMASI.getValue().equals(entity.getStatus().getValue()) ||
+                ConsultationStatus.SELESAI.getValue().equals(entity.getStatus().getValue());
+
+        return BookingConfirmationResponse.builder()
+                .id(entity.getId().toString())
+                .userId(entity.getUser().getId().toString())
+                .balaiLocation(balai.getLocation() != null ? balai.getLocation() : balai.getName())
+                .balaiId(balai.getId().toString())
+                .date(entity.getConsultationDate().toString())
+                .timeSlot(entity.getTimeSlot())
+                .sessionKey(isSessionKeyVisible ? entity.getConsultationId() : null)
+                .status(entity.getStatus().getValue())
+                .confirmationDate(entity.getUpdatedAt())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 }

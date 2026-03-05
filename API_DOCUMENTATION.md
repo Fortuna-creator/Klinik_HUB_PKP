@@ -27,10 +27,17 @@ curl -X GET "http://localhost:8080/health"
 ## Authentication API
 
 ### Overview
-The Authentication API handles user registration, login, OTP verification, and account activation.
+The Authentication API handles user registration, login, OTP verification, and account activation. Features HttpOnly cookie-based JWT authentication for enhanced security.
 
 ### Authentication
-Most endpoints do not require authentication, except where noted.
+Most endpoints do not require authentication, except where noted. After successful login/OTP verification, JWT token is set in HttpOnly cookie automatically.
+
+### Security Features
+- **HttpOnly Cookies**: JWT tokens stored in secure, HttpOnly cookies (XSS protected)
+- **SameSite=Strict**: CSRF protection
+- **Secure Flag**: HTTPS only transmission
+- **OTP Rate Limiting**: Max 3 failed verifications → 15-minute lockout
+- **CORS Enabled**: Supports credentials transmission with `credentials: 'include'`
 
 ### Endpoints
 
@@ -70,34 +77,44 @@ curl -X POST "http://localhost:8080/api/auth/register" \
 #### 2. Verify OTP
 **POST** `/api/auth/verify-otp`
 
-Verify the OTP sent to the user's email for account verification.
+Verify the OTP sent to the user's email for account verification. **Subject to rate limiting: 3 failed attempts = 15-minute lockout.**
 
 **Parameters:**
-- `email` (string, required): User's email address
-- `otp` (string, required): One-time password
+- `userId` (string, required): User ID from registration
+- `otpCode` (string, required): 6-digit OTP code
 
 **Request Example:**
 ```bash
 curl -X POST "http://localhost:8080/api/auth/verify-otp" \
   -H "Content-Type: application/json" \
   -d '{
-    "email": "user@example.com",
-    "otp": "123456"
+    "userId": "5001",
+    "otpCode": "123456"
   }'
 ```
 
 **Response (200 OK):**
 ```json
 {
-  "token": "jwt_token_here",
-  "refreshToken": "refresh_token_here",
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "role": "HOMEOWNER"
-  }
+  "message": "Email verified successfully"
 }
 ```
+Sets HttpOnly cookie: `auth_token` (JWT token, 7-day expiration)
+
+**Response (429 Too Many Attempts - Rate Limited):**
+```json
+{
+  "error": "TOO_MANY_ATTEMPTS",
+  "message": "Too many OTP verification attempts. Please try again later.",
+  "retryAfterSeconds": 900
+}
+```
+
+**Error Codes:**
+- `400`: Invalid OTP format or malformed request
+- `401`: Invalid or expired OTP code
+- `404`: User ID not found
+- `429`: Account locked (3 failed attempts, 15-minute cooldown)
 
 #### 3. Login
 **POST** `/api/auth/login`

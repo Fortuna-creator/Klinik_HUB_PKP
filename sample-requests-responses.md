@@ -1,8 +1,23 @@
-# Hub API v2.1 - Portfolio Endpoints Sample Requests & Responses
+# Hub API v2.1 - Sample Requests & Responses
 
-This document provides sample requests and responses for all portfolio-related endpoints in the Hub API.
+## 🔐 Authentication Overview
 
-## Portfolio Endpoints Overview
+All authenticated endpoints use **HttpOnly Cookie-based JWT authentication**.
+Token is automatically set in response header after login/OTP verification.
+
+**Important**: Frontend must use `credentials: 'include'` in fetch calls:
+```javascript
+fetch(url, {
+  method: 'POST',
+  credentials: 'include',  // ✅ Required for HttpOnly cookies
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
+```
+
+---
+
+## 📋 Portfolio Endpoints Overview
 
 ### 1. Create/Update Portfolio
 **Endpoint:** `POST /api/users/portfolio`  
@@ -11,7 +26,7 @@ This document provides sample requests and responses for all portfolio-related e
 #### Sample Request
 ```bash
 POST /api/users/portfolio
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Cookie: auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
 {
@@ -24,6 +39,8 @@ Content-Type: application/json
   "websiteUrl": "https://jane-architect.com"
 }
 ```
+
+**Note**: Cookie `auth_token` is set automatically after login. No manual Authorization header needed.
 
 #### Sample Response (201 Created)
 ```json
@@ -55,7 +72,7 @@ Content-Type: application/json
 #### Sample Request
 ```bash
 PUT /api/users/portfolio
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Cookie: auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
 
 {

@@ -71,6 +71,24 @@
       "value": "",
       "type": "string",
       "description": "Consultation ID for operations"
+    },
+    {
+      "key": "otp_code",
+      "value": "123456",
+      "type": "string",
+      "description": "OTP code for testing (use 123456 for test data)"
+    },
+    {
+      "key": "session_key",
+      "value": "",
+      "type": "string",
+      "description": "Session key generated after consultation confirmation"
+    },
+    {
+      "key": "retry_after_seconds",
+      "value": "",
+      "type": "string",
+      "description": "Retry-after time for OTP rate limiting (returned in 429 response)"
     }
   ],
   "item": [

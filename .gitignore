@@ -25,9 +25,13 @@ bin/**/*.jar
 # Maven build directory
 target/
 
-# Local configuration files
-application-local.yml
-application-local.properties
+# Configuration files (contain secrets: DB passwords, API keys, JWT secrets, mail credentials)
+application.yml
+application-*.yml
+application-*.properties
+.env
+.env.local
+.env.*.local
 
 # Logs
 logs/

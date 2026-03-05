@@ -1,7 +1,8 @@
 package com.hub.app.config;
-import com.hub.app.auth.util.JwtUtil;
+import com.hub.app.auth.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -15,12 +16,13 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
     @Override
@@ -32,8 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
-                if (jwtUtil.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    String username = jwtUtil.extractUsername(token);
+                if (jwtService.validateToken(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    String username = jwtService.extractUsername(token);
 
                     // Load authorities from your UserDetailsService
                     UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -54,10 +56,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String resolveToken(HttpServletRequest request) {
+        // First, try to get token from Authorization header (Bearer <token>)
         String bearer = request.getHeader("Authorization");
         if (StringUtils.hasText(bearer) && bearer.startsWith("Bearer ")) {
-            return bearer.substring(7);
+            String token = bearer.substring(7).trim();
+            // Only return if token is not empty after extracting "Bearer " prefix
+            if (StringUtils.hasText(token)) {
+                return token;
+            }
         }
+        
+        // If not found in header, try to get from HttpOnly cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> "auth_token".equals(cookie.getName()))
+                    .map(Cookie::getValue)
+                    .filter(StringUtils::hasText)  // Ensure cookie value is not empty
+                    .findFirst()
+                    .orElse(null);
+        }
+        
         return null;
     }
 }

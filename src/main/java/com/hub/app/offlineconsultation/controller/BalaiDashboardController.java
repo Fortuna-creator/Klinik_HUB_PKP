@@ -6,7 +6,7 @@ import com.hub.app.offlineconsultation.dto.request.CompleteConsultationRequest;
 import com.hub.app.offlineconsultation.dto.request.ConfirmConsultationRequest;
 import com.hub.app.offlineconsultation.dto.request.RejectConsultationRequest;
 import com.hub.app.offlineconsultation.dto.response.ConsultationActionResponse;
-import com.hub.app.offlineconsultation.dto.response.ConsultationDetailResponse;
+import com.hub.app.offlineconsultation.dto.response.DashboardConsultationResponse;
 import com.hub.app.offlineconsultation.dto.response.DashboardStatsResponse;
 import com.hub.app.offlineconsultation.service.IdempotencyService;
 import com.hub.app.offlineconsultation.service.OfflineConsultationService;
@@ -52,18 +52,20 @@ public class BalaiDashboardController {
 
     /**
      * Get consultations for the Balai dashboard, with optional date and status filters.
+     * Note: Session keys (consultationId) are excluded from this response to prevent
+     * Balai staff from seeing Warga verification codes.
      */
     @GetMapping("/api/dashboard/consultations")
     @Operation(summary = "Get dashboard consultations")
-    public ResponseEntity<List<ConsultationDetailResponse>> getDashboardConsultations(
-            @RequestParam String balaiId,
+    public ResponseEntity<List<DashboardConsultationResponse>> getDashboardConsultations(
+            @RequestParam(required = true) String balaiId,
             @RequestParam(required = false) String date,
             @RequestParam(defaultValue = "all") String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal UserDetails principal) {
 
-        List<ConsultationDetailResponse> result =
+        List<DashboardConsultationResponse> result =
                 consultationService.getDashboardConsultations(balaiId, date, status, page, size);
         return ResponseEntity.ok(result);
     }

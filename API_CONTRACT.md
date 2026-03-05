@@ -26,17 +26,34 @@ The backend should implement these endpoints exactly as specified below.
 
 ## 🔐 Authentication
 
-### Header Format
-All requests (except `/auth/login` and `/auth/register`) must include:
-```http
-Authorization: Bearer <JWT_TOKEN>
-Idempotency-Key: <UNIQUE_REQUEST_ID>  (required for state-changing operations)
+### HttpOnly Cookie Authentication (Recommended)
+All authenticated requests automatically use the `auth_token` HttpOnly cookie set after login/OTP verification.
+
+**Frontend Implementation:**
+```javascript
+// Use credentials: 'include' in ALL fetch calls
+fetch(`${baseUrl}/endpoint`, {
+  method: 'POST',
+  credentials: 'include',  // ✅ REQUIRED for cookie transmission
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
 ```
 
-### JWT Token
-- **Issued by:** `POST /api/auth/login`
-- **Expiration:** Recommend 24 hours minimum
-- **Payload:** Must include `sub` (user ID), `role` (Warga/Balai), `email`
+**Cookie Details:**
+- **Name**: `auth_token`
+- **Duration**: 7 days
+- **Attributes**: Secure, HttpOnly, SameSite=Strict, Path=/api
+- **Automatic**: Set by server in `Set-Cookie` response header
+- **No Manual Management**: Browser handles cookie automatically with `credentials: 'include'`
+
+### OAuth Token Header (Legacy - Still Supported)
+For clients that cannot use cookies, bearer token format is still accepted:
+```http
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**Note:** HttpOnly cookie method is preferred for enhanced security (prevents XSS attacks).
 
 ---
 
@@ -47,9 +64,23 @@ Idempotency-Key: <UNIQUE_REQUEST_ID>  (required for state-changing operations)
 http://localhost:8080/api
 ```
 
+### CORS Configuration
+**Allowed Origins:**
+- `http://localhost:3000` (React dev server)
+- `http://localhost:5173` (Vite dev server)
+- `http://localhost:5174` (Alternate Vite port)
+- Production URL (configured via environment)
+
+**Headers Allowed:**
+- `Content-Type`
+- `Authorization` (for legacy bearer token support)
+- All custom headers
+
+**Credentials:** Enabled for cookie transmission
+
 ---
 
-## 🔑 AUTH ENDPOINTS
+## 🔑 AUTH ENDPOINTS WITH OTP RATE LIMITING
 
 ### 1. **Login**
 ```http
@@ -108,13 +139,109 @@ Response 200 OK:
   "role": "Warga" | "Balai"
 }
 
+Response 201 Created:
+{
+  "message": "User registered successfully. OTP sent to email.",
+  "userId": 5001,
+  "email": "user@example.com",
+  "role": "HOMEOWNER"
+}
+
+Set-Cookie: auth_token=eyJhbGci...; Secure; HttpOnly; SameSite=Strict; Max-Age=604800; Path=/api
+
 Response 400 Bad Request:
 {
-  "error": "USERNAME_EXISTS",
-  "message": "Username already exists",
-  "statusCode": 400
+  "error": "VALIDATION_ERROR",
+  "message": "Password must be at least 8 characters and contain uppercase, lowercase, digit, and special character"
+}
+
+Response 409 Conflict:
+{
+  "error": "USER_EMAIL_ALREADY_EXISTS",
+  "message": "Email is already registered"
 }
 ```
+
+### 3. **Verify OTP (With Rate Limiting - 3 Failed Attempts = 15-min Lockout)**
+```http
+POST /api/auth/verify-otp
+Content-Type: application/json
+
+Request:
+{
+  "userId": 5001,        // User ID from register response
+  "otpCode": "123456"   // 6-digit OTP code sent to email
+}
+
+Response 200 OK:
+{
+  "message": "Email verified successfully"
+}
+
+Set-Cookie: auth_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; Secure; HttpOnly; SameSite=Strict; Max-Age=604800; Path=/api
+
+Response 429 Too Many Attempts (Rate Limited - Account Locked):
+{
+  "error": "TOO_MANY_ATTEMPTS",
+  "message": "Too many failed OTP verification attempts. Account locked for security.",
+  "retryAfterSeconds": 900
+}
+
+Response 401 Unauthorized:
+{
+  "error": "INVALID_OTP",
+  "message": "OTP code is invalid or expired (valid for 10 minutes)"
+}
+
+Response 404 Not Found:
+{
+  "error": "USER_NOT_FOUND",
+  "message": "User ID not found"
+}
+```
+
+**Rate Limiting Details:**
+- **Failed Attempt Limit**: 3 attempts
+- **Lockout Duration**: 15 minutes (900 seconds)
+- **Response Code**: HTTP 429
+- **Retry Field**: `retryAfterSeconds` - time to wait before trying again
+- **Storage**: `otp_attempts` database table
+- **Reset Condition**: Locked out user can try again after 15 minutes OR after successful verification from another user
+
+### 4. **Resend OTP (Rate Limited - 3 per Hour)**
+```http
+POST /api/auth/resend-otp
+Content-Type: application/json
+
+Request:
+{
+  "email": "user@example.com"
+}
+
+Response 200 OK:
+{
+  "message": "OTP sent successfully to your email"
+}
+
+Response 404 Not Found:
+{
+  "error": "USER_NOT_FOUND",
+  "message": "Email address not found in system"
+}
+
+Response 429 Rate Limited (Too Many Requests):
+{
+  "error": "RATE_LIMIT_EXCEEDED",
+  "message": "Too many OTP requests. Maximum 3 per hour allowed.",
+  "retryAfterSeconds": 1800
+}
+```
+
+**OTP Generation Rate Limit:**
+- **Max per Hour**: 3 OTP codes per email
+- **Response Code**: HTTP 429 if exceeded
+- **Retry Field**: `retryAfterSeconds` - time until next OTP can be requested
+- **Window**: Rolling 1-hour window
 
 ---
 

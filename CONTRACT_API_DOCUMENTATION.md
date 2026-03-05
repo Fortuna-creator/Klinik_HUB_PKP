@@ -1,6 +1,27 @@
 # 📋 **FINAL DOKUMENTASI API CONTRACT MANAGEMENT** - Frontend Integration Guide
 
-## 👋 Halo Tim Frontend!
+## � **AUTHENTICATION UPDATE (March 6, 2026)**
+
+⚠️ **Important: HttpOnly Cookie Authentication**
+- All authenticated endpoints now use **HttpOnly Cookie-based JWT** instead of Bearer tokens
+- Token set automatically after login/OTP verification (POST `/api/auth/verify-otp`)
+- Frontend MUST use `credentials: 'include'` in fetch calls
+- No manual Authorization header needed (but still supported for legacy support)
+- Cookie Name: `auth_token` | Duration: 7 days
+
+**Frontend Implementation:**
+```javascript
+fetch(`${baseUrl}/api/endpoint`, {
+  method: 'POST',
+  credentials: 'include',  // ✅ REQUIRED for HttpOnly cookies
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
+```
+
+---
+
+## �👋 Halo Tim Frontend!
 
 Sebagai Backend Engineer, saya telah menyelesaikan implementasi lengkap sistem contract management berdasarkan kode existing yang telah diperbarui. Berikut adalah dokumentasi komprehensif API untuk integrasi frontend dengan **response body lengkap** untuk setiap endpoint, termasuk **proses download dan upload file pada setiap tahap contract lifecycle**.
 

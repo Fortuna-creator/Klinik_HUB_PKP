@@ -1,8 +1,14 @@
 # Panduan Testing API dengan Postman Collection
 
-## 📦 Postman Collection: Balai Offline Calendar API
+## 📦 Postman Collection: Hub API v2.1
 
-File Postman Collection sudah dibuat: `Hub_Balai_Offline_Calendar_Postman_Collection.json`
+File Postman Collection sudah dibuat: `Hub_API_v2.1_Postman_Collection.json`
+
+**Updated Features:**
+- OTP Verification with Rate Limiting (429 responses)
+- HttpOnly Cookie Authentication
+- CORS with Credentials Support
+- Complete endpoint documentation with authentication requirements
 
 ---
 
@@ -34,12 +40,16 @@ Setelah import, setup variables di Collection Settings:
 | Variable | Default Value | Keterangan | Contoh |
 |----------|---------------|------------|--------|
 | `base_url` | `http://localhost:8080` | URL backend server | Biarkan default atau ubah sesuai environment |
-| `jwt_token` | _(kosong)_ | JWT token setelah login | Paste token dari login response |
-| `balai_id` | `7c5a3c5f-8a77-4d4e-9e0b-41b0b912c5a1` | Sample Balai ID | Ganti dengan ID balai yang ada di database |
-| `user_id` | `1` | User ID untuk testing | Ganti dengan user ID yang valid |
-| `consultation_id` | _(kosong)_ | Auto-populated setelah create | Akan otomatis terisi |
-| `test_date` | `2025-11-20` | Tanggal test untuk booking | Format: YYYY-MM-DD |
-| `test_time` | `09:00:00` | Waktu test untuk booking | Format: HH:mm:ss |
+| `jwt_token` | _(kosong)_ | Deprecated - Token now in HttpOnly cookie | Not needed with credentials: 'include' |
+| `user_id` | _(kosong)_ | User ID untuk testing | Ganti dengan user ID yang valid (5001-5005 untuk homeowner) |
+| `email` | `test@example.com` | Email untuk login/registration | Updated dengan email test |
+| `password` | `password123` | Password untuk testing | Default password untuk semua test accounts |
+| `otp_code` | `123456` | OTP code untuk verification | Use 123456 untuk test data |
+| `consultant_id` | _(kosong)_ | Consultant ID untuk consultation | Ganti dengan ID konsultan yang valid (6001-6005) |
+| `consultation_id` | _(kosong)_ | Consultation ID | Auto-populated setelah create |
+| `project_id` | _(kosong)_ | Project ID untuk operations | Auto-populated setelah create project |
+| `session_key` | _(kosong)_ | Session key dari confirmation | Auto-populated setelah confirm consultation |
+| `retry_after_seconds` | _(kosong)_ | Retry time untuk rate limiting | Auto-populated dari 429 response |
 
 ---
 
@@ -49,23 +59,32 @@ Setelah import, setup variables di Collection Settings:
 
 Sebelum test endpoint yang butuh auth, kamu perlu JWT token:
 
-#### Option A: Gunakan existing Hub Auth Collection
-1. Import `Hub_Auth_Postman_Collection.json`
-2. Register user baru atau login dengan user existing
-3. Copy JWT token dari response
-4. Paste ke variable `jwt_token` di Balai Offline Calendar collection
+#### New: HttpOnly Cookie Authentication (Recommended)
+1. **No need to copy JWT tokens manually**
+2. Login endpoint automatically sets `auth_token` HttpOnly cookie
+3. Postman automatically includes cookie in subsequent requests
+4. Token is securely stored in browser (XSS protected)
 
-#### Option B: Manual login
-```bash
-POST http://localhost:8080/api/auth/login
-Content-Type: application/json
+#### Step-by-Step Login Flow
+1. POST to `/api/auth/register` with email, password, confirmPassword
+2. POST to `/api/auth/resend-otp` with email to get OTP
+3. POST to `/api/auth/verify-otp` with userId and otpCode (123456 for test)
+4. Cookie `auth_token` is set automatically
+5. All subsequent requests use the cookie automatically
 
-{
-  "email": "your-email@example.com",
-  "password": "your-password"
-}
+**Test Account Credentials:**
 ```
-Copy token dari response dan paste ke `jwt_token` variable.
+Email: homeowner1@example.com
+Password: password
+OTP: 123456
+Organization: Balai PKP
+```
+
+**For Postman Testing:**
+- Ensure collection has cookie support enabled
+- Responses will include `Set-Cookie: auth_token=...` header
+- Token automatically used in following requests
+- No manual token copying needed!
 
 ---
 

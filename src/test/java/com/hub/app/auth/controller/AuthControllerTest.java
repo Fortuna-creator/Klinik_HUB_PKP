@@ -4,8 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hub.app.auth.dto.InitialRegisterRequest;
 import com.hub.app.auth.dto.LoginResponse;
 import com.hub.app.auth.dto.VerifyOtpRequest;
+import com.hub.app.auth.service.ActivationService;
 import com.hub.app.auth.service.AuthService;
 import com.hub.app.auth.service.JwtService;
+import com.hub.app.auth.service.OtpService;
+import com.hub.app.error.ApiErrorBuilder;
 import com.hub.app.error.DomainException;
 import com.hub.app.error.ErrorCode;
 import com.hub.app.user.model.HomeOwner;
@@ -42,6 +45,15 @@ class AuthControllerTest {
     private AuthService authService;
 
     @MockitoBean
+    private ActivationService activationService;
+
+    @MockitoBean
+    private ApiErrorBuilder apiErrorBuilder;
+
+    @MockitoBean
+    private OtpService otpService;
+
+    @MockitoBean
     private JwtService jwtService;
 
     @MockitoBean
@@ -51,52 +63,65 @@ class AuthControllerTest {
     void register_ShouldReturnOk_WhenValidRequest() throws Exception {
         // Arrange
         InitialRegisterRequest request = new InitialRegisterRequest();
+        request.setUsername("testuser");
         request.setEmail("test@example.com");
         request.setPassword("password123");
-        request.setConfirmPassword("password123");
+        request.setFullName("Test User");
+        request.setPhone("081234567890");
+        request.setAddress("Test Address");
+        request.setNik("1234567890123456");
+        request.setRole("Warga");
+        
         HomeOwner mockHomeOwner = new HomeOwner();
+        mockHomeOwner.setId(1L);
         mockHomeOwner.setEmail("test@example.com");
-        when(authService.register(anyString(), anyString())).thenReturn(mockHomeOwner);
+        mockHomeOwner.setName("Test User");
+        mockHomeOwner.setPhone("081234567890");
+        
+        when(authService.register(any(InitialRegisterRequest.class))).thenReturn(mockHomeOwner);
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("User registered, OTP sent to test@example.com"));
+                .andExpect(jsonPath("$.email").value("test@example.com"))
+                .andExpect(jsonPath("$.userId").value(1L));
     }
 
     @Test
-    void register_ShouldReturnBadRequest_WhenPasswordsDoNotMatch() throws Exception {
+    void register_ShouldReturnBadRequest_WhenEmailAlreadyExists() throws Exception {
         // Arrange
         InitialRegisterRequest request = new InitialRegisterRequest();
-        request.setEmail("test@example.com");
+        request.setUsername("testuser");
+        request.setEmail("existing@example.com");
         request.setPassword("password123");
-        request.setConfirmPassword("different");
+        request.setFullName("Test User");
+        request.setPhone("081234567890");
+        request.setAddress("Test Address");
+        request.setNik("1234567890123456");
+        request.setRole("Warga");
+
+        when(authService.register(any(InitialRegisterRequest.class)))
+                .thenThrow(new DomainException(ErrorCode.USER_EMAIL_ALREADY_EXISTS));
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Passwords do not match"));
+                .andExpect(status().isConflict());
     }
 
     @Test
-    void register_ShouldReturnBadRequest_WhenRegistrationFails() throws Exception {
-        // Arrange
-        InitialRegisterRequest request = new InitialRegisterRequest();
-        request.setEmail("test@example.com");
-        request.setPassword("password123");
-        request.setConfirmPassword("password123");
-        when(authService.register(anyString(), anyString())).thenThrow(new IllegalArgumentException("Email already exists"));
+    void register_ShouldReturnBadRequest_WhenValidationFails() throws Exception {
+        // Arrange - Missing required fields
+        String invalidRequest = "{ \"email\": \"test@example.com\" }";
 
         // Act & Assert
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Email already exists"));
+                .content(invalidRequest))
+                .andExpect(status().isBadRequest());
     }
 
 

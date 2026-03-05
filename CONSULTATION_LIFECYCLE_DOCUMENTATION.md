@@ -1,5 +1,31 @@
 Berikut adalah **CONSULTATION LIFECYCLE** lengkap dengan status, step, dan state terbaru berdasarkan semua perubahan yang telah diimplementasikan:
 
+## **SECURITY & AUTHENTICATION**
+
+### HttpOnly Cookie Authentication
+- **Token Storage**: JWT tokens stored in secure HttpOnly cookies (not localStorage)
+- **Cookie Attributes**: Secure, HttpOnly, SameSite=Strict, Path=/api
+- **Token Expiration**: 7 days (604800 seconds)
+- **OTP Rate Limiting**: 3 failed attempts → 15-minute lockout (HTTP 429)
+- **CORS Enabled**: Credentials support for cross-origin requests
+
+### Frontend Integration Requirements
+```javascript
+// When making API requests, use:
+fetch(`${apiUrl}/endpoint`, {
+  method: 'POST',
+  credentials: 'include',  // ✅ REQUIRED for cookie transmission
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(data)
+})
+```
+
+### Testing with Postman
+- Set `base_url` to `http://localhost:8080`
+- Use `/api/auth/login` or `/api/auth/verify-otp` for initial authentication
+- Postman automatically handles cookies for subsequent requests
+- Token returned in `Set-Cookie` header with `auth_token` name
+
 ## **CONSULTATION STATUS LIFECYCLE (FINAL VERSION)**
 
 ### **1. MENUNGGU_KONFIRMASI_KONSULTAN**

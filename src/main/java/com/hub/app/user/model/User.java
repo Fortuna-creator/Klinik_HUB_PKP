@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -40,6 +41,9 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     private VerificationStatus status;
+
+    @Column(name = "balai_id")
+    private UUID balaiId;
 
     private Instant updatedAt;
 }
