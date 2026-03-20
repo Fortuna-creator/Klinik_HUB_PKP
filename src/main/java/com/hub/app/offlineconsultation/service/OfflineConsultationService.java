@@ -500,16 +500,15 @@ public class OfflineConsultationService {
     }
 
     /**
-     * Generate a random alphanumeric session key for Warga verification.
-     * Format: 8 uppercase letters and digits (A-Z, 0-9)
-     * Example: "ABC123XZ"
+     * Generate a random 8-digit numeric session key for Warga verification.
+     * Format: 8 digits (0-9)
+     * Example: "12345678"
      */
     private String generateRandomSessionKey() {
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         Random random = new Random();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < 8; i++) {
-            sb.append(chars.charAt(random.nextInt(chars.length())));
+            sb.append(random.nextInt(10));
         }
         return sb.toString();
     }

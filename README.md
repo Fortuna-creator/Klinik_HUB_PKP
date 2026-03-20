@@ -68,6 +68,287 @@ A comprehensive Spring Boot backend for managing online and offline consultation
 
 ---
 
+## �️ Development Environment Setup Guide
+
+### Step 1: Install Java 21 JDK
+
+#### Windows
+
+1. **Download Java 21 JDK**
+   - Go to [Oracle Java 21 Downloads](https://www.oracle.com/java/technologies/downloads/#java21)
+   - Select **Windows** → **x64 Installer** (`.exe`)
+   - Click download and accept the license agreement
+
+2. **Run Installer**
+   - Double-click the downloaded `.exe` file
+   - Click **Next** through the installation wizard
+   - **Important:** Note the installation path (e.g., `C:\Program Files\Java\jdk-21` or `C:\Program Files\Java\jdk-21.0.1`)
+   - Click **Finish**
+
+3. **Set JAVA_HOME Environment Variable**
+   - Press `Win + X` → Select **System**
+   - Click **Advanced system settings**
+   - Click **Environment Variables** button
+   - Under "System variables", click **New**
+   - Variable name: `JAVA_HOME`
+   - Variable value: `C:\Program Files\Java\jdk-21` (or your actual installation path)
+   - Click **OK** three times
+
+4. **Update PATH Variable**
+   - In "System variables", find **Path** → Click **Edit**
+   - Click **New**
+   - Add: `%JAVA_HOME%\bin`
+   - Click **OK** twice
+
+5. **Verify Installation**
+   - Open **Command Prompt** or **PowerShell**
+   - Run: `java -version`
+   - Should display: `java version "21.x.x"`
+
+#### macOS
+
+```bash
+# Using Homebrew (recommended)
+brew install java21
+
+# Or download from Oracle and run
+# Double-click the .dmg file and follow prompts
+
+# Verify installation
+java -version
+
+# Set JAVA_HOME (add to ~/.zprofile or ~/.bash_profile)
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+```
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# Update package manager
+sudo apt update
+
+# Install OpenJDK 21
+sudo apt install openjdk-21-jdk
+
+# Set JAVA_HOME
+export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+
+# Add to ~/.bashrc for persistence
+echo 'export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64' >> ~/.bashrc
+source ~/.bashrc
+
+# Verify
+java -version
+```
+
+---
+
+### Step 2: Install Apache Maven
+
+#### Windows
+
+1. **Download Maven**
+   - Go to [Maven Official Download](https://maven.apache.org/download.cgi)
+   - Download the **Binary zip archive** (e.g., `apache-maven-3.9.x-bin.zip`)
+   - Extract to a folder (e.g., `C:\Maven\apache-maven-3.9.x`)
+
+2. **Set MAVEN_HOME Environment Variable**
+   - Press `Win + X` → Select **System**
+   - Click **Advanced system settings**
+   - Click **Environment Variables**
+   - Under "System variables", click **New**
+   - Variable name: `MAVEN_HOME`
+   - Variable value: `C:\Maven\apache-maven-3.9.x` (your extraction path)
+   - Click **OK**
+
+3. **Update PATH Variable**
+   - In "System variables", find **Path** → Click **Edit**
+   - Click **New**
+   - Add: `%MAVEN_HOME%\bin`
+   - Click **OK** twice
+
+4. **Verify Installation**
+   - Open **Command Prompt** or **PowerShell**
+   - Run: `mvn -version`
+   - Should display Maven version and Java version
+
+#### macOS
+
+```bash
+# Using Homebrew
+brew install maven
+
+# Verify installation
+mvn -version
+
+# Check MAVEN_HOME
+echo $M2_HOME  # Usually /usr/local/Cellar/maven/x.x.x
+```
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# Update package manager
+sudo apt update
+
+# Install Maven
+sudo apt install maven
+
+# Verify
+mvn -version
+
+# MAVEN_HOME is usually /usr/share/maven
+```
+
+---
+
+### Step 3: Install PostgreSQL & PgAdmin 4
+
+#### Windows
+
+**Option A: Using PostgreSQL Installer**
+
+1. **Download PostgreSQL**
+   - Go to [PostgreSQL Downloads](https://www.postgresql.org/download/windows/)
+   - Download the latest stable version (currently 16.x)
+
+2. **Run Installer**
+   - Double-click the `.exe` file
+   - Set installation directory (e.g., `C:\Program Files\PostgreSQL\16`)
+   - Set superuser password (e.g., `postgres`) - **Remember this!**
+   - Keep port as default: `5432`
+   - Wait for installation to complete
+
+3. **Install PgAdmin 4**
+   - After PostgreSQL installation completes, choose to install Stack Builder
+   - Select **PgAdmin 4** from the list
+   - Follow installation prompts
+   - Or download separately from [pgAdmin Downloads](https://www.pgadmin.org/download/)
+
+4. **Verify Installation**
+   - Open PgAdmin 4 (from Start menu)
+   - It opens in browser: `http://localhost:5050`
+   - Login with email you set during installation
+   - You should see "Servers" on the left panel
+
+**Option B: Using Docker (Recommended for Development)**
+
+```bash
+# Install Docker Desktop from https://www.docker.com/products/docker-desktop
+
+# Run PostgreSQL in Docker
+docker run --name postgres-db \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=hub-backend \
+  -p 5432:5432 \
+  -d postgres:16
+
+# Run PgAdmin 4 in Docker
+docker run --name pgadmin \
+  -e PGADMIN_DEFAULT_EMAIL=admin@example.com \
+  -e PGADMIN_DEFAULT_PASSWORD=admin \
+  -p 5050:80 \
+  -d dpage/pgadmin4
+
+# Access PgAdmin at http://localhost:5050
+```
+
+#### macOS
+
+```bash
+# Using Homebrew
+brew install postgresql
+
+# Start PostgreSQL service
+brew services start postgresql
+
+# Install PgAdmin 4
+brew install pgadmin4
+
+# Verify PostgreSQL
+psql --version
+```
+
+#### Linux (Ubuntu/Debian)
+
+```bash
+# Update package manager
+sudo apt update
+
+# Install PostgreSQL
+sudo apt install postgresql postgresql-contrib
+
+# Install PgAdmin 4
+sudo apt install pgadmin4
+
+# Start PostgreSQL service
+sudo systemctl start postgresql
+
+# Verify
+psql --version
+```
+
+---
+
+### Step 4: Create Database & User
+
+1. **Open PgAdmin 4** (http://localhost:5050)
+2. **Login** with your credentials
+3. **Create Database:**
+   - Right-click "Databases" → **Create** → **Database**
+   - Name: `hub-backend`
+   - Owner: `postgres`
+   - Click **Save**
+
+4. **Create Database User (Optional):**
+   - Right-click "Login/Group Roles" → **Create** → **Login/Group Role**
+   - Name: `hub_user`
+   - Password: `secure_password`
+   - Privileges tab → Toggle **Can login** to **ON**
+   - Click **Save**
+
+5. **Grant Privileges:**
+   - Right-click `hub-backend` database → **Properties**
+   - Security tab → Grant all privileges to your user
+   - Or run SQL:
+   ```sql
+   GRANT ALL PRIVILEGES ON DATABASE "hub-backend" TO hub_user;
+   ```
+
+---
+
+### Step 5: Configure Project & Download Dependencies
+
+1. **Clone the Repository**
+   ```bash
+   git clone <repository-url>
+   cd Klinik_HUB_PKP
+   ```
+
+2. **Download Maven Dependencies**
+   - Maven automatically downloads dependencies on first build
+   - This may take 2-5 minutes on first run
+   ```bash
+   mvn clean install
+   ```
+
+3. **Verify Build**
+   ```bash
+   mvn clean compile
+   ```
+   - Should complete without errors
+
+---
+
+## 🚀 Setup & Installation
+
+### 1. Create application.yml Configuration
+
+### 1. Clone Repository
+
+```bash
+---
+
 ## 🚀 Setup & Installation
 
 ### 1. Clone Repository
@@ -77,60 +358,73 @@ git clone <repository-url>
 cd Klinik_HUB_PKP
 ```
 
-### 2. Create MySQL Database
+### 2. Edit application.yml Configuration File
 
-```sql
--- Open MySQL and create the database
-CREATE DATABASE klinik_hub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+#### Location
+`src/main/resources/application.yml`
 
--- Ensure MySQL user has permissions
-GRANT ALL PRIVILEGES ON klinik_hub.* TO 'your_username'@'localhost';
-FLUSH PRIVILEGES;
+#### For Development (PostgreSQL)
+
+**Step 1: Check if PostgreSQL is running**
+```bash
+# Windows
+pg_isready -h localhost -p 5432
+
+# Mac/Linux
+pg_isready -h localhost -p 5432
 ```
 
-### 3. Create `application-local.yml`
+**Step 2: Open the file in your editor (VS Code, IntelliJ, etc.)**
 
-In `src/main/resources/`:
-
+**Step 3: Update database configuration**
 ```yaml
 # Server Configuration
 server:
   port: 8080
   servlet:
     context-path: /
+  compression:
+    enabled: true
 
 # Spring Configuration
 spring:
   application:
     name: klinik-hub-api
   
-  # Database Configuration
+  # Database Configuration (PostgreSQL)
   datasource:
-    url: jdbc:mysql://localhost:3306/klinik_hub?useSSL=false&serverTimezone=UTC&createDatabaseIfNotExist=true
-    username: your_mysql_username
-    password: your_mysql_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:postgresql://localhost:5432/hub-backend
+    username: postgres              # Your PostgreSQL user
+    password: password              # Your PostgreSQL password
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
   
+  # JPA/Hibernate Configuration
   jpa:
     hibernate:
-      ddl-auto: validate  # Use 'validate' in prod, 'update' in dev
+      ddl-auto: validate            # Use 'validate' for dev (Liquibase handles migrations)
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.MySQL8Dialect
+        dialect: org.hibernate.dialect.PostgreSQL10Dialect
         format_sql: true
+        jdbc:
+          batch_size: 20
     show-sql: false
+    open-in-view: false
   
   # Liquibase Configuration (Database Migrations)
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
+    contexts: dev,test              # Run migrations for dev and test contexts
   
-  # Email Configuration
+  # Email Configuration (Gmail SMTP)
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:testingotpasa@gmail.com}
-    password: ${MAIL_PASSWORD:your_google_app_password}
+    username: testingotpasa@gmail.com        # Your Gmail address
+    password: your_google_app_password       # Your Gmail app password (16 chars)
     properties:
       mail:
         smtp:
@@ -138,53 +432,123 @@ spring:
           starttls:
             enable: true
             required: true
-        smtp:
           connectiontimeout: 5000
           timeout: 5000
           writetimeout: 5000
-  
-  # JPA/Hibernate
-  jpa:
-    open-in-view: false
 
 # JWT Configuration
 app:
   jwt:
-    secret: your-very-long-secret-key-at-least-32-characters-for-security
+    secret: your-very-long-secret-key-at-least-32-characters-for-security-dev-only
     expiration: 604800000  # 7 days in milliseconds
 
-# Logging
+# Logging Configuration (Development)
 logging:
   level:
     root: INFO
     com.hub.app: DEBUG
     org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # Actuator (Health checks)
 management:
   endpoints:
     web:
       exposure:
-        include: health,metrics
+        include: health,metrics,info
   endpoint:
     health:
       show-details: always
+
+# CORS Configuration
+app:
+  cors:
+    allowed-origins: http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000
 ```
 
-### 4. Set Environment Variables (Production)
+#### Key Points for Development:
+- **Database**: Use PostgreSQL (`jdbc:postgresql://localhost:5432/hub-backend`)
+- **Database Name**: `hub-backend` (note: use quotes in PostgreSQL for names with hyphens)
+- **Username**: Use `postgres` (default PostgreSQL superuser)
+- **Password**: The password you set during PostgreSQL installation
+- **ddl-auto**: Leave as `validate` (Liquibase handles schema migrations)
+- **Mail**: Use your Gmail address and app password
+- **JWT Secret**: Use any long string for development
+- **Logging Level**: Set to `DEBUG` for detailed logs
+- **CORS**: Add your frontend URL (e.g., `http://localhost:3000`)
+
+### 3. Configure Email (Gmail)
+
+**Why?** The application sends OTP codes via email. Without this, email features won't work.
+
+1. **Enable 2-Factor Authentication on Google Account**
+   - Go to [myaccount.google.com/security](https://myaccount.google.com/security)
+   - Search for "2-Step Verification"
+   - Follow the prompts to enable it
+
+2. **Generate App Password**
+   - Go to [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+   - Select "Mail" and "Windows Computer" (or your OS)
+   - Google generates a 16-character password
+   - Copy this password
+
+3. **Update application.yml**
+   ```yaml
+   spring:
+     mail:
+       username: your_email@gmail.com        # Your Gmail address
+       password: your_16char_app_password      # The password you just copied
+   ```
+
+4. **Test Email Sending**
+   - Run the application
+   - Register a new user
+   - Check your email for OTP code
+
+### 4. Verify Prerequisites
+
+Before proceeding, verify all tools are installed:
 
 ```bash
-# Linux/Mac
-export MAIL_USERNAME="your_email@gmail.com"
-export MAIL_PASSWORD="your_google_app_password"
-export JWT_SECRET="your-long-secret-key"
-export SPRING_DATASOURCE_PASSWORD="mysql_password"
+# Check Java
+java -version
+# Output: java version "21.x.x"
 
-# Windows PowerShell
-$env:MAIL_USERNAME="your_email@gmail.com"
-$env:MAIL_PASSWORD="your_google_app_password"
-$env:JWT_SECRET="your-long-secret-key"
-$env:SPRING_DATASOURCE_PASSWORD="mysql_password"
+# Check Maven
+mvn -version
+# Output: Maven 3.8.x...
+
+# Check PostgreSQL
+psql --version
+# Output: psql (PostgreSQL) 16.x
+
+# Check Git (if cloning)
+git --version
+# Output: git version x.x.x
+```
+
+### 5. Download Maven Dependencies
+
+```bash
+# Navigate to project directory
+cd Klinik_HUB_PKP
+
+# Download all dependencies
+mvn clean install
+
+# This may take 2-5 minutes on first run
+# It downloads all dependencies from Maven Central Repository
+```
+
+### 6. Compile Project
+
+```bash
+# Verify everything compiles
+mvn clean compile
+
+# Should end with: [INFO] BUILD SUCCESS
 ```
 
 ---
@@ -215,15 +579,205 @@ mvn compile -e  # Show errors in detail
 
 ## ▶️ Running the Application
 
-### Option 1: Maven (Development)
+### Using Maven spring-boot:run (Recommended for Development)
+
+#### Step 1: Ensure PostgreSQL is Running
 
 ```bash
-# Run with default profile (application.yml)
+# Windows
+pg_isready -h localhost -p 5432
+
+# Mac (with Homebrew)
+brew services list | grep postgresql
+
+# Linux
+sudo systemctl status postgresql
+
+# Docker
+docker ps  # Check if postgres container is running
+```
+
+#### Step 2: Run the Application
+
+```bash
+# From project root directory
 mvn spring-boot:run
 
-# Run with specific profile
-mvn spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=local"
+# Or with specific profile
+mvn spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=dev"
 ```
+
+#### Step 3: Verify Application is Running
+
+**Check console output for:**
+```
+[main] o.s.b.w.e.t.TomcatWebServer : Tomcat started on port(s): 8080
+[main] c.h.a.KlinikHubPkpApplication : Started KlinikHubPkpApplication
+```
+
+**Or test with curl:**
+```bash
+curl http://localhost:8080/api/health
+
+# Should return:
+# {"status":"UP"}
+```
+
+---
+
+### Useful Maven Commands
+
+```bash
+# Download dependencies only (skip compilation)
+mvn dependency:resolve
+
+# Run with debug logging
+mvn spring-boot:run -Dspring-boot.run.arguments="--logging.level.root=DEBUG"
+
+# Run specific test class
+mvn test -Dtest=YourTestClass
+
+# Build JAR file
+mvn clean package
+
+# Skip tests during build
+mvn clean install -DskipTests
+
+# Check for dependency conflicts
+mvn dependency:tree
+
+# Format code
+mvn spotless:apply
+```
+
+---
+
+## 🗄️ Database Management
+
+### Connect to PostgreSQL Database
+
+#### Using PgAdmin 4 (GUI)
+1. Open browser: `http://localhost:5050`
+2. Login with your PgAdmin credentials
+3. Left panel → Expand "Servers" → "PostgreSQL 16"
+4. Right-click `klinik_hub` → "Query Tool"
+5. Run SQL queries
+
+#### Using psql (Command Line)
+```bash
+# Connect to database
+psql -U postgres -d hub-backend
+
+# List all databases
+\l
+
+# List all tables
+\dt
+
+# Exit
+\q
+
+# Run SQL file
+psql -U postgres -d hub-backend -f schema.sql
+```
+
+### View Liquibase Migration Status
+
+```bash
+# See which migrations have been applied
+mvn liquibase:status
+
+# Rollback last 2 migrations
+mvn liquibase:rollback -Dliquibase.rollbackCount=2
+
+# Generate SQL to apply
+mvn liquibase:updateSQL
+```
+
+---
+
+## 🔧 Troubleshooting Development Setup
+
+### Issue: "Command not found: mvn"
+
+**Cause:** MAVEN_HOME or PATH not set correctly
+
+**Fix:**
+```bash
+# Verify MAVEN_HOME is set
+echo $MAVEN_HOME  # Mac/Linux
+echo %MAVEN_HOME%  # Windows PowerShell
+
+# If empty, re-add to PATH
+# Windows: System Properties → Environment Variables
+# Mac/Linux: Add to ~/.bashrc or ~/.zprofile, then source it
+```
+
+### Issue: "Cannot find JDK"
+
+**Cause:** JAVA_HOME not set
+
+**Fix:**
+```bash
+# Verify JAVA_HOME
+echo $JAVA_HOME    # Mac/Linux
+echo %JAVA_HOME%   # Windows PowerShell
+
+# Set JAVA_HOME temporarily (current session only)
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home  # Mac
+```
+
+### Issue: "Connection refused - 5432"
+
+**Cause:** PostgreSQL not running
+
+**Fix:**
+```bash
+# Start PostgreSQL
+brew services start postgresql  # Mac
+sudo systemctl start postgresql  # Linux
+# Windows: Start PostgreSQL from Services or PostgreSQL folder
+
+# Or use Docker
+docker run -p 5432:5432 -e POSTGRES_PASSWORD=password postgres:16
+```
+
+### Issue: "Liquibase: Maven dependencies not found"
+
+**Cause:** Maven not downloaded dependencies
+
+**Fix:**
+```bash
+# Clean and download dependencies
+mvn clean install --update-snapshots
+
+# Or just update
+mvn dependency:resolve
+```
+
+### Issue: "Port 8080 already in use"
+
+**Cause:** Another app using port 8080
+
+**Fix:**
+```bash
+# Change port in application.yml
+server:
+  port: 8081
+
+# Or find and kill process
+# Windows PowerShell
+netstat -ano | findstr :8080
+taskkill /PID <PID> /F
+
+# Mac/Linux
+lsof -xi :8080
+kill -9 <PID>
+```
+
+---
+
+## ▶️ Additional Running Options
 
 ### Option 2: Java Command
 
