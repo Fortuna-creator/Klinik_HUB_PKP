@@ -40,6 +40,9 @@ fetch(`${baseUrl}/endpoint`, {
 })
 ```
 
+
+
+
 **Cookie Details:**
 - **Name**: `auth_token`
 - **Duration**: 7 days

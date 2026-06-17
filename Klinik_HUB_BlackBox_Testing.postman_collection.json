@@ -1,0 +1,675 @@
+{
+  "info": {
+    "name": "Klinik HUB PKP - Black Box Testing (BAB 4.3.2)",
+    "description": "Postman Collection untuk 26 skenario Black Box Testing berdasarkan BAB 4.3.2.\n\nPENTING: Pengujian dilakukan secara MANUAL (test case by test case), BUKAN automated run. OTP dikirim ke email dan tidak dapat dibaca otomatis oleh Postman.\n\nModul:\n- Autentikasi (A-01 s/d A-10): 10 skenario\n- Booking (B-01 s/d B-09): 9 skenario\n- Dashboard Balai (C-01 s/d C-07): 7 skenario\n\nSetup:\n1. Isi testBalaiId dengan UUID Balai dari database\n2. Jalankan A-07 (login) dulu\n3. Copy JWT dari response header Set-Cookie ke variable jwtToken\n4. Baru jalankan B dan C\n\nBase URL: http://localhost:8080/api\nTest password: password",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api", "type": "string" },
+    { "key": "homeownerEmail", "value": "homeowner1@test.com", "type": "string" },
+    { "key": "homeownerPassword", "value": "password", "type": "string" },
+    { "key": "newUserEmail", "value": "newuser@test.com", "type": "string" },
+    { "key": "balaiEmail", "value": "bp2p.sumatera1@pu.go.id", "type": "string" },
+    { "key": "balaiPassword", "value": "password", "type": "string" },
+    { "key": "testBalaiId", "value": "REPLACE-WITH-REAL-BALAI-UUID", "type": "string" },
+    { "key": "testConsultationId", "value": "", "type": "string" },
+    { "key": "jwtToken", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "A - Autentikasi",
+      "description": "A-01 s/d A-06 = manual (OTP ke email)\nA-07 s/d A-10 = via Postman",
+      "item": [
+        {
+          "name": "A-01 Registrasi email valid",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-01: Status 200 OK + OTP terkirim\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"newtestuser\",\n  \"email\": \"{{newUserEmail}}\",\n  \"password\": \"{{homeownerPassword}}\",\n  \"fullName\": \"New Test User\",\n  \"phone\": \"081234567890\",\n  \"role\": \"HOMEOWNER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "A-02 Registrasi email sudah terdaftar",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-02: Status 409 Conflict\", function () {",
+                "    pm.response.to.have.status(409);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"existinguser\",\n  \"email\": \"{{homeownerEmail}}\",\n  \"password\": \"{{homeownerPassword}}\",\n  \"fullName\": \"Existing User\",\n  \"phone\": \"081234567890\",\n  \"role\": \"HOMEOWNER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "A-03 Verifikasi OTP kode benar (MANUAL)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-03: Status 200 OK + JWT cookie\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newUserEmail}}\",\n  \"otp\": \"COPY-FROM-EMAIL\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["auth", "verify-otp"] }
+          }
+        },
+        {
+          "name": "A-04 Verifikasi OTP kode salah",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-04: Status 400 Bad Request\", function () {",
+                "    pm.response.to.have.status(400);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{homeownerEmail}}\",\n  \"otp\": \"000000\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["auth", "verify-otp"] }
+          }
+        },
+        {
+          "name": "A-05 Verifikasi OTP 3x gagal (jalankan A-04 3x berturut-turut)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-05: Status 429/423 setelah 3x gagal\", function () {",
+                "    pm.expect(pm.response.code).to.be.oneOf([429, 423]);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{homeownerEmail}}\",\n  \"otp\": \"000000\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/verify-otp", "host": ["{{baseUrl}}"], "path": ["auth", "verify-otp"] }
+          }
+        },
+        {
+          "name": "A-06 Request OTP > 3x dalam 1 jam",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-06: Status 429 Too Many Requests\", function () {",
+                "    pm.response.to.have.status(429);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/auth/resend-otp?email={{homeownerEmail}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "resend-otp"],
+              "query": [{ "key": "email", "value": "{{homeownerEmail}}" }]
+            }
+          }
+        },
+        {
+          "name": "A-07 Login email & password valid",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-07: Status 200 OK + JWT cookie\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{homeownerEmail}}\",\n  \"password\": \"{{homeownerPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "A-08 Login password salah",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-08: Status 401 Unauthorized\", function () {",
+                "    pm.response.to.have.status(401);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{homeownerEmail}}\",\n  \"password\": \"wrongpassword\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "A-09 Login email tidak terdaftar",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-09: Status 404 Not Found\", function () {",
+                "    pm.response.to.have.status(404);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nonexistent@test.com\",\n  \"password\": \"password\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "A-10 Logout (hapus JWT cookie)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"A-10: Status 200 OK\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/auth/logout", "host": ["{{baseUrl}}"], "path": ["auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "B - Booking",
+      "description": "PRASYARAT: Jalankan A-07 dulu, lalu copy JWT dari Set-Cookie header ke variable jwtToken. Pre-request script akan otomatis mengirim cookie.",
+      "event": [{
+        "listen": "prerequest",
+        "script": {
+          "exec": [
+            "var token = pm.collectionVariables.get('jwtToken');",
+            "if (token && token !== '') {",
+            "    pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });",
+            "}"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "item": [
+        {
+          "name": "B-01 Booking slot tersedia",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-01: Status 201 Created + kode verifikasi\", function () {",
+                "    pm.response.to.have.status(201);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "    pm.expect(json.data).to.have.property('sessionCode');",
+                "    console.log('Consultation ID:', json.data.consultationId);",
+                "    console.log('Session Code:', json.data.sessionCode);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "test-b01-{{$randomUUID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balaiId\": \"{{testBalaiId}}\",\n  \"date\": \"2026-12-31\",\n  \"timeSlot\": \"09.00 - 10.00\",\n  \"topic\": \"Test Booking\",\n  \"description\": \"Black box test booking\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/book", "host": ["{{baseUrl}}"], "path": ["consultations", "book"] }
+          }
+        },
+        {
+          "name": "B-02 Booking tanpa Idempotency-Key",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-02: Status 400 Bad Request\", function () {",
+                "    pm.response.to.have.status(400);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balaiId\": \"{{testBalaiId}}\",\n  \"date\": \"2026-12-31\",\n  \"timeSlot\": \"09.00 - 10.00\",\n  \"topic\": \"No Idempotency Key\",\n  \"description\": \"Missing header\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/book", "host": ["{{baseUrl}}"], "path": ["consultations", "book"] }
+          }
+        },
+        {
+          "name": "B-03 Booking Idempotency-Key duplikat",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-03: Status 200 OK (cached response)\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "test-b03-duplicate" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balaiId\": \"{{testBalaiId}}\",\n  \"date\": \"2026-12-31\",\n  \"timeSlot\": \"09.00 - 10.00\",\n  \"topic\": \"Duplicate Key\",\n  \"description\": \"Same idempotency key\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/book", "host": ["{{baseUrl}}"], "path": ["consultations", "book"] }
+          }
+        },
+        {
+          "name": "B-04 Booking slot penuh",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-04: Status 409 Conflict\", function () {",
+                "    pm.response.to.have.status(409);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "test-b04-{{$randomUUID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balaiId\": \"{{testBalaiId}}\",\n  \"date\": \"2026-12-31\",\n  \"timeSlot\": \"09.00 - 10.00\",\n  \"topic\": \"Slot Penuh\",\n  \"description\": \"Already taken slot\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/book", "host": ["{{baseUrl}}"], "path": ["consultations", "book"] }
+          }
+        },
+        {
+          "name": "B-05 Booking tanpa autentikasi",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-05: Status 401 Unauthorized\", function () {",
+                "    pm.response.to.have.status(401);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "test-b05-{{$randomUUID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balaiId\": \"{{testBalaiId}}\",\n  \"date\": \"2026-12-31\",\n  \"timeSlot\": \"09.00 - 10.00\",\n  \"topic\": \"No Auth\",\n  \"description\": \"No authentication\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/book", "host": ["{{baseUrl}}"], "path": ["consultations", "book"] }
+          }
+        },
+        {
+          "name": "B-06 Booking oleh role BALAI",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-06: Status 403 Forbidden\", function () {",
+                "    pm.response.to.have.status(403);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Idempotency-Key", "value": "test-b06-{{$randomUUID}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"balaiId\": \"{{testBalaiId}}\",\n  \"date\": \"2026-12-31\",\n  \"timeSlot\": \"09.00 - 10.00\",\n  \"topic\": \"Balai Booking\",\n  \"description\": \"Balai cannot book\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/book", "host": ["{{baseUrl}}"], "path": ["consultations", "book"] }
+          }
+        },
+        {
+          "name": "B-07 Lihat booking sendiri",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-07: Status 200 OK + daftar booking\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "    pm.expect(json.data).to.be.an('array');",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/consultations/me?status=all&page=0&size=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["consultations", "me"],
+              "query": [
+                { "key": "status", "value": "all" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "B-08 Verifikasi kehadiran kode benar",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-08: Status 200 OK\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionCode\": \"COPY-FROM-B01-RESPONSE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/{{testConsultationId}}/verify", "host": ["{{baseUrl}}"], "path": ["consultations", "{{testConsultationId}}", "verify"] }
+          }
+        },
+        {
+          "name": "B-09 Verifikasi kehadiran kode salah",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"B-09: Status 400 Bad Request\", function () {",
+                "    pm.response.to.have.status(400);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionCode\": \"00000000\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/{{testConsultationId}}/verify", "host": ["{{baseUrl}}"], "path": ["consultations", "{{testConsultationId}}", "verify"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "C - Dashboard Balai",
+      "description": "PRASYARAT: Login sebagai BALAI dulu. Copy JWT dari Set-Cookie ke variable jwtToken. Lalu jalankan skenario C.",
+      "event": [{
+        "listen": "prerequest",
+        "script": {
+          "exec": [
+            "var token = pm.collectionVariables.get('jwtToken');",
+            "if (token && token !== '') {",
+            "    pm.request.headers.add({ key: 'Authorization', value: 'Bearer ' + token });",
+            "}"
+          ],
+          "type": "text/javascript"
+        }
+      }],
+      "item": [
+        {
+          "name": "C-01 Dashboard booking (role BALAI)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-01: Status 200 OK + daftar booking\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "    pm.expect(json.data).to.be.an('array');",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/dashboard/consultations", "host": ["{{baseUrl}}"], "path": ["dashboard", "consultations"] }
+          }
+        },
+        {
+          "name": "C-02 Dashboard booking (role HOMEOWNER)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-02: Status 403 Forbidden\", function () {",
+                "    pm.response.to.have.status(403);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/dashboard/consultations", "host": ["{{baseUrl}}"], "path": ["dashboard", "consultations"] }
+          }
+        },
+        {
+          "name": "C-03 Konfirmasi booking",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-03: Status 200 OK\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{baseUrl}}/consultations/{{testConsultationId}}/confirm", "host": ["{{baseUrl}}"], "path": ["consultations", "{{testConsultationId}}", "confirm"] }
+          }
+        },
+        {
+          "name": "C-04 Tolak booking",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-04: Status 200 OK\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Slot penuh, silakan pilih tanggal lain\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/{{testConsultationId}}/reject", "host": ["{{baseUrl}}"], "path": ["consultations", "{{testConsultationId}}", "reject"] }
+          }
+        },
+        {
+          "name": "C-05 Selesaikan booking kode valid",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-05: Status 200 OK\", function () {",
+                "    pm.response.to.have.status(200);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionCode\": \"COPY-FROM-B01-RESPONSE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/{{testConsultationId}}/complete", "host": ["{{baseUrl}}"], "path": ["consultations", "{{testConsultationId}}", "complete"] }
+          }
+        },
+        {
+          "name": "C-06 Selesaikan booking kode invalid",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-06: Status 400 Bad Request\", function () {",
+                "    pm.response.to.have.status(400);",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionCode\": \"00000000\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/consultations/{{testConsultationId}}/complete", "host": ["{{baseUrl}}"], "path": ["consultations", "{{testConsultationId}}", "complete"] }
+          }
+        },
+        {
+          "name": "C-07 Statistik harian",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "pm.test(\"C-07: Status 200 OK + data statistik\", function () {",
+                "    pm.response.to.have.status(200);",
+                "    var json = pm.response.json();",
+                "    pm.expect(json.success).to.be.true;",
+                "});"
+              ],
+              "type": "text/javascript"
+            }
+          }],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/dashboard/stats", "host": ["{{baseUrl}}"], "path": ["dashboard", "stats"] }
+          }
+        }
+      ]
+    }
+  ]
+}

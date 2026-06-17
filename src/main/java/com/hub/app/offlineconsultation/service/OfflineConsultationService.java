@@ -454,9 +454,10 @@ public class OfflineConsultationService {
      * <ol>
      *   <li>The consultation must currently be in {@code terkonfirmasi} or
      *       {@code sedang_berjalan} status.</li>
+     *   <li>Validate that the provided session key matches the stored
+     *       consultation code (generated at confirmation time).</li>
      *   <li>If still terkonfirmasi, auto-advance to sedang_berjalan.</li>
      *   <li>Transition to {@code selesai}.</li>
-     *   <li>Session key already exists (was generated at confirmation time).</li>
      * </ol>
      *
      * <p><b>Note:</b> Per the contract's state machine, the official path is
@@ -467,7 +468,7 @@ public class OfflineConsultationService {
      * {@code sedang_berjalan}.</p>
      *
      * @param consultationId the consultation's UUID
-     * @param request        request details
+     * @param request        request details (must include valid sessionKey)
      * @return action response with updated consultation
      */
     @Transactional
@@ -475,6 +476,13 @@ public class OfflineConsultationService {
             UUID consultationId, CompleteConsultationRequest request) {
 
         OfflineConsultationEntity entity = findConsultationOrThrow(consultationId);
+
+        // ── Guard: validate session key ──────────────────────────────
+        if (request.getSessionKey() == null || request.getSessionKey().isBlank()
+                || !entity.getConsultationId().equals(request.getSessionKey())) {
+            throw new DomainException(ErrorCode.OC_INVALID_VERIFICATION_CODE,
+                    "Session key does not match. Cannot complete consultation without the correct code.");
+        }
 
         // If still confirmed, auto-advance to sedang_berjalan first
         if (entity.getStatus() == ConsultationStatus.TERKONFIRMASI) {
@@ -485,10 +493,9 @@ public class OfflineConsultationService {
         validateTransition(entity, ConsultationStatus.SELESAI);
 
         entity.setStatus(ConsultationStatus.SELESAI);
-        // Session key already exists from confirmation - no need to generate again
 
         OfflineConsultationEntity saved = consultationRepo.save(entity);
-        log.info("Consultation completed: id={}, existingSessionKey={}",
+        log.info("Consultation completed: id={}, sessionKey={}",
                 consultationId, entity.getConsultationId());
 
         return ConsultationActionResponse.builder()
