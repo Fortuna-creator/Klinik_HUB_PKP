@@ -2,12 +2,6 @@
 
 --changeset hub:039-seed-balai-data context:dev,test splitStatements:false
 
--- =====================================================================
--- Seed data for Balai P3KP (Office) table
--- Real government office locations (19 regional offices across Indonesia)
--- Organized by region: Sumatera(5), Jawa(4), Kalimantan(2), Sulawesi(3), NusaTenggara(2), Maluku(1), Papua(2)
--- =====================================================================
-
 INSERT INTO balai (id, name, location, description, email, phone_number, address, image_url, web_url, working_hours_start, working_hours_end, created_at, updated_at)
 VALUES
     -- SUMATERA REGION (5 offices)

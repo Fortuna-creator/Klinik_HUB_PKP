@@ -2,12 +2,6 @@
 
 --changeset hub:040-seed-test-users context:dev,test splitStatements:false
 
--- =====================================================================
--- Seed data for test users - pre-verified for easier testing
--- All test passwords: "password" (hashed with bcrypt: $2a$10$d.vrhv2B4oZtDdiyWkW5duaeBuKC7FiyI.wjZ0aJV8JddLQeewOUW)
--- Includes 5 HOMEOWNER test users and 19 BALAI office test users
--- =====================================================================
-
 INSERT INTO users (
     id, email, name, password, phone, address, role, status, activity_status, 
     created_at, updated_at
